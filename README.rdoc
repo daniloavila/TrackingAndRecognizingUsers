@@ -1,0 +1,6 @@
+= Funcionalidade
+
+O Objetivo desse código é realizar reconhecimento facial em imagens 2d, utilizando eigenfaces. Inicialmente está utilizando uma webcam qualquer. Mas queremos integra-lo com kinect, e além do reconhecimento facil conseguirmos descobrir a localização do usuário no ambiente.
+
+= Base
+Esse código é baseado no código do Shervin Emami (www.shervinemami.co.cc).
