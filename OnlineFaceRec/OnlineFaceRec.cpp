@@ -41,7 +41,7 @@ using namespace std;
 
 // Haar Cascade file, used for Face Detection.
 const char *faceCascadeFilename = "haarcascade_frontalface_alt.xml";
-const int NUMBER_OF_PHOTOS = 20;
+const int NUMBER_OF_PHOTOS = 19;
 extern const int VK_ESCAPE;
 
 int SAVE_EIGENFACE_IMAGES = 1;		// Set to 0 if you dont want images of the Eigenvectors saved to files (for debugging).
