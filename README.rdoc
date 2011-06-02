@@ -6,7 +6,6 @@ O Objetivo desse código é realizar reconhecimento facial em imagens 2d, utiliz
 Esse código é baseado no código do Shervin Emami (www.shervinemami.co.cc).
 
 = Compilação
-cd OnlineFaceRec/
 make
 
 =Execução
