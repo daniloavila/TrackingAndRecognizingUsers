@@ -47,6 +47,7 @@ using namespace std;
 
 // Haar Cascade file, used for Face Detection.
 const char *faceCascadeFilename = "haarcascade_frontalface_alt.xml";
+const int NUMBER_OF_PHOTOS = 19;
 extern const int VK_ESCAPE;
 
 int SAVE_EIGENFACE_IMAGES = 1;		// Set to 0 if you dont want images of the Eigenvectors saved to files (for debugging).
@@ -649,8 +650,7 @@ void recognizeFromCam(void)
 
 	timeFaceRecognizeStart = (double)cvGetTickCount();	// Record the timing.
 
-	while (1)
-	{
+	while (1){
 		int iNearest, nearest, truth;
 		IplImage *camImg;
 		IplImage *greyImg;
@@ -665,8 +665,7 @@ void recognizeFromCam(void)
 		float confidence;
 
 		// Handle keyboard input in the console.
-		if (kbhit())
-			keyPressed = getchar();
+		if (kbhit()) keyPressed = getchar();
 
 		if (keyPressed == VK_ESCAPE) {	// Check if the user hit the 'Escape' key
 			break;	// Stop processing input.
@@ -772,13 +771,14 @@ void recognizeFromCam(void)
 			}//endif nEigens
 
 			// Possibly save the processed face to the training set.
-			if (saveNextFaces) {
+			if (saveNextFaces && newPersonFaces <= NUMBER_OF_PHOTOS) {
 // MAYBE GET IT TO ONLY TRAIN SOME IMAGES ?
 				// Use a different filename each time.
 				sprintf(cstr, "data/%d_%s%d.pgm", nPersons+1, newPersonName, newPersonFaces+1);
 				printf("Storing the current face of '%s' into image '%s'.\n", newPersonName, cstr);
 				cvSaveImage(cstr, processedFaceImg, NULL);
 				newPersonFaces++;
+				sleep(0.5);
 			}
 
 			// Free the resources used for this frame.
