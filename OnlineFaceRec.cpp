@@ -37,8 +37,15 @@
 #include <opencv/cv.h>
 #include <opencv/cvaux.h>
 #include <opencv/highgui.h>
-#include <GL/glut.h>
 #include <XnCppWrapper.h>
+
+#if (XN_PLATFORM == XN_PLATFORM_MACOSX)
+	#include <GLUT/glut.h>
+#else
+	#include <GL/glut.h>
+#endif
+
+
 #include "KeyboardUtil.h"
 #include "ImageUtil.h"
 #include "KinectUtil.h"
