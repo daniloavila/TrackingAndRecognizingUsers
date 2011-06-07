@@ -1,9 +1,9 @@
 #ifndef IMAGE_UTIL_H_
 #define IMAGE_UTIL_H_
 
-#include <OpenCV/cv.h>
-#include <OpenCV/cvaux.h>
-#include <OpenCV/highgui.h>
+#include <opencv/cv.h>
+#include <opencv/cvaux.h>
+#include <opencv/highgui.h>
 
 IplImage* convertImageToGreyscale(const IplImage *imageSrc);
 IplImage* cropImage(const IplImage *img, const CvRect region);

@@ -34,8 +34,14 @@
 #include <sys/stat.h>
 #include <vector>
 #include <string.h>
+#include <opencv/cv.h>
+#include <opencv/cvaux.h>
+#include <opencv/highgui.h>
+#include <GL/glut.h>
+#include <XnCppWrapper.h>
 #include "KeyboardUtil.h"
 #include "ImageUtil.h"
+#include "KinectUtil.h"
 
 using namespace std;
 
@@ -552,7 +558,6 @@ IplImage* getCameraFrame(void)
 	return frame;
 }
 
-
 // Re-train the new face rec database without shutting down.
 // Depending on the number of images in the training set and number of people, it might take 30 seconds or so.
 CvMat* retrainOnline(void)
@@ -665,17 +670,22 @@ void recognizeFromCam(void)
 		if (keyPressed == VK_ESCAPE) {	// Check if the user hit the 'Escape' key
 			break;	// Stop processing input.
 		}
+		printf("Init... %d\n", keyPressed);
+
 		switch (keyPressed) {
 			case 'n':	// Add a new person to the training set.
 				// Train from the following images.
+				printf("N\n");
 				printf("Enter your name: ");
 				strcpy(newPersonName, "newPerson");
 				gets(newPersonName);
 				printf("Collecting all images until you hit 't', to start Training the images as '%s' ...\n", newPersonName);
 				newPersonFaces = 0;	// restart training a new person
 				saveNextFaces = TRUE;
+				printf("N\n");
 				break;
 			case 't':	// Start training
+				printf("T\n");
 				saveNextFaces = FALSE;	// stop saving next faces.
 				// Store the saved data into the training file.
 				printf("Storing the training data for new person '%s'.\n", newPersonName);
@@ -686,6 +696,7 @@ void recognizeFromCam(void)
 					fprintf(trainFile, "%d %s %s\n", nPersons+1, newPersonName, cstr);
 				}
 				fclose(trainFile);
+				printf("T\n");
 
 				// Now there is one more person in the database, ready for retraining.
 				//nPersons++;
@@ -710,9 +721,13 @@ void recognizeFromCam(void)
 				continue;	// Begin with the next frame.
 				break;
 		}
+		printf("saiu do case");
 
 		// Get the camera frame
-		camImg = getCameraFrame();
+		//camImg = getCameraFrame();
+
+		camImg = getKinectFrame();
+
 		if (!camImg) {
 			printf("ERROR in recognizeFromCam(): Bad input image!\n");
 			exit(1);
