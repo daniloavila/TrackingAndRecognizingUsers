@@ -1,9 +1,9 @@
 = Funcionalidade
 
-O Objetivo desse código é realizar reconhecimento facial em imagens 2d, utilizando eigenfaces. Inicialmente está utilizando uma webcam qualquer. Mas queremos integra-lo com kinect, e além do reconhecimento facil conseguirmos descobrir a localização do usuário no ambiente.
+O Objetivo desse código é realizar reconhecimento facial em imagens 2d, utilizando eigenfaces. O sistema está integrado com Kinect.
 
 = Base
-Esse código é baseado no código do Shervin Emami (www.shervinemami.co.cc).
+Esse código é baseado no código do Shervin Emami (www.shervinemami.co.cc), e no exemplo de UserTracker da bliblioteca OpenNi.
 
 = Compilação
 make
