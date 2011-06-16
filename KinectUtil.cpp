@@ -42,10 +42,8 @@ void mountKinect() {
 
         // Initialize context object 
         nRetVal = context.Init(); 
-
         // Create a ImageGenerator node 
         nRetVal = image.Create(context);
-
         // Make it start generating data 
         nRetVal = context.StartGeneratingAll(); 
 
@@ -53,6 +51,7 @@ void mountKinect() {
         mapMode.nXRes = KINECT_HEIGHT_CAPTURE;
         mapMode.nYRes = KINECT_WIDTH_CAPTURE;
         mapMode.nFPS = KINECT_FPS_CAPTURE;
+
         nRetVal = image.SetMapOutputMode( mapMode );
         printf("Kinect Ready\n");
 }
