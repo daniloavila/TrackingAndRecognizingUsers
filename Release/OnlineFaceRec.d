@@ -110,37 +110,20 @@ Release/OnlineFaceRec.d Release/OnlineFaceRec.o: OnlineFaceRec.cpp \
  /usr/local/include/opencv/cv.h /usr/local/include/opencv/cvaux.hpp \
  /usr/local/include/opencv/cvvidsurv.hpp \
  /usr/local/include/opencv/highgui.h \
- /usr/local/include/opencv/highgui.hpp /usr/include/GL/glut.h \
+ /usr/local/include/opencv/highgui.hpp OpenNI/XnCppWrapper.h \
+ OpenNI/XnOpenNI.h OpenNI/XnTypes.h OpenNI/XnStatus.h OpenNI/XnPlatform.h \
+ OpenNI/Linux-x86/XnPlatformLinux-x86.h OpenNI/XnOS.h OpenNI/XnMacros.h \
+ OpenNI/XnStatusCodes.h OpenNI/XnStatus.h \
+ OpenNI/Linux-x86/XnOSLinux-x86.h /usr/include/fcntl.h \
+ /usr/include/bits/fcntl.h /usr/include/bits/uio.h \
+ /usr/include/bits/fcntl2.h OpenNI/XnContext.h OpenNI/XnTypes.h \
+ OpenNI/XnQueries.h OpenNI/XnPrdNodeInfoList.h OpenNI/XnLicensing.h \
+ OpenNI/XnUtils.h OpenNI/XnPrdNodeInfo.h OpenNI/XnQueries.h \
+ OpenNI/XnPrdNode.h OpenNI/XnEnumerationErrors.h OpenNI/XnVersion.h \
+ OpenNI/XnCodecIDs.h /usr/include/GL/glut.h \
  /usr/include/GL/freeglut_std.h /usr/include/GL/gl.h \
  /usr/include/GL/glext.h /usr/include/inttypes.h /usr/include/GL/glu.h \
- /home/tales/kinect/OpenNI/Include/XnCppWrapper.h \
- /home/tales/kinect/OpenNI/Include/XnOpenNI.h \
- /home/tales/kinect/OpenNI/Include/XnTypes.h \
- /home/tales/kinect/OpenNI/Include/XnStatus.h \
- /home/tales/kinect/OpenNI/Include/XnPlatform.h \
- /home/tales/kinect/OpenNI/Include/Linux-x86/XnPlatformLinux-x86.h \
- /home/tales/kinect/OpenNI/Include/XnOS.h \
- /home/tales/kinect/OpenNI/Include/XnMacros.h \
- /home/tales/kinect/OpenNI/Include/XnStatusCodes.h \
- /home/tales/kinect/OpenNI/Include/XnStatus.h \
- /home/tales/kinect/OpenNI/Include/XnOSStrings.h \
- /home/tales/kinect/OpenNI/Include/XnOSMemory.h \
- /home/tales/kinect/OpenNI/Include/Linux-x86/XnOSLinux-x86.h \
- /usr/include/fcntl.h /usr/include/bits/fcntl.h /usr/include/bits/uio.h \
- /usr/include/bits/fcntl2.h /home/tales/kinect/OpenNI/Include/XnContext.h \
- /home/tales/kinect/OpenNI/Include/XnTypes.h \
- /home/tales/kinect/OpenNI/Include/XnQueries.h \
- /home/tales/kinect/OpenNI/Include/XnPrdNodeInfoList.h \
- /home/tales/kinect/OpenNI/Include/XnLicensing.h \
- /home/tales/kinect/OpenNI/Include/XnUtils.h \
- /home/tales/kinect/OpenNI/Include/XnModuleInterface.h \
- /home/tales/kinect/OpenNI/Include/XnPrdNodeInfo.h \
- /home/tales/kinect/OpenNI/Include/XnQueries.h \
- /home/tales/kinect/OpenNI/Include/XnPrdNode.h \
- /home/tales/kinect/OpenNI/Include/XnEnumerationErrors.h \
- /home/tales/kinect/OpenNI/Include/XnVersion.h \
- /home/tales/kinect/OpenNI/Include/XnCodecIDs.h KeyboardUtil.h \
- /usr/include/termios.h /usr/include/bits/termios.h \
+ KeyboardUtil.h /usr/include/termios.h /usr/include/bits/termios.h \
  /usr/include/sys/ttydefaults.h ImageUtil.h KinectUtil.h
 
 /usr/include/stdio.h:
@@ -501,6 +484,60 @@ Release/OnlineFaceRec.d Release/OnlineFaceRec.o: OnlineFaceRec.cpp \
 
 /usr/local/include/opencv/highgui.hpp:
 
+OpenNI/XnCppWrapper.h:
+
+OpenNI/XnOpenNI.h:
+
+OpenNI/XnTypes.h:
+
+OpenNI/XnStatus.h:
+
+OpenNI/XnPlatform.h:
+
+OpenNI/Linux-x86/XnPlatformLinux-x86.h:
+
+OpenNI/XnOS.h:
+
+OpenNI/XnMacros.h:
+
+OpenNI/XnStatusCodes.h:
+
+OpenNI/XnStatus.h:
+
+OpenNI/Linux-x86/XnOSLinux-x86.h:
+
+/usr/include/fcntl.h:
+
+/usr/include/bits/fcntl.h:
+
+/usr/include/bits/uio.h:
+
+/usr/include/bits/fcntl2.h:
+
+OpenNI/XnContext.h:
+
+OpenNI/XnTypes.h:
+
+OpenNI/XnQueries.h:
+
+OpenNI/XnPrdNodeInfoList.h:
+
+OpenNI/XnLicensing.h:
+
+OpenNI/XnUtils.h:
+
+OpenNI/XnPrdNodeInfo.h:
+
+OpenNI/XnQueries.h:
+
+OpenNI/XnPrdNode.h:
+
+OpenNI/XnEnumerationErrors.h:
+
+OpenNI/XnVersion.h:
+
+OpenNI/XnCodecIDs.h:
+
 /usr/include/GL/glut.h:
 
 /usr/include/GL/freeglut_std.h:
@@ -512,66 +549,6 @@ Release/OnlineFaceRec.d Release/OnlineFaceRec.o: OnlineFaceRec.cpp \
 /usr/include/inttypes.h:
 
 /usr/include/GL/glu.h:
-
-/home/tales/kinect/OpenNI/Include/XnCppWrapper.h:
-
-/home/tales/kinect/OpenNI/Include/XnOpenNI.h:
-
-/home/tales/kinect/OpenNI/Include/XnTypes.h:
-
-/home/tales/kinect/OpenNI/Include/XnStatus.h:
-
-/home/tales/kinect/OpenNI/Include/XnPlatform.h:
-
-/home/tales/kinect/OpenNI/Include/Linux-x86/XnPlatformLinux-x86.h:
-
-/home/tales/kinect/OpenNI/Include/XnOS.h:
-
-/home/tales/kinect/OpenNI/Include/XnMacros.h:
-
-/home/tales/kinect/OpenNI/Include/XnStatusCodes.h:
-
-/home/tales/kinect/OpenNI/Include/XnStatus.h:
-
-/home/tales/kinect/OpenNI/Include/XnOSStrings.h:
-
-/home/tales/kinect/OpenNI/Include/XnOSMemory.h:
-
-/home/tales/kinect/OpenNI/Include/Linux-x86/XnOSLinux-x86.h:
-
-/usr/include/fcntl.h:
-
-/usr/include/bits/fcntl.h:
-
-/usr/include/bits/uio.h:
-
-/usr/include/bits/fcntl2.h:
-
-/home/tales/kinect/OpenNI/Include/XnContext.h:
-
-/home/tales/kinect/OpenNI/Include/XnTypes.h:
-
-/home/tales/kinect/OpenNI/Include/XnQueries.h:
-
-/home/tales/kinect/OpenNI/Include/XnPrdNodeInfoList.h:
-
-/home/tales/kinect/OpenNI/Include/XnLicensing.h:
-
-/home/tales/kinect/OpenNI/Include/XnUtils.h:
-
-/home/tales/kinect/OpenNI/Include/XnModuleInterface.h:
-
-/home/tales/kinect/OpenNI/Include/XnPrdNodeInfo.h:
-
-/home/tales/kinect/OpenNI/Include/XnQueries.h:
-
-/home/tales/kinect/OpenNI/Include/XnPrdNode.h:
-
-/home/tales/kinect/OpenNI/Include/XnEnumerationErrors.h:
-
-/home/tales/kinect/OpenNI/Include/XnVersion.h:
-
-/home/tales/kinect/OpenNI/Include/XnCodecIDs.h:
 
 KeyboardUtil.h:
 
