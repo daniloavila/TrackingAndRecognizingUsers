@@ -670,7 +670,6 @@ void recognizeFromCam(void)
 		if (keyPressed == VK_ESCAPE) {	// Check if the user hit the 'Escape' key
 			break;	// Stop processing input.
 		}
-		printf("Init... %d\n", keyPressed);
 
 		switch (keyPressed) {
 			case 'n':	// Add a new person to the training set.
@@ -721,7 +720,6 @@ void recognizeFromCam(void)
 				continue;	// Begin with the next frame.
 				break;
 		}
-		printf("saiu do case");
 
 		// Get the camera frame
 		//camImg = getCameraFrame();
