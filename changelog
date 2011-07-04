@@ -1,3 +1,5 @@
+v0.0.2 - Pega frame do Kinect
+
 v0.0.1 - Detecta somente um face por vez, e a identifica.
 			 - No cadastro de novo usuarios, tira 19 fotos com intervalos de 0.5 segundos entre elas. 
 				
