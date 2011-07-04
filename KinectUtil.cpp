@@ -1,6 +1,5 @@
 #include "KinectUtil.h"
 
-
 int kinectMounted = 0;
 xn::Context context;
 xn::ImageGenerator image;
