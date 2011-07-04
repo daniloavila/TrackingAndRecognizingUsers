@@ -107,36 +107,36 @@ void printUsage()
 }
 
 
-// // Startup routine.
-// int main( int argc, char** argv )
-// {
-// 	printUsage();
+// Startup routine.
+int main( int argc, char** argv )
+{
+	printUsage();
 
-// 	if( argc >= 2 && strcmp(argv[1], "train") == 0 ) {
-// 		char *szFileTrain;
-// 		if (argc == 3)
-// 			szFileTrain = argv[2];	// use the given arg
-// 		else {
-// 			printf("ERROR: No training file given.\n");
-// 			return 1;
-// 		}
-// 		learn(szFileTrain);
-// 	}
-// 	else if( argc >= 2 && strcmp(argv[1], "test") == 0) {
-// 		char *szFileTest;
-// 		if (argc == 3)
-// 			szFileTest = argv[2];	// use the given arg
-// 		else {
-// 			printf("ERROR: No testing file given.\n");
-// 			return 1;
-// 		}
-// 		recognizeFileList(szFileTest);
-// 	}
-// 	else {
-// 		recognizeFromCam();
-// 	}
-// 	return 0;
-// }
+	if( argc >= 2 && strcmp(argv[1], "train") == 0 ) {
+		char *szFileTrain;
+		if (argc == 3)
+			szFileTrain = argv[2];	// use the given arg
+		else {
+			printf("ERROR: No training file given.\n");
+			return 1;
+		}
+		learn(szFileTrain);
+	}
+	else if( argc >= 2 && strcmp(argv[1], "test") == 0) {
+		char *szFileTest;
+		if (argc == 3)
+			szFileTest = argv[2];	// use the given arg
+		else {
+			printf("ERROR: No testing file given.\n");
+			return 1;
+		}
+		recognizeFileList(szFileTest);
+	}
+	else {
+		recognizeFromCam();
+	}
+	return 0;
+}
 
 // Save all the eigenvectors as images, so that they can be checked.
 void storeEigenfaceImages()

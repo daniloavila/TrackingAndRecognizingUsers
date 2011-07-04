@@ -31,12 +31,14 @@
 #include <XnCppWrapper.h>
 #include "SceneDrawer.h"
 #include "UserUtil.h"
+#include "MessageQueue.h"
 
 //---------------------------------------------------------------------------
 // Globals
 //---------------------------------------------------------------------------
 xn::Context g_Context;
 xn::DepthGenerator g_DepthGenerator;
+xn::ImageGenerator g_ImageGenerator;
 xn::UserGenerator g_UserGenerator;
 xn::SceneAnalyzer g_SceneAnalyzer;
 
@@ -47,6 +49,9 @@ XnBool g_bDrawPixels = TRUE;
 XnBool g_bDrawSkeleton = TRUE;
 XnBool g_bPrintID = TRUE;
 XnBool g_bPrintState = TRUE;
+
+int idQueueRequest;
+int idQueueResponse;
 
 #if (XN_PLATFORM == XN_PLATFORM_MACOSX)
 	#include <GLUT/glut.h>
@@ -77,7 +82,7 @@ void CleanupExit()
 void XN_CALLBACK_TYPE User_NewUser(xn::UserGenerator& generator, XnUserID nId, void* pCookie)
 {
 	printf("New User %d\n", nId);
-	g_UserGenerator.GetSkeletonCap().RequestCalibration(nId, FALSE);
+	// g_UserGenerator.GetSkeletonCap().RequestCalibration(nId, FALSE);
 	
 }
 // Callback: An existing user was lost
@@ -177,7 +182,7 @@ void glInit (int * pargc, char ** argv)
 	glDisableClientState(GL_COLOR_ARRAY);
 }
 
-#define SAMPLE_XML_PATH " ../../Config/SamplesConfig.xml"
+#define SAMPLE_XML_PATH "Config/SamplesConfig.xml"
 
 #define CHECK_RC(nRetVal, what)										\
 	if (nRetVal != XN_STATUS_OK)									\
@@ -186,12 +191,13 @@ void glInit (int * pargc, char ** argv)
 		return nRetVal;												\
 	}
 
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv){
 	XnStatus nRetVal = XN_STATUS_OK; //variavel que mantem o status: caso um erro seja lançado, da para acessa-lo por meio desta
 
-	if (argc > 1)
-	{
+	// idQueueRequest = createMessageQueue(MESSAGE_QUEUE_REQUEST);
+	// idQueueResponse = createMessageQueue(MESSAGE_QUEUE_RESPONSE);
+
+	if (argc > 1){
 		nRetVal = g_Context.Init();
 		CHECK_RC(nRetVal, "Init");
 		nRetVal = g_Context.OpenFileRecording(argv[1]); //verifica se passamos algum arquivo pela linha de comando, para que seja gravado a saida do kinect no msm
@@ -201,21 +207,8 @@ int main(int argc, char **argv)
 			return 1;
 		}
 	}
-	else
-	{
+	else{
 		xn::EnumerationErrors errors;
-		// Node type="Image" name="Image1">
-		// 	<Configuration>
-		// 		<MapOutputMode xRes="640" yRes="480" FPS="30"/>
-		// 		<Mirror on="true"/>
-		// 	</Configuration>
-		// </Node>
-		// <Node type="Depth" name="Depth1">
-		// 	<Configuration>
-		// 		<MapOutputMode xRes="640" yRes="480" FPS="30"/>
-		// 		<Mirror on="true"/>
-		// 	</Configuration>
-		// </Node>
 		nRetVal = g_Context.InitFromXmlFile(SAMPLE_XML_PATH, &errors); //le as configuracoes do Sample.xml, que define as configuracoes iniciais acima
 		
 		if (nRetVal == XN_STATUS_NO_NODE_PRESENT)
@@ -235,9 +228,12 @@ int main(int argc, char **argv)
 	nRetVal = g_SceneAnalyzer.Create(g_Context);
 	nRetVal = g_Context.FindExistingNode(XN_NODE_TYPE_DEPTH, g_DepthGenerator); //procura por um node Depth nas configuracoes
 	CHECK_RC(nRetVal, "Find depth generator");
+
+	nRetVal = g_Context.FindExistingNode(XN_NODE_TYPE_IMAGE, g_ImageGenerator); //procura por um node image nas configuracoes
+	CHECK_RC(nRetVal, "Find image generator");
+
 	nRetVal = g_Context.FindExistingNode(XN_NODE_TYPE_USER, g_UserGenerator);//verifica se ha alguma config para User, se não ele cria
-	if (nRetVal != XN_STATUS_OK)
-	{
+	if (nRetVal != XN_STATUS_OK){
 		nRetVal = g_UserGenerator.Create(g_Context);
 		CHECK_RC(nRetVal, "Find user generator");
 	}

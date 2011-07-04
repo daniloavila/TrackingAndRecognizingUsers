@@ -1,6 +1,7 @@
 #include <XnOpenNI.h>
 #include <XnCodecIDs.h>
 #include <XnCppWrapper.h>
+#include "MessageQueue.h"
 
 XnStatus printUserCoM(xn::UserGenerator& generator, XnUserID nId, XnPoint3D& com, XnPlane3D& floor){
 	generator.GetCoM(nId, com);
@@ -26,5 +27,12 @@ void printUsersCoM(xn::UserGenerator& generator, xn::SceneAnalyzer& analyzer){
 	for(int i=0; i< numberOfUsers; i++){		
 		printUserCoM(generator, allUsers[i], *com, *floor);
 	}
+	
+}
+
+char * getUserName(int userId){
+	int idfilaRequisicao;
+
+
 	
 }

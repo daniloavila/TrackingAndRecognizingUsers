@@ -1,12 +1,5 @@
-#include <opencv/cv.h>
-#include <opencv/cvaux.h>
-#include <opencv/highgui.h>
-#include "XnCppWrapper.h"
+#include "KinectUtil.h"
 
-#define KINECT_WIDTH_CAPTURE 480
-#define KINECT_HEIGHT_CAPTURE 640
-#define KINECT_FPS_CAPTURE 30
-#define KINECT_NUMBER_OF_CHANNELS 3
 
 int kinectMounted = 0;
 xn::Context context;
