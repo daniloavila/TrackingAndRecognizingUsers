@@ -51,16 +51,3 @@ Release/Tracker.o: Release/KeyboardUtil.o Release/KinectUtil.o Release/MessageQu
 
 clean: 
 	rm -rf Release/*.o $(EXE_TRACKER) $(EXE_REC)
-
-# g++ -c -arch x86_64 -O2 -DNDEBUG -msse3 -IOpenNI/  -o Release/FaceRecognition.o FaceRecognition.cpp	
-# g++ -c -arch x86_64 -O2 -DNDEBUG -msse3 -IOpenNI/  -o Release/ImageUtil.o ImageUtil.cpp	
-# g++ -c -arch x86_64 -O2 -DNDEBUG -msse3 -IOpenNI/  -o Release/KeyboardUtil.o KeyboardUtil.cpp	
-# g++ -c -arch x86_64 -O2 -DNDEBUG -msse3 -IOpenNI/  -o Release/KinectUtil.o KinectUtil.cpp	
-# g++ -c -arch x86_64 -O2 -DNDEBUG -msse3 -IOpenNI/  -o Release/MessageQueue.o MessageQueue.cpp	
-# g++ -c -arch x86_64 -O2 -DNDEBUG -msse3 -IOpenNI/  -o Release/SceneDrawer.o SceneDrawer.cpp	
-# g++ -c -arch x86_64 -O2 -DNDEBUG -msse3 -IOpenNI/  -o Release/UserUtil.o UserUtil.cpp	
-# g++ -c -arch x86_64 -O2 -DNDEBUG -msse3 -IOpenNI/  -o Release/main.o main.cpp	
-# g++ -o Bin/Release/kinectTrack ./Release/FaceRecognition.o ./Release/ImageUtil.o ./Release/KeyboardUtil.o ./Release/KinectUtil.o ./Release/MessageQueue.o ./Release/SceneDrawer.o ./Release/UserUtil.o ./Release/main.o -framework OpenGL -framework GLUT -framework OpenCV `pkg-config --cflags opencv` `pkg-config --libs opencv` -arch x86_64   -LBin/Release -lOpenNI
-# ld: warning: in /Library/Frameworks//OpenCV.framework/OpenCV, missing required architecture x86_64 in file
-
-#g++ -o tracker -arch x86_64  -IOpenNI/ -framework OpenGL -framework GLUT -framework OpenCV `pkg-config --cflags opencv` `pkg-config --libs opencv`  
