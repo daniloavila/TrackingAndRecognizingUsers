@@ -46,7 +46,7 @@ Release/UserUtil.o: Release/MessageQueue.o
 	$(CC) $(CCFLAGS) $(INC_DIRS) -o Release/UserUtil.o UserUtil.cpp
 Release/FaceRecognition.o: Release/ImageUtil.o  Release/KinectUtil.o Release/MessageQueue.o Release/UserUtil.o
 	$(CC) $(CCFLAGS) $(INC_DIRS) -o Release/FaceRecognition.o FaceRecognition.cpp
-Release/Tracker.o: KeyboardUtil.o Release/KinectUtil.o Release/MessageQueue.o Release/SceneDrawer.o Release/UserUtil.o
+Release/Tracker.o: Release/KeyboardUtil.o Release/KinectUtil.o Release/MessageQueue.o Release/SceneDrawer.o Release/UserUtil.o
 	$(CC) $(CCFLAGS) $(INC_DIRS) -o Release/Tracker.o Tracker.cpp
 
 clean: 
