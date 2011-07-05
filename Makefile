@@ -6,26 +6,27 @@ INC_DIRS = -IOpenNI/
 
 CC = g++
 
-CCFLAGS = -c -arch x86_64
-CCFLAGS2 = -arch x86_64
+CCFLAGS = -c
+CCFLAGS2 = 
 
 USED_LIBS += -lOpenNI
 
 EXE_TRACKER = tracker
-
 EXE_REC = recognition
 
 ifeq ("$(OSTYPE)","Darwin")
+	CCFLAGS += -arch x86_64
 	LDFLAGS += -framework OpenGL -framework GLUT -framework OpenCV `pkg-config --cflags opencv` `pkg-config --libs opencv`
+	CCFLAGS2 += -arch x86_64
 else
-	USED_LIBS += glut glib-2.0 cv
-	LDFLAGS += -lcv -lcxcore -I/usr/local/include/opencv `pkg-config --cflags opencv` `pkg-config --libs opencv`
+	USED_LIBS += -lglut -lglib-2.0 -lcv -lcv -lcxcore 
+	INC_DIRS += -IOpenNI/ -I/usr/local/include/opencv 
+	LDFLAGS += `pkg-config --cflags opencv` `pkg-config --libs opencv`
 endif
 
 OBJS: Release/FaceRecognition.o Release/ImageUtil.o Release/KeyboardUtil.o Release/KinectUtil.o Release/MessageQueue.o Release/SceneDrawer.o Release/UserUtil.o Release/Tracker.o
 # TRACKER_OBJS: KeyboardUtil.o KinectUtil.o MessageQueue.o SceneDrawer.o UserUtil.o Tracker.o
 # REC_OBJS: ImageUtil.o KeyboardUtil.o KinectUtil.o MessageQueue.o UserUtil.o FaceRecognition.o
-
 
 all: $(OBJS)
 	$(CC) -o $(EXE_TRACKER) Release/KeyboardUtil.o Release/KinectUtil.o Release/MessageQueue.o Release/SceneDrawer.o Release/UserUtil.o Release/Tracker.o $(CCFLAGS2) $(USED_LIBS) $(LDFLAGS)
