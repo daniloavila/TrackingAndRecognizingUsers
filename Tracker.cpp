@@ -96,6 +96,7 @@ void XN_CALLBACK_TYPE User_NewUser(xn::UserGenerator& generator, XnUserID nId, v
 
 	xn::SceneMetaData sceneMD;
 	generator.GetUserPixels(nId, sceneMD);
+
 	userGenerator.GetUserPixels(0, sceneMetaData);  
       
     unsigned short depthPixels*, maskPixels*;
@@ -126,6 +127,8 @@ void glutDisplay (void){
 
 	xn::SceneMetaData sceneMD;
 	xn::DepthMetaData depthMD;
+	// xn::ImageMetaData imageMD;
+
 	g_DepthGenerator.GetMetaData(depthMD);
 	glOrtho(0, depthMD.XRes(), depthMD.YRes(), 0, -1.0, 1.0);
 
@@ -138,6 +141,7 @@ void glutDisplay (void){
 
 		// Process the data
 		g_DepthGenerator.GetMetaData(depthMD);
+		// g_ImageGenerator.GetMetaData(imageMD);
 		g_UserGenerator.GetUserPixels(0, sceneMD);
 		DrawDepthMap(depthMD, sceneMD);
 
@@ -277,6 +281,11 @@ int main(int argc, char **argv){
 
 	//define os metodos responsaveis quando os eventos de novo usuario encontrado e usuario perdido ocorrem 
 	g_UserGenerator.RegisterUserCallbacks(User_NewUser, User_LostUser, NULL, hUserCallbacks); 
+
+	// if(g_DepthGenerator.IsCapabilitySupported("AlternativeViewPoint")){ 
+	//   nRetVal = g_DepthGenerator.GetAlternativeViewPointCap().SetViewPoint(g_ImageGenerator); 
+	//   CHECK_RC(nRetVal, "SetViewPoint for depth generator"); 
+	// } 
 
 	//comecar a ler dados do kinect
 	nRetVal = g_Context.StartGeneratingAll(); 

@@ -100,13 +100,7 @@ CvMat* retrainOnline(void);
 // Show how to use this program from the command-line.
 void printUsage()
 {
-	printf("Face Recognition and Localization for users in the SmartSpace using Kinect\n"
-		// "Usage: recognition [<command>] \n"
-		// "  Valid commands are: \n"
-		// "    train <train_file> \n"
-		// "    test <test_file> \n"
-		// " (if no args are supplied, then online camera mode is enabled).\n"
-		);
+	printf("Face Recognition and Localization for users in the SmartSpace using Kinect\n");
 }
 
 
@@ -114,8 +108,28 @@ void printUsage()
 int main( int argc, char** argv ){
 	printUsage();
 
+	messageRequest messageIn;
+	messageResponse messageOut;
+	char nome[255];
+		
+
 	idQueueRequest = getMessageQueue(MESSAGE_QUEUE_REQUEST);
 	idQueueResponse = getMessageQueue(MESSAGE_QUEUE_RESPONSE);
+
+	while(1){
+		msgrcv(idQueueRequest, &messageIn, sizeof(messageRequest) - sizeof(long), 0, 0);
+
+		//nome = identificacao
+
+		messageOut.user_id = messageIn.user_id;
+		strcpy(messageOut.user_name, nome);
+
+		if(msgsnd(idQueueResponse, &messageOut, sizeof(messageResponse) - sizeof(long), 0) > 0) {
+			printf("Erro no envio de mensagem para o usuario %d\n", messageOut.user_id);
+		}
+
+
+	}
 
 
 
