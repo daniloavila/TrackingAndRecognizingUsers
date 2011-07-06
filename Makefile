@@ -1,7 +1,5 @@
 OSTYPE := $(shell uname -s)
 
-BIN_DIR = Bin
-
 INC_DIRS = -IOpenNI/
 
 CC = g++
@@ -25,8 +23,6 @@ else
 endif
 
 OBJS: Release/FaceRecognition.o Release/ImageUtil.o Release/KeyboardUtil.o Release/KinectUtil.o Release/MessageQueue.o Release/SceneDrawer.o Release/UserUtil.o Release/Tracker.o
-# TRACKER_OBJS: KeyboardUtil.o KinectUtil.o MessageQueue.o SceneDrawer.o UserUtil.o Tracker.o
-# REC_OBJS: ImageUtil.o KeyboardUtil.o KinectUtil.o MessageQueue.o UserUtil.o FaceRecognition.o
 
 all: $(OBJS)
 	$(CC) -o $(EXE_TRACKER) Release/KeyboardUtil.o Release/KinectUtil.o Release/MessageQueue.o Release/SceneDrawer.o Release/UserUtil.o Release/Tracker.o $(CCFLAGS2) $(USED_LIBS) $(LDFLAGS)
