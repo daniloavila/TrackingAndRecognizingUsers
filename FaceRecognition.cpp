@@ -106,11 +106,41 @@ void printUsage()
 
 // Startup routine.
 int main( int argc, char** argv ){
+	int i;
+	CvMat * trainPersonNumMat;  // the person numbers during training
+	float * projectedTestFace;
+	CvHaarClassifierCascade* faceCascade;
+
 	printUsage();
 
 	messageRequest messageIn;
 	messageResponse messageOut;
 	char nome[255];
+
+		// Load the previously saved training data
+	if( loadTrainingData( &trainPersonNumMat ) ) {
+		faceWidth = pAvgTrainImg->width;
+		faceHeight = pAvgTrainImg->height;
+	}
+	else {
+		//printf("ERROR in recognizeFromCam(): Couldn't load the training data!\n");
+		//exit(1);
+	}
+
+	// Project the test images onto the PCA subspace
+	projectedTestFace = (float *)cvAlloc( nEigens*sizeof(float) );
+
+	// Make sure there is a "data" folder, for storing the new person.
+	mkdir("Eigenfaces/data", 0777);
+
+	// Load the HaarCascade classifier for face detection.
+	faceCascade = (CvHaarClassifierCascade*)cvLoad(faceCascadeFilename, 0, 0, 0 );
+	if( !faceCascade ) {
+		printf("ERROR in recognizeFromCam(): Could not load Haar cascade Face detection classifier in '%s'.\n", faceCascadeFilename);
+		exit(1);
+	}
+
+
 		
 
 	idQueueRequest = getMessageQueue(MESSAGE_QUEUE_REQUEST);
@@ -175,7 +205,7 @@ void storeEigenfaceImages()
 {
 	// Store the average image to a file
 	printf("Saving the image of the average face as 'out_averageImage.bmp'.\n");
-	cvSaveImage("out_averageImage.bmp", pAvgTrainImg);
+	cvSaveImage("Eigenfaces/out_averageImage.bmp", pAvgTrainImg);
 	// Create a large image made of many eigenface images.
 	// Must also convert each eigenface image to a normal 8-bit UCHAR image instead of a 32-bit float image.
 	printf("Saving the %d eigenvector images as 'out_eigenfaces.bmp'\n", nEigens);
@@ -201,7 +231,7 @@ void storeEigenfaceImages()
 			cvResetImageROI(bigImg);
 			cvReleaseImage(&byteImg);
 		}
-		cvSaveImage("out_eigenfaces.bmp", bigImg);
+		cvSaveImage("Eigenfaces/out_eigenfaces.bmp", bigImg);
 		cvReleaseImage(&bigImg);
 	}
 }
@@ -260,7 +290,7 @@ int loadTrainingData(CvMat ** pTrainPersonNumMat)
 	int i;
 
 	// create a file-storage interface
-	fileStorage = cvOpenFileStorage( "facedata.xml", 0, CV_STORAGE_READ );
+	fileStorage = cvOpenFileStorage( "Eigenfaces/facedata.xml", 0, CV_STORAGE_READ );
 	if( !fileStorage ) {
 		printf("Can't open training database file 'facedata.xml'.\n");
 		return 0;
@@ -320,7 +350,7 @@ void storeTrainingData()
 	int i;
 
 	// create a file-storage interface
-	fileStorage = cvOpenFileStorage( "facedata.xml", 0, CV_STORAGE_WRITE );
+	fileStorage = cvOpenFileStorage( "Eigenfaces/facedata.xml", 0, CV_STORAGE_WRITE );
 
 	// Store the person names. Added by Shervin.
 	cvWriteInt( fileStorage, "nPersons", nPersons );
@@ -628,7 +658,7 @@ CvMat* retrainOnline(void)
 
 	// Retrain from the data in the files
 	printf("Retraining with the new person ...\n");
-	learn("train.txt");
+	learn("Eigenfaces/train.txt");
 	printf("Done retraining.\n");
 
 	// Load the previously saved training data
@@ -663,7 +693,7 @@ void recognizeFromCam(void)
 
 	// Load the previously saved training data
 	if( loadTrainingData( &trainPersonNumMat ) ) {
-		faceWidth = pAvgTrainImg->width;
+		face = pAvgTrainImg->width;
 		faceHeight = pAvgTrainImg->height;
 	}
 	else {
@@ -678,7 +708,7 @@ void recognizeFromCam(void)
 	cvNamedWindow("Input", CV_WINDOW_AUTOSIZE);
 
 	// Make sure there is a "data" folder, for storing the new person.
-	mkdir("data", 0777);
+	mkdir("Eigenfaces/data", 0777);
 
 	// Load the HaarCascade classifier for face detection.
 	faceCascade = (CvHaarClassifierCascade*)cvLoad(faceCascadeFilename, 0, 0, 0 );
@@ -728,7 +758,7 @@ void recognizeFromCam(void)
 				// Store the saved data into the training file.
 				printf("Storing the training data for new person '%s'.\n", newPersonName);
 				// Append the new person to the end of the training data.
-				trainFile = fopen("train.txt", "a");
+				trainFile = fopen("Eigenfaces/train.txt", "a");
 				for (i=0; i<newPersonFaces; i++) {
 					sprintf(cstr, "data/%d_%s%d.pgm", nPersons+1, newPersonName, i+1);
 					fprintf(trainFile, "%d %s %s\n", nPersons+1, newPersonName, cstr);
