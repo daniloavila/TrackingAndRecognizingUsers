@@ -91,8 +91,8 @@ void CleanupExit(){
 void XN_CALLBACK_TYPE User_NewUser(xn::UserGenerator& generator, XnUserID nId, void* pCookie){
 	printf("New User %d\n", nId);
 
-	messageRequest *message = (messageRequest *) malloc(sizeof(messageRequest));
-	message->user_id = nId;
+	messageRequest message;
+	message.user_id = nId;
 
 	xn::SceneMetaData sceneMD;
 	generator.GetUserPixels(nId, sceneMD);  
@@ -102,10 +102,11 @@ void XN_CALLBACK_TYPE User_NewUser(xn::UserGenerator& generator, XnUserID nId, v
 	depthPixels = (unsigned short*) sceneMD.Data();  
   
 	for (int i =0 ; i < 640 * 480; i++) {  
-        message->matriz_pixel[i] = depthPixels[i];         
+        message.matriz_pixel[i] = depthPixels[i];         
   	}  
 
-  	if(msgsnd(idQueueRequest, &message, sizeof(messageRequest) - sizeof(long), 0) > 0) {
+  	printf("Enviando mensagem");
+  if(msgsnd(idQueueRequest, &message, sizeof(messageRequest) - sizeof(long), 0) > 0) {
 		printf("Erro no envio de mensagem\n");
 	}
 

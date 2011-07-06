@@ -151,13 +151,15 @@ int main( int argc, char** argv ){
 	cvMoveWindow("Recognition", 100, 100);
 
 	while(1){
+		printf("message\n");
+
 		msgrcv(idQueueRequest, &messageIn, sizeof(messageRequest) - sizeof(long), 0, 0);
 
 		printf("Received message %d\n", messageIn.user_id);
 
 		//nome = identificacao
 
-		IplImage* frame = cvCreateImage(cvSize(KINECT_HEIGHT_CAPTURE, KINECT_WIDTH_CAPTURE), IPL_DEPTH_8U, 1);
+		IplImage* frame = cvCreateImage(cvSize(KINECT_HEIGHT_CAPTURE, KINECT_WIDTH_CAPTURE), IPL_DEPTH_16U, 1);
         frame->imageData = (char*) messageIn.matriz_pixel;
         cvShowImage("Recognition", frame);
  
@@ -693,7 +695,7 @@ void recognizeFromCam(void)
 
 	// Load the previously saved training data
 	if( loadTrainingData( &trainPersonNumMat ) ) {
-		face = pAvgTrainImg->width;
+		faceWidth = pAvgTrainImg->width;
 		faceHeight = pAvgTrainImg->height;
 	}
 	else {
