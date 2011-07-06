@@ -32,6 +32,7 @@
 #include <sys/types.h>
 #include <sys/ipc.h>
 #include <sys/msg.h>
+#include <sys/shm.h>
 #include <signal.h>
 #include "SceneDrawer.h"
 #include "UserUtil.h"
@@ -54,6 +55,8 @@ XnBool g_bDrawSkeleton = TRUE;
 XnBool g_bPrintID = TRUE;
 XnBool g_bPrintState = TRUE;
 
+#define INTERVAL_IN_MILISECONDS 10
+
 int idQueueRequest;
 int idQueueResponse;
 int faceRecId;
@@ -75,6 +78,10 @@ XnBool g_bQuit = false;
 //---------------------------------------------------------------------------
 // Code
 //---------------------------------------------------------------------------
+void recognitionCallback(int i) {
+	printf(".");
+	glutTimerFunc(INTERVAL_IN_MILISECONDS, recognitionCallback, 0);
+}
 
 void CleanupExit(){
 	g_Context.Shutdown();
@@ -89,25 +96,51 @@ void CleanupExit(){
 
 // Callback: New user was detected
 void XN_CALLBACK_TYPE User_NewUser(xn::UserGenerator& generator, XnUserID nId, void* pCookie){
+	int *pshm, idshm;
+
 	printf("New User %d\n", nId);
 
-	messageRequest message;
-	message.user_id = nId;
+	if ((idshm = shmget(0x1223, sizeof(int), IPC_CREAT|0x1ff)) < 0) {
+		printf("erro na criacao da fila\n");
+		exit(1);
+	}
+
+	pshm = (int *) shmat(idshm, (char *)0, 0);
+	if (pshm == (int *)-1) {
+		printf("erro no attach\n");
+		exit(1);
+	}
+
+
+	messageRequest messageReq;
+	messageReq.user_id = nId;
+	messageReq.id_memoria = idshm;
 
 	xn::SceneMetaData sceneMD;
 	generator.GetUserPixels(nId, sceneMD);  
-      
-    unsigned short *depthPixels, *maskPixels;
      
+    unsigned short *depthPixels, *maskPixels;
+    
 	depthPixels = (unsigned short*) sceneMD.Data();  
   
 	for (int i =0 ; i < 640 * 480; i++) {  
-        message.matriz_pixel[i] = depthPixels[i];         
-  	}  
+        //pshm[i] = depthPixels[i];     
+  	} 
 
-  	printf("Enviando mensagem");
-  if(msgsnd(idQueueRequest, &message, sizeof(messageRequest) - sizeof(long), 0) > 0) {
+
+	// Create a GUI window for the user to see the camera image.
+	cvNamedWindow("Recognition", CV_WINDOW_AUTOSIZE);
+	cvMoveWindow("Recognition", 100, 100);
+
+
+	IplImage* frame = cvCreateImage(cvSize(KINECT_HEIGHT_CAPTURE, KINECT_WIDTH_CAPTURE), IPL_DEPTH_8U, 1);
+    frame->imageData = (char*) depthPixels;
+    cvShowImage("Recognition", frame);
+
+  	if(msgsnd(idQueueRequest, &messageReq, sizeof(messageRequest) - sizeof(long), 0) > 0) {
 		printf("Erro no envio de mensagem\n");
+	} else {
+		printf("Mensagem enviada com sucesso\n");
 	}
 
 	//printf("Dados: %d\n", metaData->pData);
@@ -193,11 +226,13 @@ void glInit (int * pargc, char ** argv){
 	glutInitWindowSize(GL_WIN_SIZE_X, GL_WIN_SIZE_Y);
 	glutCreateWindow ("User Localization in a Smart Space");
 	//glutFullScreen();
-	glutSetCursor(GLUT_CURSOR_NONE);
+	//glutSetCursor(GLUT_CURSOR_NONE);
 
 	glutKeyboardFunc(glutKeyboard); //define acoes para determinandas teclas
 	glutDisplayFunc(glutDisplay);
 	glutIdleFunc(glutIdle);
+
+	glutTimerFunc(INTERVAL_IN_MILISECONDS, recognitionCallback, 0);
 
 	glDisable(GL_DEPTH_TEST);
 	glEnable(GL_TEXTURE_2D);
@@ -298,3 +333,4 @@ int main(int argc, char **argv){
 	glutMainLoop();
 
 }
+

@@ -38,6 +38,7 @@
 #include <opencv/cvaux.h>
 #include <opencv/highgui.h>
 #include <XnCppWrapper.h>
+#include <sys/shm.h>
 
 #if (XN_PLATFORM == XN_PLATFORM_MACOSX)
 	#include <GLUT/glut.h>
@@ -151,24 +152,26 @@ int main( int argc, char** argv ){
 	cvMoveWindow("Recognition", 100, 100);
 
 	while(1){
-		printf("message\n");
+		printf("message - %d\n", idQueueRequest);
 
-		msgrcv(idQueueRequest, &messageIn, sizeof(messageRequest) - sizeof(long), 0, 0);
+		if(msgrcv(idQueueRequest, &messageIn, sizeof(messageRequest), 0, 0) > 0) {
 
-		printf("Received message %d\n", messageIn.user_id);
+		//if(&messageIn != NULL)	 {
+			printf("Received message %d\n", messageIn.user_id);
 
-		//nome = identificacao
+			//nome = identificacao
 
-		IplImage* frame = cvCreateImage(cvSize(KINECT_HEIGHT_CAPTURE, KINECT_WIDTH_CAPTURE), IPL_DEPTH_16U, 1);
-        frame->imageData = (char*) messageIn.matriz_pixel;
-        cvShowImage("Recognition", frame);
- 
+			//IplImage* frame = cvCreateImage(cvSize(KINECT_HEIGHT_CAPTURE, KINECT_WIDTH_CAPTURE), IPL_DEPTH_16U, 1);
+	        //frame->imageData = (char*) messageIn.matriz_pixel;
+	        //cvShowImage("Recognition", frame);
+	 
 
-		messageOut.user_id = messageIn.user_id;
-		strcpy(messageOut.user_name, nome);
+			messageOut.user_id = messageIn.user_id;
+			strcpy(messageOut.user_name, nome);
 
-		if(msgsnd(idQueueResponse, &messageOut, sizeof(messageResponse) - sizeof(long), 0) > 0) {
-			printf("Erro no envio de mensagem para o usuario %d\n", messageOut.user_id);
+			if(msgsnd(idQueueResponse, &messageOut, sizeof(messageResponse) - sizeof(long), 0) > 0) {
+				printf("Erro no envio de mensagem para o usuario %d\n", messageOut.user_id);
+			}
 		}
 	}
 

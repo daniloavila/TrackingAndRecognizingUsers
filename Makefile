@@ -11,6 +11,7 @@ USED_LIBS += -lOpenNI
 
 EXE_TRACKER = tracker
 EXE_REC = recognition
+RELEASE_DIR = Release/
 
 ifeq ("$(OSTYPE)","Darwin")
 	CCFLAGS += -arch x86_64
@@ -22,28 +23,28 @@ else
 	LDFLAGS += `pkg-config --cflags opencv` `pkg-config --libs opencv`
 endif
 
-OBJS: Release/FaceRecognition.o Release/ImageUtil.o Release/KeyboardUtil.o Release/KinectUtil.o Release/MessageQueue.o Release/SceneDrawer.o Release/UserUtil.o Release/Tracker.o
+OBJS: $(RELEASE_DIR)FaceRecognition.o $(RELEASE_DIR)ImageUtil.o $(RELEASE_DIR)KeyboardUtil.o $(RELEASE_DIR)KinectUtil.o $(RELEASE_DIR)MessageQueue.o $(RELEASE_DIR)SceneDrawer.o $(RELEASE_DIR)UserUtil.o $(RELEASE_DIR)Tracker.o
 
 all: $(OBJS)
-	$(CC) -o $(EXE_TRACKER) Release/KeyboardUtil.o Release/KinectUtil.o Release/MessageQueue.o Release/SceneDrawer.o Release/UserUtil.o Release/Tracker.o $(CCFLAGS2) $(USED_LIBS) $(LDFLAGS)
-	$(CC) -o $(EXE_REC) Release/ImageUtil.o Release/KeyboardUtil.o Release/KinectUtil.o Release/MessageQueue.o Release/UserUtil.o Release/FaceRecognition.o $(CCFLAGS2) $(USED_LIBS) $(LDFLAGS)
+	$(CC) -o $(EXE_TRACKER) $(RELEASE_DIR)KeyboardUtil.o $(RELEASE_DIR)KinectUtil.o $(RELEASE_DIR)MessageQueue.o $(RELEASE_DIR)SceneDrawer.o $(RELEASE_DIR)UserUtil.o $(RELEASE_DIR)Tracker.o $(CCFLAGS2) $(USED_LIBS) $(LDFLAGS)
+	$(CC) -o $(EXE_REC) $(RELEASE_DIR)ImageUtil.o $(RELEASE_DIR)KeyboardUtil.o $(RELEASE_DIR)KinectUtil.o $(RELEASE_DIR)MessageQueue.o $(RELEASE_DIR)UserUtil.o $(RELEASE_DIR)FaceRecognition.o $(CCFLAGS2) $(USED_LIBS) $(LDFLAGS)
 
-Release/ImageUtil.o: 
-	$(CC) $(CCFLAGS) $(INC_DIRS) -o Release/ImageUtil.o ImageUtil.cpp
-Release/KeyboardUtil.o:
-	$(CC) $(CCFLAGS) $(INC_DIRS) -o Release/KeyboardUtil.o KeyboardUtil.cpp
-Release/KinectUtil.o: 
-	$(CC) $(CCFLAGS) $(INC_DIRS) -o Release/KinectUtil.o KinectUtil.cpp
-Release/MessageQueue.o: Release/KinectUtil.o
-	$(CC) $(CCFLAGS) $(INC_DIRS) -o Release/MessageQueue.o MessageQueue.cpp
-Release/SceneDrawer.o:
-	$(CC) $(CCFLAGS) $(INC_DIRS) -o Release/SceneDrawer.o SceneDrawer.cpp
-Release/UserUtil.o: Release/MessageQueue.o
-	$(CC) $(CCFLAGS) $(INC_DIRS) -o Release/UserUtil.o UserUtil.cpp
-Release/FaceRecognition.o: Release/ImageUtil.o  Release/KinectUtil.o Release/MessageQueue.o Release/UserUtil.o
-	$(CC) $(CCFLAGS) $(INC_DIRS) -o Release/FaceRecognition.o FaceRecognition.cpp
-Release/Tracker.o: Release/KeyboardUtil.o Release/KinectUtil.o Release/MessageQueue.o Release/SceneDrawer.o Release/UserUtil.o
-	$(CC) $(CCFLAGS) $(INC_DIRS) -o Release/Tracker.o Tracker.cpp
+$(RELEASE_DIR)ImageUtil.o: 
+	$(CC) $(CCFLAGS) $(INC_DIRS) -o $(RELEASE_DIR)ImageUtil.o ImageUtil.cpp
+$(RELEASE_DIR)KeyboardUtil.o:
+	$(CC) $(CCFLAGS) $(INC_DIRS) -o $(RELEASE_DIR)KeyboardUtil.o KeyboardUtil.cpp
+$(RELEASE_DIR)KinectUtil.o: 
+	$(CC) $(CCFLAGS) $(INC_DIRS) -o $(RELEASE_DIR)KinectUtil.o KinectUtil.cpp
+$(RELEASE_DIR)MessageQueue.o: $(RELEASE_DIR)KinectUtil.o
+	$(CC) $(CCFLAGS) $(INC_DIRS) -o $(RELEASE_DIR)MessageQueue.o MessageQueue.cpp
+$(RELEASE_DIR)SceneDrawer.o:
+	$(CC) $(CCFLAGS) $(INC_DIRS) -o $(RELEASE_DIR)SceneDrawer.o SceneDrawer.cpp
+$(RELEASE_DIR)UserUtil.o: $(RELEASE_DIR)MessageQueue.o
+	$(CC) $(CCFLAGS) $(INC_DIRS) -o $(RELEASE_DIR)UserUtil.o UserUtil.cpp
+$(RELEASE_DIR)FaceRecognition.o: $(RELEASE_DIR)ImageUtil.o  $(RELEASE_DIR)KinectUtil.o $(RELEASE_DIR)MessageQueue.o $(RELEASE_DIR)UserUtil.o
+	$(CC) $(CCFLAGS) $(INC_DIRS) -o $(RELEASE_DIR)FaceRecognition.o FaceRecognition.cpp
+$(RELEASE_DIR)Tracker.o: $(RELEASE_DIR)KeyboardUtil.o $(RELEASE_DIR)KinectUtil.o $(RELEASE_DIR)MessageQueue.o $(RELEASE_DIR)SceneDrawer.o $(RELEASE_DIR)UserUtil.o
+	$(CC) $(CCFLAGS) $(INC_DIRS) -o $(RELEASE_DIR)Tracker.o Tracker.cpp
 
 clean: 
-	rm -rf Release/*.o $(EXE_TRACKER) $(EXE_REC)
+	rm -rf $(RELEASE_DIR)*.o $(EXE_TRACKER) $(EXE_REC)

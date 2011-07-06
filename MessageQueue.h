@@ -4,6 +4,7 @@
 #include <sys/types.h>
 #include <sys/ipc.h>
 #include <sys/msg.h>
+#include <sys/shm.h>
 #include "KinectUtil.h"
 
 // key da fila de messagens entre "UserTracker" e "FaceRec". Utilizada para enviar requisicoes de reconhecimento ao "FaceRec".
@@ -15,7 +16,7 @@
 // estrutura da mensagem trocada entre "UserTracker" e "FaceRec"
 typedef struct messageRequest {
 	long user_id;
-	unsigned short matriz_pixel[KINECT_WIDTH_CAPTURE * KINECT_HEIGHT_CAPTURE];
+	int id_memoria;
 } messageRequest;
 
 // estrutura da mensagem trocada entre "FaceRec" e "UserTracker"
