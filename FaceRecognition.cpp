@@ -45,15 +45,18 @@
 	#include <GL/glut.h>
 #endif
 
-
 #include "KeyboardUtil.h"
 #include "ImageUtil.h"
 #include "KinectUtil.h"
+#include "MessageQueue.h"
 
 using namespace std;
 
+int idQueueRequest;
+int idQueueResponse;
+
 // Haar Cascade file, used for Face Detection.
-const char *faceCascadeFilename = "haarcascade_frontalface_alt.xml";
+const char *faceCascadeFilename = "Eigenfaces/haarcascade_frontalface_alt.xml";
 const int NUMBER_OF_PHOTOS = 19;
 extern const int VK_ESCAPE;
 
@@ -97,45 +100,51 @@ CvMat* retrainOnline(void);
 // Show how to use this program from the command-line.
 void printUsage()
 {
-	printf("OnlineFaceRec, created by Shervin Emami (www.shervinemami.co.cc), 2nd Jun 2010.\n"
-		"Usage: OnlineFaceRec [<command>] \n"
-		"  Valid commands are: \n"
-		"    train <train_file> \n"
-		"    test <test_file> \n"
-		" (if no args are supplied, then online camera mode is enabled).\n"
+	printf("Face Recognition and Localization for users in the SmartSpace using Kinect\n"
+		// "Usage: recognition [<command>] \n"
+		// "  Valid commands are: \n"
+		// "    train <train_file> \n"
+		// "    test <test_file> \n"
+		// " (if no args are supplied, then online camera mode is enabled).\n"
 		);
 }
 
 
 // Startup routine.
-int main( int argc, char** argv )
-{
+int main( int argc, char** argv ){
 	printUsage();
 
-	if( argc >= 2 && strcmp(argv[1], "train") == 0 ) {
-		char *szFileTrain;
-		if (argc == 3)
-			szFileTrain = argv[2];	// use the given arg
-		else {
-			printf("ERROR: No training file given.\n");
-			return 1;
-		}
-		learn(szFileTrain);
-	}
-	else if( argc >= 2 && strcmp(argv[1], "test") == 0) {
-		char *szFileTest;
-		if (argc == 3)
-			szFileTest = argv[2];	// use the given arg
-		else {
-			printf("ERROR: No testing file given.\n");
-			return 1;
-		}
-		recognizeFileList(szFileTest);
-	}
-	else {
-		recognizeFromCam();
-	}
-	return 0;
+	idQueueRequest = getMessageQueue(MESSAGE_QUEUE_REQUEST);
+	idQueueResponse = getMessageQueue(MESSAGE_QUEUE_RESPONSE);
+
+
+
+	
+
+	// if( argc >= 2 && strcmp(argv[1], "train") == 0 ) {
+	// 	char *szFileTrain;
+	// 	if (argc == 3)
+	// 		szFileTrain = argv[2];	// use the given arg
+	// 	else {
+	// 		printf("ERROR: No training file given.\n");
+	// 		return 1;
+	// 	}
+	// 	learn(szFileTrain);
+	// }
+	// else if( argc >= 2 && strcmp(argv[1], "test") == 0) {
+	// 	char *szFileTest;
+	// 	if (argc == 3)
+	// 		szFileTest = argv[2];	// use the given arg
+	// 	else {
+	// 		printf("ERROR: No testing file given.\n");
+	// 		return 1;
+	// 	}
+	// 	recognizeFileList(szFileTest);
+	// }
+	// else {
+	// 	recognizeFromCam();
+	// }
+	// return 0;
 }
 
 // Save all the eigenvectors as images, so that they can be checked.

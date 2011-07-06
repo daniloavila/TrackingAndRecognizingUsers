@@ -29,6 +29,10 @@
 #include <XnOpenNI.h>
 #include <XnCodecIDs.h>
 #include <XnCppWrapper.h>
+#include <sys/types.h>
+#include <sys/ipc.h>
+#include <sys/msg.h>
+#include <signal.h>
 #include "SceneDrawer.h"
 #include "UserUtil.h"
 #include "MessageQueue.h"
@@ -52,6 +56,7 @@ XnBool g_bPrintState = TRUE;
 
 int idQueueRequest;
 int idQueueResponse;
+int faceRecId;
 
 #if (XN_PLATFORM == XN_PLATFORM_MACOSX)
 	#include <GLUT/glut.h>
@@ -71,29 +76,34 @@ XnBool g_bQuit = false;
 // Code
 //---------------------------------------------------------------------------
 
-void CleanupExit()
-{
+void CleanupExit(){
 	g_Context.Shutdown();
+
+	//matando a fila de mensagens
+	msgctl(idQueueRequest, IPC_RMID, NULL);
+	msgctl(idQueueResponse, IPC_RMID, NULL);
+	kill(faceRecId, SIGKILL);
 
 	exit (1);
 }
 
 // Callback: New user was detected
-void XN_CALLBACK_TYPE User_NewUser(xn::UserGenerator& generator, XnUserID nId, void* pCookie)
-{
+void XN_CALLBACK_TYPE User_NewUser(xn::UserGenerator& generator, XnUserID nId, void* pCookie){
 	printf("New User %d\n", nId);
 	// g_UserGenerator.GetSkeletonCap().RequestCalibration(nId, FALSE);
-	
+	xn::SceneMetaData sceneMD;
+	generator.GetUserPixels(nId, sceneMD);
+	XnSceneMetaData* metaData = sceneMD.GetUnderlying();
+	printf("DAdos: %d\n", metaData->pData);
+
 }
 // Callback: An existing user was lost
-void XN_CALLBACK_TYPE User_LostUser(xn::UserGenerator& generator, XnUserID nId, void* pCookie)
-{
+void XN_CALLBACK_TYPE User_LostUser(xn::UserGenerator& generator, XnUserID nId, void* pCookie){
 	printf("Lost user %d\n", nId);
 }
 
 // this function is called each frame
-void glutDisplay (void)
-{
+void glutDisplay (void){
 
 	glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -109,8 +119,7 @@ void glutDisplay (void)
 
 	glDisable(GL_TEXTURE_2D);
 
-	if (!g_bPause)
-	{
+	if (!g_bPause){
 		// Read next available data
 		g_Context.WaitAndUpdateAll();
 	}
@@ -123,8 +132,7 @@ void glutDisplay (void)
 	glutSwapBuffers();
 }
 
-void glutIdle (void)
-{
+void glutIdle (void){
 	if (g_bQuit) {
 		CleanupExit();
 	}
@@ -133,10 +141,8 @@ void glutIdle (void)
 	glutPostRedisplay();
 }
 
-void glutKeyboard (unsigned char key, int x, int y)
-{
-	switch (key)
-	{
+void glutKeyboard (unsigned char key, int x, int y){
+	switch (key){
 	case 27:
 		CleanupExit();
 	case 'b':
@@ -162,8 +168,7 @@ void glutKeyboard (unsigned char key, int x, int y)
 		printUsersCoM(g_UserGenerator, g_SceneAnalyzer);
 	}
 }
-void glInit (int * pargc, char ** argv)
-{
+void glInit (int * pargc, char ** argv){
 	glutInit(pargc, argv);
 	glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
 	glutInitWindowSize(GL_WIN_SIZE_X, GL_WIN_SIZE_Y);
@@ -184,64 +189,85 @@ void glInit (int * pargc, char ** argv)
 
 #define SAMPLE_XML_PATH "Config/SamplesConfig.xml"
 
-#define CHECK_RC(nRetVal, what)										\
-	if (nRetVal != XN_STATUS_OK)									\
-	{																\
+#define CHECK_RC(nRetVal, what) \
+	if (nRetVal != XN_STATUS_OK){\
 		printf("%s failed: %s\n", what, xnGetStatusString(nRetVal));\
-		return nRetVal;												\
+		return nRetVal; \
 	}
 
 int main(int argc, char **argv){
-	XnStatus nRetVal = XN_STATUS_OK; //variavel que mantem o status: caso um erro seja lançado, da para acessa-lo por meio desta
-
-	// idQueueRequest = createMessageQueue(MESSAGE_QUEUE_REQUEST);
-	// idQueueResponse = createMessageQueue(MESSAGE_QUEUE_RESPONSE);
+	//variavel que mantem o status: caso um erro seja lançado, da para acessa-lo por meio desta
+	XnStatus nRetVal = XN_STATUS_OK; 
 
 	if (argc > 1){
 		nRetVal = g_Context.Init();
 		CHECK_RC(nRetVal, "Init");
-		nRetVal = g_Context.OpenFileRecording(argv[1]); //verifica se passamos algum arquivo pela linha de comando, para que seja gravado a saida do kinect no msm
-		if (nRetVal != XN_STATUS_OK)
-		{
+
+		//verifica se passamos algum arquivo pela linha de comando, para que seja gravado a saida do kinect no msm
+		nRetVal = g_Context.OpenFileRecording(argv[1]); 
+		if (nRetVal != XN_STATUS_OK){
 			printf("Can't open recording %s: %s\n", argv[1], xnGetStatusString(nRetVal));
 			return 1;
 		}
 	}
 	else{
 		xn::EnumerationErrors errors;
-		nRetVal = g_Context.InitFromXmlFile(SAMPLE_XML_PATH, &errors); //le as configuracoes do Sample.xml, que define as configuracoes iniciais acima
+
+		//le as configuracoes do Sample.xml, que define as configuracoes iniciais acima
+		nRetVal = g_Context.InitFromXmlFile(SAMPLE_XML_PATH, &errors); 
 		
-		if (nRetVal == XN_STATUS_NO_NODE_PRESENT)
-		{
+		if (nRetVal == XN_STATUS_NO_NODE_PRESENT){
 			XnChar strError[1024];
 			errors.ToString(strError, 1024);
 			printf("%s\n", strError);
 			return (nRetVal);
 		}
-		else if (nRetVal != XN_STATUS_OK)
-		{
+		else if (nRetVal != XN_STATUS_OK){
 			printf("Open failed: %s\n", xnGetStatusString(nRetVal));
 			return (nRetVal);
 		}
 	}
 
+	idQueueRequest = createMessageQueue(MESSAGE_QUEUE_REQUEST);
+	idQueueResponse = createMessageQueue(MESSAGE_QUEUE_RESPONSE);
+
+	//criando um processo filho. Este processo sera transformado do deamon utilizando o execl
+	faceRecId = fork();
+	if (faceRecId < 0) {
+		printf("erro no fork\n");
+		exit(1);
+	}
+
+	//inicinado o processo que reconhece os novoc usuarios encontrados
+	if (faceRecId == 0) {
+		execl("recognition", "recognition", (char *) 0);
+	}
+
+
 	nRetVal = g_SceneAnalyzer.Create(g_Context);
-	nRetVal = g_Context.FindExistingNode(XN_NODE_TYPE_DEPTH, g_DepthGenerator); //procura por um node Depth nas configuracoes
+
+	//procura por um node Depth nas configuracoes
+	nRetVal = g_Context.FindExistingNode(XN_NODE_TYPE_DEPTH, g_DepthGenerator); 
 	CHECK_RC(nRetVal, "Find depth generator");
 
-	nRetVal = g_Context.FindExistingNode(XN_NODE_TYPE_IMAGE, g_ImageGenerator); //procura por um node image nas configuracoes
+	//procura por um node image nas configuracoes
+	nRetVal = g_Context.FindExistingNode(XN_NODE_TYPE_IMAGE, g_ImageGenerator); 
 	CHECK_RC(nRetVal, "Find image generator");
 
-	nRetVal = g_Context.FindExistingNode(XN_NODE_TYPE_USER, g_UserGenerator);//verifica se ha alguma config para User, se não ele cria
+	//verifica se ha alguma config para User, se não ele cria
+	nRetVal = g_Context.FindExistingNode(XN_NODE_TYPE_USER, g_UserGenerator);
 	if (nRetVal != XN_STATUS_OK){
 		nRetVal = g_UserGenerator.Create(g_Context);
 		CHECK_RC(nRetVal, "Find user generator");
 	}
 
 	XnCallbackHandle hUserCallbacks, hCalibrationCallbacks, hPoseCallbacks;
-	g_UserGenerator.RegisterUserCallbacks(User_NewUser, User_LostUser, NULL, hUserCallbacks); //define os metodos responsaveis quando os eventos de novo usuario encontrado e usuario perdido ocorrem 
 
-	nRetVal = g_Context.StartGeneratingAll(); //comecar a ler dados do kinect
+	//define os metodos responsaveis quando os eventos de novo usuario encontrado e usuario perdido ocorrem 
+	g_UserGenerator.RegisterUserCallbacks(User_NewUser, User_LostUser, NULL, hUserCallbacks); 
+
+	//comecar a ler dados do kinect
+	nRetVal = g_Context.StartGeneratingAll(); 
 	CHECK_RC(nRetVal, "StartGenerating");
 
 	glInit(&argc, argv);
