@@ -99,7 +99,7 @@ void XN_CALLBACK_TYPE User_NewUser(xn::UserGenerator& generator, XnUserID nId, v
 
 	userGenerator.GetUserPixels(0, sceneMetaData);  
       
-    unsigned short depthPixels*, maskPixels*;
+  unsigned short depthPixels*, maskPixels*;
      
 	depthPixels = (unsigned short*) sceneMetaData.Data();  
   
