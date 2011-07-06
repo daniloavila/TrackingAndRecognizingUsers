@@ -116,10 +116,21 @@ int main( int argc, char** argv ){
 	idQueueRequest = getMessageQueue(MESSAGE_QUEUE_REQUEST);
 	idQueueResponse = getMessageQueue(MESSAGE_QUEUE_RESPONSE);
 
+	// Create a GUI window for the user to see the camera image.
+	cvNamedWindow("Recognition", CV_WINDOW_AUTOSIZE);
+	cvMoveWindow("Recognition", 100, 100);
+
 	while(1){
 		msgrcv(idQueueRequest, &messageIn, sizeof(messageRequest) - sizeof(long), 0, 0);
 
+		printf("Received message %d\n", messageIn.user_id);
+
 		//nome = identificacao
+
+		IplImage* frame = cvCreateImage(cvSize(KINECT_HEIGHT_CAPTURE, KINECT_WIDTH_CAPTURE), IPL_DEPTH_8U, 1);
+        frame->imageData = (char*) messageIn.matriz_pixel;
+        cvShowImage("Recognition", frame);
+ 
 
 		messageOut.user_id = messageIn.user_id;
 		strcpy(messageOut.user_name, nome);
@@ -127,8 +138,6 @@ int main( int argc, char** argv ){
 		if(msgsnd(idQueueResponse, &messageOut, sizeof(messageResponse) - sizeof(long), 0) > 0) {
 			printf("Erro no envio de mensagem para o usuario %d\n", messageOut.user_id);
 		}
-
-
 	}
 
 
