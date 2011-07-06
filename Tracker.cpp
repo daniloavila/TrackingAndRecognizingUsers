@@ -90,11 +90,23 @@ void CleanupExit(){
 // Callback: New user was detected
 void XN_CALLBACK_TYPE User_NewUser(xn::UserGenerator& generator, XnUserID nId, void* pCookie){
 	printf("New User %d\n", nId);
-	// g_UserGenerator.GetSkeletonCap().RequestCalibration(nId, FALSE);
+
+	messageRequest message* = malloc(sizof(messageRequest));
+	message->user_id = nId;
+
 	xn::SceneMetaData sceneMD;
 	generator.GetUserPixels(nId, sceneMD);
-	XnSceneMetaData* metaData = sceneMD.GetUnderlying();
-	printf("DAdos: %d\n", metaData->pData);
+	userGenerator.GetUserPixels(0, sceneMetaData);  
+      
+    unsigned short depthPixels*, maskPixels*;
+     
+	depthPixels = (unsigned short*) sceneMetaData.Data();  
+  
+	for (int i =0 ; i < 640 * 480; i++) {  
+        	message->matriz_pixel[i] = depthPixels[i];         
+  	}  
+
+	//printf("Dados: %d\n", metaData->pData);
 
 }
 // Callback: An existing user was lost

@@ -15,7 +15,7 @@
 // estrutura da mensagem trocada entre "UserTracker" e "FaceRec"
 typedef struct messageRequest {
 	long user_id;
-	char matriz_pixel[KINECT_WIDTH_CAPTURE * KINECT_HEIGHT_CAPTURE * KINECT_NUMBER_OF_CHANNELS];
+	unsigned short matriz_pixel[KINECT_WIDTH_CAPTURE * KINECT_HEIGHT_CAPTURE];
 } messageRequest;
 
 // estrutura da mensagem trocada entre "FaceRec" e "UserTracker"
