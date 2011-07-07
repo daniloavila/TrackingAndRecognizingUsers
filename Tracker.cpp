@@ -119,14 +119,17 @@ void XN_CALLBACK_TYPE User_NewUser(xn::UserGenerator& generator, XnUserID nId, v
 	xn::SceneMetaData sceneMD;
 	generator.GetUserPixels(nId, sceneMD);  
      
-    unsigned short *depthPixels, *maskPixels;
+  unsigned short *depthPixels;
+  char maskPixels[307200];
     
-	depthPixels = (unsigned short*) sceneMD.Data();  
-  
 	for (int i =0 ; i < 640 * 480; i++) {  
-        //pshm[i] = depthPixels[i];     
-  	} 
-
+        if (depthPixels[i] != 0) {  
+                      maskPixels[i] = 0;  
+        } else {  
+              maskPixels[i] = 255;  
+        }  
+      }
+  
 
 	// Create a GUI window for the user to see the camera image.
 	cvNamedWindow("Recognition", CV_WINDOW_AUTOSIZE);
@@ -134,7 +137,7 @@ void XN_CALLBACK_TYPE User_NewUser(xn::UserGenerator& generator, XnUserID nId, v
 
 
 	IplImage* frame = cvCreateImage(cvSize(KINECT_HEIGHT_CAPTURE, KINECT_WIDTH_CAPTURE), IPL_DEPTH_8U, 1);
-    frame->imageData = (char*) depthPixels;
+    frame->imageData = (char*) maskPixels;
     cvShowImage("Recognition", frame);
 
   	if(msgsnd(idQueueRequest, &messageReq, sizeof(messageRequest) - sizeof(long), 0) > 0) {
