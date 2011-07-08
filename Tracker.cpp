@@ -60,6 +60,7 @@ XnBool g_bPrintState = TRUE;
 int idQueueRequest;
 int idQueueResponse;
 int faceRecId;
+int sharedMemoryCount = 0;
 
 #if (XN_PLATFORM == XN_PLATFORM_MACOSX)
 	#include <GLUT/glut.h>
@@ -79,7 +80,12 @@ XnBool g_bQuit = false;
 // Code
 //---------------------------------------------------------------------------
 void recognitionCallback(int i) {
-	printf(".");
+	char nome[7];	
+
+	if(msgrcv(idQueueResponse, nome, sizeof(char) * 7, 0, IPC_NOWAIT)>=0){
+		printf("Tracker - Received message %s\n", nome);			
+	}
+
 	glutTimerFunc(INTERVAL_IN_MILISECONDS, recognitionCallback, 0);
 }
 
@@ -96,57 +102,37 @@ void CleanupExit(){
 
 // Callback: New user was detected
 void XN_CALLBACK_TYPE User_NewUser(xn::UserGenerator& generator, XnUserID nId, void* pCookie){
-	int *pshm, idshm;
+	XnLabel *pshm;
+	int sharedMemoryId;
 
 	printf("New User %d\n", nId);
 
-	if ((idshm = shmget(0x1223, sizeof(int), IPC_CREAT|0x1ff)) < 0) {
+	int key = SHARED_MEMORY + sharedMemoryCount;
+	// printf("\t\t\tCriando %d\n", key);
+	if ((sharedMemoryId = shmget(key, sizeof(XnLabel), IPC_CREAT|0x1ff)) < 0) {
 		printf("erro na criacao da fila\n");
 		exit(1);
 	}
 
-	pshm = (int *) shmat(idshm, (char *)0, 0);
-	if (pshm == (int *)-1) {
+	pshm = (XnLabel *) shmat(sharedMemoryId, (char *)0, 0);
+	if (pshm == (XnLabel *)-1) {
 		printf("erro no attach\n");
 		exit(1);
 	}
 
-
-	messageRequest messageReq;
-	messageReq.user_id = nId;
-	messageReq.id_memoria = idshm;
-
 	xn::SceneMetaData sceneMD;
-	generator.GetUserPixels(nId, sceneMD);  
-     
-  unsigned short *depthPixels;
-  char maskPixels[307200];
-    
-	for (int i =0 ; i < 640 * 480; i++) {  
-        if (depthPixels[i] != 0) {  
-                      maskPixels[i] = 0;  
-        } else {  
-              maskPixels[i] = 255;  
-        }  
-      }
-  
+	generator.GetUserPixels(nId, sceneMD);
+	*pshm = *(sceneMD.Data());
 
-	// Create a GUI window for the user to see the camera image.
-	cvNamedWindow("Recognition", CV_WINDOW_AUTOSIZE);
-	cvMoveWindow("Recognition", 100, 100);
+	// printf("Tracker - Data: %d\n", *pshm);
 
-
-	IplImage* frame = cvCreateImage(cvSize(KINECT_HEIGHT_CAPTURE, KINECT_WIDTH_CAPTURE), IPL_DEPTH_8U, 1);
-    frame->imageData = (char*) maskPixels;
-    cvShowImage("Recognition", frame);
-
-  	if(msgsnd(idQueueRequest, &messageReq, sizeof(messageRequest) - sizeof(long), 0) > 0) {
-		printf("Erro no envio de mensagem\n");
-	} else {
-		printf("Mensagem enviada com sucesso\n");
+	// printf("Tracker - Enviando a mensagem\n");
+	if(msgsnd(idQueueRequest, &key, sizeof(int), 0) > 0) {
+		printf("Erro no envio de mensagem para o usuario %d\n", key);
 	}
+	// printf("Tracker - Enviou a mensagem\n");
 
-	//printf("Dados: %d\n", metaData->pData);
+	sharedMemoryCount++;
 
 }
 // Callback: An existing user was lost
