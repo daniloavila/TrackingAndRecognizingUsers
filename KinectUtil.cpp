@@ -19,6 +19,7 @@ char* transformToCharAray(const XnRGB24Pixel* source) {
                         result[(i*KINECT_WIDTH_CAPTURE*KINECT_NUMBER_OF_CHANNELS)+(j*KINECT_NUMBER_OF_CHANNELS)+2] = aux->nRed;
                         result[(i*KINECT_WIDTH_CAPTURE*KINECT_NUMBER_OF_CHANNELS)+(j*KINECT_NUMBER_OF_CHANNELS)+1] = aux->nGreen;
                         result[(i*KINECT_WIDTH_CAPTURE*KINECT_NUMBER_OF_CHANNELS)+(j*KINECT_NUMBER_OF_CHANNELS)+0] = aux->nBlue;
+                        //printf("(%d %d %d)", aux->nRed, aux->nGreen, aux->nBlue);
                 }
         }
 

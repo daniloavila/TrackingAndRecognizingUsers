@@ -17,6 +17,8 @@
  */
 IplImage* getKinectFrame();
 
+char* transformToCharAray(const XnRGB24Pixel* source);
+
 #define KINECT_WIDTH_CAPTURE 480
 #define KINECT_HEIGHT_CAPTURE 640
 #define KINECT_FPS_CAPTURE 30
