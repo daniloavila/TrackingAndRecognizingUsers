@@ -21,3 +21,4 @@ int getMessageQueue(int key) {
 
 	return idFila;
 }
+

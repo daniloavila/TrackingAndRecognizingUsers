@@ -114,70 +114,75 @@ int main( int argc, char** argv ){
 
 	printUsage();
 
-	messageRequest messageIn;
+	int messageIn;
 	messageResponse messageOut;
 	char nome[255];
 
-		// Load the previously saved training data
-	if( loadTrainingData( &trainPersonNumMat ) ) {
-		faceWidth = pAvgTrainImg->width;
-		faceHeight = pAvgTrainImg->height;
-	}
-	else {
-		//printf("ERROR in recognizeFromCam(): Couldn't load the training data!\n");
-		//exit(1);
-	}
+	XnLabel *pshm;
+	int sharedMemoryId;
 
-	// Project the test images onto the PCA subspace
-	projectedTestFace = (float *)cvAlloc( nEigens*sizeof(float) );
+	// 	// Load the previously saved training data
+	// if( loadTrainingData( &trainPersonNumMat ) ) {
+	// 	faceWidth = pAvgTrainImg->width;
+	// 	faceHeight = pAvgTrainImg->height;
+	// }
+	// else {
+	// 	//printf("ERROR in recognizeFromCam(): Couldn't load the training data!\n");
+	// 	//exit(1);
+	// }
 
-	// Make sure there is a "data" folder, for storing the new person.
-	mkdir("Eigenfaces/data", 0777);
+	// // Project the test images onto the PCA subspace
+	// projectedTestFace = (float *)cvAlloc( nEigens*sizeof(float) );
 
-	// Load the HaarCascade classifier for face detection.
-	faceCascade = (CvHaarClassifierCascade*)cvLoad(faceCascadeFilename, 0, 0, 0 );
-	if( !faceCascade ) {
-		printf("ERROR in recognizeFromCam(): Could not load Haar cascade Face detection classifier in '%s'.\n", faceCascadeFilename);
-		exit(1);
-	}
+	// // Make sure there is a "data" folder, for storing the new person.
+	// mkdir("Eigenfaces/data", 0777);
 
-
-		
+	// // Load the HaarCascade classifier for face detection.
+	// faceCascade = (CvHaarClassifierCascade*)cvLoad(faceCascadeFilename, 0, 0, 0 );
+	// if( !faceCascade ) {
+	// 	printf("ERROR in recognizeFromCam(): Could not load Haar cascade Face detection classifier in '%s'.\n", faceCascadeFilename);
+	// 	exit(1);
+	// }
 
 	idQueueRequest = getMessageQueue(MESSAGE_QUEUE_REQUEST);
 	idQueueResponse = getMessageQueue(MESSAGE_QUEUE_RESPONSE);
 
-	// Create a GUI window for the user to see the camera image.
-	cvNamedWindow("Recognition", CV_WINDOW_AUTOSIZE);
-	cvMoveWindow("Recognition", 100, 100);
-
 	while(1){
-		printf("message - %d\n", idQueueRequest);
+		// printf("Recoginition - Lendo a mensagem\n");
+		if(msgrcv(idQueueRequest, &messageIn, sizeof(int), 0, 0) > 0){
+			// printf("Erro ao receber mensagem");	
+		}	
+		// printf("Recoginition - Received message %d\n", messageIn);
 
-		if(msgrcv(idQueueRequest, &messageIn, sizeof(messageRequest), 0, 0) > 0) {
-
-		//if(&messageIn != NULL)	 {
-			printf("Received message %d\n", messageIn.user_id);
-
-			//nome = identificacao
-
-			//IplImage* frame = cvCreateImage(cvSize(KINECT_HEIGHT_CAPTURE, KINECT_WIDTH_CAPTURE), IPL_DEPTH_16U, 1);
-	        //frame->imageData = (char*) messageIn.matriz_pixel;
-	        //cvShowImage("Recognition", frame);
-	 
-
-			messageOut.user_id = messageIn.user_id;
-			strcpy(messageOut.user_name, nome);
-
-			if(msgsnd(idQueueResponse, &messageOut, sizeof(messageResponse) - sizeof(long), 0) > 0) {
-				printf("Erro no envio de mensagem para o usuario %d\n", messageOut.user_id);
-			}
+		// printf("Recoginition - Criando memoria compartilhada\n");
+		if ((sharedMemoryId = shmget(messageIn, sizeof(XnLabel), IPC_EXCL|0x1ff)) < 0) {
+			printf("erro na criacao da fila\n");
+			exit(1);
 		}
+
+		pshm = (XnLabel *) shmat(sharedMemoryId, (char *)0, 0);
+		if (pshm == (XnLabel *)-1) {
+			printf("erro no attach\n");
+			exit(1);
+		}
+
+		// printf("Recoginition - Received data %d\n", *pshm);
+
+		shmctl(sharedMemoryId, IPC_RMID, NULL);
+		// printf("\t\t\tMatando %d\n", messageIn);
+
+		//RECONHECER A IMAGEM
+
+		// printf("Recognition - Enviando a mensagem\n");
+		char nome[7] = "Danilo";
+		int length = 7;
+		if(msgsnd(idQueueResponse, nome, sizeof(char)*length, 0) > 0) {
+			printf("Erro no envio de mensagem para o usuario\n");
+		}
+		// printf("Recognition - Enviou a mensagem: %s\n", nome);
+
+
 	}
-
-
-
-	
 
 	// if( argc >= 2 && strcmp(argv[1], "train") == 0 ) {
 	// 	char *szFileTrain;

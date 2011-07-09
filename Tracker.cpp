@@ -64,6 +64,7 @@ XnBool g_bPrintState = TRUE;
 int idQueueRequest;
 int idQueueResponse;
 int faceRecId;
+int sharedMemoryCount = 0;
 
 #if (XN_PLATFORM == XN_PLATFORM_MACOSX)
 	#include <GLUT/glut.h>
@@ -85,6 +86,7 @@ int id = 0;
 // Code
 //---------------------------------------------------------------------------
 void recognitionCallback(int i) {
+
 	printf(".");
     
 
@@ -148,6 +150,12 @@ void recognitionCallback(int i) {
     cvReleaseImage( &shownImg );
     //cvWaitKey();
 
+	char nome[7];	
+
+	if(msgrcv(idQueueResponse, nome, sizeof(char) * 7, 0, IPC_NOWAIT)>=0){
+		printf("Tracker - Received message %s\n", nome);			
+	}
+
 	glutTimerFunc(INTERVAL_IN_MILISECONDS, recognitionCallback, 0);
 }
 
@@ -164,27 +172,31 @@ void CleanupExit(){
 
 // Callback: New user was detected
 void XN_CALLBACK_TYPE User_NewUser(xn::UserGenerator& generator, XnUserID nId, void* pCookie){
-	int *pshm, idshm;
+	XnLabel *pshm;
+	int sharedMemoryId;
 
 	id = (int) nId;
 
 	printf("New User %d\n", nId);
 
-	if ((idshm = shmget(0x1223, sizeof(int), IPC_CREAT|0x1ff)) < 0) {
+	int key = SHARED_MEMORY + sharedMemoryCount;
+	// printf("\t\t\tCriando %d\n", key);
+	if ((sharedMemoryId = shmget(key, sizeof(XnLabel), IPC_CREAT|0x1ff)) < 0) {
 		printf("erro na criacao da fila\n");
 		exit(1);
 	}
 
-	pshm = (int *) shmat(idshm, (char *)0, 0);
-	if (pshm == (int *)-1) {
+	pshm = (XnLabel *) shmat(sharedMemoryId, (char *)0, 0);
+	if (pshm == (XnLabel *)-1) {
 		printf("erro no attach\n");
 		exit(1);
 	}
 
+	xn::SceneMetaData sceneMD;
+	generator.GetUserPixels(nId, sceneMD);
+	*pshm = *(sceneMD.Data());
 
-	messageRequest messageReq;
-	messageReq.user_id = nId;
-	messageReq.id_memoria = idshm;
+	// printf("Tracker - Data: %d\n", *pshm);
 
 	xn::SceneMetaData sceneMD;
 	const XnRGB24Pixel* source = g_ImageGenerator.GetRGB24ImageMap();
@@ -252,9 +264,14 @@ void XN_CALLBACK_TYPE User_NewUser(xn::UserGenerator& generator, XnUserID nId, v
 		printf("Erro no envio de mensagem\n");
 	} else {
 		printf("Mensagem enviada com sucesso\n");
-	}
 
-	//printf("Dados: %d\n", metaData->pData);
+	// printf("Tracker - Enviando a mensagem\n");
+	if(msgsnd(idQueueRequest, &key, sizeof(int), 0) > 0) {
+		printf("Erro no envio de mensagem para o usuario %d\n", key);
+	}
+	// printf("Tracker - Enviou a mensagem\n");
+
+	sharedMemoryCount++;
 
 }
 // Callback: An existing user was lost
