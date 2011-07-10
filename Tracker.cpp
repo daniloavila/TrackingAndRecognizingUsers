@@ -1,27 +1,24 @@
 /*****************************************************************************
-*                                                                            *
-*  OpenNI 1.0 Alpha                                                          *
-*  Copyright (C) 2010 PrimeSense Ltd.                                        *
-*                                                                            *
-*  This file is part of OpenNI.                                              *
-*                                                                            *
-*  OpenNI is free software: you can redistribute it and/or modify            *
-*  it under the terms of the GNU Lesser General Public License as published  *
-*  by the Free Software Foundation, either version 3 of the License, or      *
-*  (at your option) any later version.                                       *
-*                                                                            *
-*  OpenNI is distributed in the hope that it will be useful,                 *
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of            *
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the              *
-*  GNU Lesser General Public License for more details.                       *
-*                                                                            *
-*  You should have received a copy of the GNU Lesser General Public License  *
-*  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.            *
-*                                                                            *
-*****************************************************************************/
-
-
-
+ *                                                                            *
+ *  OpenNI 1.0 Alpha                                                          *
+ *  Copyright (C) 2010 PrimeSense Ltd.                                        *
+ *                                                                            *
+ *  This file is part of OpenNI.                                              *
+ *                                                                            *
+ *  OpenNI is free software: you can redistribute it and/or modify            *
+ *  it under the terms of the GNU Lesser General Public License as published  *
+ *  by the Free Software Foundation, either version 3 of the License, or      *
+ *  (at your option) any later version.                                       *
+ *                                                                            *
+ *  OpenNI is distributed in the hope that it will be useful,                 *
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of            *
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the              *
+ *  GNU Lesser General Public License for more details.                       *
+ *                                                                            *
+ *  You should have received a copy of the GNU Lesser General Public License  *
+ *  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.            *
+ *                                                                            *
+ *****************************************************************************/
 
 //---------------------------------------------------------------------------
 // Includes
@@ -51,7 +48,7 @@ xn::ImageGenerator g_ImageGenerator;
 xn::UserGenerator g_UserGenerator;
 xn::SceneAnalyzer g_SceneAnalyzer;
 
-XnBool g_bNeedPose = FALSE; 
+XnBool g_bNeedPose = FALSE;
 XnChar g_strPose[20] = "";
 XnBool g_bDrawBackground = TRUE;
 XnBool g_bDrawPixels = TRUE;
@@ -59,7 +56,7 @@ XnBool g_bDrawSkeleton = TRUE;
 XnBool g_bPrintID = TRUE;
 XnBool g_bPrintState = TRUE;
 
-#define INTERVAL_IN_MILISECONDS 10
+#define INTERVAL_IN_MILISECONDS 1000
 
 int idQueueRequest;
 int idQueueResponse;
@@ -67,9 +64,9 @@ int faceRecId;
 int sharedMemoryCount = 0;
 
 #if (XN_PLATFORM == XN_PLATFORM_MACOSX)
-	#include <GLUT/glut.h>
+#include <GLUT/glut.h>
 #else
-	#include <GL/glut.h>
+#include <GL/glut.h>
 #endif
 
 #define GL_WIN_SIZE_X 720
@@ -82,20 +79,55 @@ XnBool g_bQuit = false;
 
 int id = 0;
 
-//---------------------------------------------------------------------------
-// Code
-//---------------------------------------------------------------------------
+void getFrameFromUserId(XnUserID nId, char *maskPixels);
+
+/**
+ * Calcula a proxima key da memoria compartilhada.
+ */
+unsigned int getMemoryKey() {
+	return SHARED_MEMORY + (sharedMemoryCount * 4);
+}
+
+/**
+ * Recebe as mensagens da fila de resposta e reenvia as frames dos usuarios não reconhecidos.
+ */
 void recognitionCallback(int i) {
 
-	char nome[7];	
-	if(msgrcv(idQueueResponse, nome, sizeof(char) * 7, 0, IPC_NOWAIT)>=0){
+	char nome[7];
+	if (msgrcv(idQueueResponse, nome, sizeof(char) * 7, 0, IPC_NOWAIT) >= 0) {
 		printf("Tracker - Received message %s\n", nome);
 	}
 
+	if (id) {
+		int sharedMemoryId;
+
+		printf("User %d\n", id);
+
+		int key = getMemoryKey();
+
+		if ((sharedMemoryId = shmget(key, sizeof(char) * KINECT_WIDTH_CAPTURE * KINECT_HEIGHT_CAPTURE * KINECT_NUMBER_OF_CHANNELS, IPC_CREAT | 0x1ff)) < 0) {
+			printf("erro na criacao da memoria\n");
+			exit(1);
+		}
+		char *maskPixels = (char*) (shmat(sharedMemoryId, (char*) (0), 0));
+		if (maskPixels == (char*) (-1)) {
+			printf("erro no attach\n");
+			exit(1);
+		}
+
+		// Busca a area da imagem onde o usuario está.
+		getFrameFromUserId(id, maskPixels);
+
+		if (msgsnd(idQueueRequest, &key, sizeof(int), 0) > 0) {
+			printf("Erro no envio de mensagem para o usuario %d\n", key);
+		}
+
+		sharedMemoryCount++;
+	}
 	glutTimerFunc(INTERVAL_IN_MILISECONDS, recognitionCallback, 0);
 }
 
-void CleanupExit(){
+void CleanupExit() {
 	g_Context.Shutdown();
 
 	//matando a fila de mensagens
@@ -103,59 +135,63 @@ void CleanupExit(){
 	msgctl(idQueueResponse, IPC_RMID, NULL);
 	kill(faceRecId, SIGKILL);
 
-	exit (1);
+	exit(1);
+}
+
+/**
+ * Busca o frame do usuario isolando os seus pixels
+ */
+void getFrameFromUserId(XnUserID nId, char *maskPixels) {
+	// Busca a area da imagem onde o usuario está.
+	xn::SceneMetaData sceneMD;
+	g_UserGenerator.GetUserPixels(nId, sceneMD);
+	// Busca um frame da tela
+	const XnRGB24Pixel *source = g_ImageGenerator.GetRGB24ImageMap();
+	char *result = transformToCharAray(source);
+	// Busca em cima do frame da tela só a area de pixels do usuario
+	unsigned short *scenePixels = (unsigned short int*) (sceneMD.Data());
+	transformAreaVision(scenePixels);
+	for (int i = 0; i < KINECT_HEIGHT_CAPTURE; i++) {
+		for (int j = 0; j < KINECT_WIDTH_CAPTURE; j++) {
+			if (scenePixels[(i * KINECT_WIDTH_CAPTURE) + j]) {
+				maskPixels[(i * KINECT_WIDTH_CAPTURE * KINECT_NUMBER_OF_CHANNELS) + (j * KINECT_NUMBER_OF_CHANNELS) + 2] = result[(i * KINECT_WIDTH_CAPTURE
+						* KINECT_NUMBER_OF_CHANNELS) + (j * KINECT_NUMBER_OF_CHANNELS) + 2];
+				maskPixels[(i * KINECT_WIDTH_CAPTURE * KINECT_NUMBER_OF_CHANNELS) + (j * KINECT_NUMBER_OF_CHANNELS) + 1] = result[(i * KINECT_WIDTH_CAPTURE
+						* KINECT_NUMBER_OF_CHANNELS) + (j * KINECT_NUMBER_OF_CHANNELS) + 1];
+				maskPixels[(i * KINECT_WIDTH_CAPTURE * KINECT_NUMBER_OF_CHANNELS) + (j * KINECT_NUMBER_OF_CHANNELS) + 0] = result[(i * KINECT_WIDTH_CAPTURE
+						* KINECT_NUMBER_OF_CHANNELS) + (j * KINECT_NUMBER_OF_CHANNELS) + 0];
+			} else {
+				maskPixels[(i * KINECT_WIDTH_CAPTURE * KINECT_NUMBER_OF_CHANNELS) + (j * KINECT_NUMBER_OF_CHANNELS) + 2] = 0;
+				maskPixels[(i * KINECT_WIDTH_CAPTURE * KINECT_NUMBER_OF_CHANNELS) + (j * KINECT_NUMBER_OF_CHANNELS) + 1] = 0;
+				maskPixels[(i * KINECT_WIDTH_CAPTURE * KINECT_NUMBER_OF_CHANNELS) + (j * KINECT_NUMBER_OF_CHANNELS) + 0] = 0;
+			}
+		}
+	}
 }
 
 // Callback: New user was detected
-void XN_CALLBACK_TYPE User_NewUser(xn::UserGenerator& generator, XnUserID nId, void* pCookie){
-	char *pshm;
+void XN_CALLBACK_TYPE User_NewUser(xn::UserGenerator& generator, XnUserID nId, void* pCookie) {
 	int sharedMemoryId;
 
-	id = (int) nId;
-
+	id = (int) (nId);
 	printf("New User %d\n", nId);
 
-	int key = SHARED_MEMORY + sharedMemoryCount;
+	int key = getMemoryKey();
 
-	if ((sharedMemoryId = shmget(key, sizeof(char) * KINECT_WIDTH_CAPTURE * KINECT_HEIGHT_CAPTURE * KINECT_NUMBER_OF_CHANNELS, IPC_CREAT|0x1ff)) < 0) {
+	if ((sharedMemoryId = shmget(key, sizeof(char) * KINECT_WIDTH_CAPTURE * KINECT_HEIGHT_CAPTURE * KINECT_NUMBER_OF_CHANNELS, IPC_CREAT | 0x1ff)) < 0) {
 		printf("erro na criacao da memoria\n");
 		exit(1);
 	}
-
-	char *maskPixels = (char *) shmat(sharedMemoryId, (char *)0, 0);
-	if (maskPixels == (char *)-1) {
+	char *maskPixels = (char*) (shmat(sharedMemoryId, (char*) (0), 0));
+	if (maskPixels == (char*) (-1)) {
 		printf("erro no attach\n");
 		exit(1);
 	}
 
 	// Busca a area da imagem onde o usuario está.
-	xn::SceneMetaData sceneMD;
-	generator.GetUserPixels(nId, sceneMD);
+	getFrameFromUserId(nId, maskPixels);
 
-	// Busca um frame da tela
-	const XnRGB24Pixel* source = g_ImageGenerator.GetRGB24ImageMap();
-
-	char *result = transformToCharAray(source);
-
-	// Busca em cima do frame da tela só a area de pixels do usuario
-  	unsigned short *scenePixels = (short unsigned int*) sceneMD.Data();
-  	transformAreaVision(scenePixels);
-    for(int i = 0; i < KINECT_HEIGHT_CAPTURE; i++) {
-            for(int j = 0; j < KINECT_WIDTH_CAPTURE; j++) {
-            		if(scenePixels[(i*KINECT_WIDTH_CAPTURE)+j]) {
-                    	maskPixels[(i*KINECT_WIDTH_CAPTURE*KINECT_NUMBER_OF_CHANNELS)+(j*KINECT_NUMBER_OF_CHANNELS)+2] = result[(i*KINECT_WIDTH_CAPTURE*KINECT_NUMBER_OF_CHANNELS)+(j*KINECT_NUMBER_OF_CHANNELS)+2];
-                    	maskPixels[(i*KINECT_WIDTH_CAPTURE*KINECT_NUMBER_OF_CHANNELS)+(j*KINECT_NUMBER_OF_CHANNELS)+1] = result[(i*KINECT_WIDTH_CAPTURE*KINECT_NUMBER_OF_CHANNELS)+(j*KINECT_NUMBER_OF_CHANNELS)+1];
-                    	maskPixels[(i*KINECT_WIDTH_CAPTURE*KINECT_NUMBER_OF_CHANNELS)+(j*KINECT_NUMBER_OF_CHANNELS)+0] = result[(i*KINECT_WIDTH_CAPTURE*KINECT_NUMBER_OF_CHANNELS)+(j*KINECT_NUMBER_OF_CHANNELS)+0];
-
-                	} else {
-                		maskPixels[(i*KINECT_WIDTH_CAPTURE*KINECT_NUMBER_OF_CHANNELS)+(j*KINECT_NUMBER_OF_CHANNELS)+2] = 0;
-                    	maskPixels[(i*KINECT_WIDTH_CAPTURE*KINECT_NUMBER_OF_CHANNELS)+(j*KINECT_NUMBER_OF_CHANNELS)+1] = 0;
-                    	maskPixels[(i*KINECT_WIDTH_CAPTURE*KINECT_NUMBER_OF_CHANNELS)+(j*KINECT_NUMBER_OF_CHANNELS)+0] = 0;
-                	}
-            }
-    }
-
-    if(msgsnd(idQueueRequest, &key, sizeof(int), 0) > 0) {
+	if (msgsnd(idQueueRequest, &key, sizeof(int), 0) > 0) {
 		printf("Erro no envio de mensagem para o usuario %d\n", key);
 	}
 
@@ -163,14 +199,14 @@ void XN_CALLBACK_TYPE User_NewUser(xn::UserGenerator& generator, XnUserID nId, v
 }
 
 // Callback: An existing user was lost
-void XN_CALLBACK_TYPE User_LostUser(xn::UserGenerator& generator, XnUserID nId, void* pCookie){
+void XN_CALLBACK_TYPE User_LostUser(xn::UserGenerator& generator, XnUserID nId, void* pCookie) {
 	printf("Lost user %d\n", nId);
 }
 
 // this function is called each frame
-void glutDisplay (void){
+void glutDisplay(void) {
 
-	glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	// Setup the OpenGL viewpoint
 	glMatrixMode(GL_PROJECTION);
@@ -186,21 +222,21 @@ void glutDisplay (void){
 
 	glDisable(GL_TEXTURE_2D);
 
-	if (!g_bPause){
+	if (!g_bPause) {
 		// Read next available data
 		g_Context.WaitAndUpdateAll();
 	}
 
-		// Process the data
-		g_DepthGenerator.GetMetaData(depthMD);
-		// g_ImageGenerator.GetMetaData(imageMD);
-		g_UserGenerator.GetUserPixels(0, sceneMD);
-		DrawDepthMap(depthMD, sceneMD);
+	// Process the data
+	g_DepthGenerator.GetMetaData(depthMD);
+	// g_ImageGenerator.GetMetaData(imageMD);
+	g_UserGenerator.GetUserPixels(0, sceneMD);
+	DrawDepthMap(depthMD, sceneMD);
 
 	glutSwapBuffers();
 }
 
-void glutIdle (void){
+void glutIdle(void) {
 	if (g_bQuit) {
 		CleanupExit();
 	}
@@ -209,8 +245,8 @@ void glutIdle (void){
 	glutPostRedisplay();
 }
 
-void glutKeyboard (unsigned char key, int x, int y){
-	switch (key){
+void glutKeyboard(unsigned char key, int x, int y) {
+	switch (key) {
 	case 27:
 		CleanupExit();
 	case 'b':
@@ -229,18 +265,18 @@ void glutKeyboard (unsigned char key, int x, int y){
 		// Print ID & state as label, or only ID?
 		g_bPrintState = !g_bPrintState;
 		break;
-	case'p':
+	case 'p':
 		g_bPause = !g_bPause;
 		break;
-	case'c':
+	case 'c':
 		printUsersCoM(g_UserGenerator, g_SceneAnalyzer);
 	}
 }
-void glInit (int * pargc, char ** argv){
+void glInit(int * pargc, char ** argv) {
 	glutInit(pargc, argv);
 	glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
 	glutInitWindowSize(GL_WIN_SIZE_X, GL_WIN_SIZE_Y);
-	glutCreateWindow ("User Localization in a Smart Space");
+	glutCreateWindow("User Localization in a Smart Space");
 	//glutFullScreen();
 	//glutSetCursor(GLUT_CURSOR_NONE);
 
@@ -265,34 +301,32 @@ void glInit (int * pargc, char ** argv){
 		return nRetVal; \
 	}
 
-int main(int argc, char **argv){
+int main(int argc, char **argv) {
 	//variavel que mantem o status: caso um erro seja lançado, da para acessa-lo por meio desta
-	XnStatus nRetVal = XN_STATUS_OK; 
+	XnStatus nRetVal = XN_STATUS_OK;
 
-	if (argc > 1){
+	if (argc > 1) {
 		nRetVal = g_Context.Init();
 		CHECK_RC(nRetVal, "Init");
 
 		//verifica se passamos algum arquivo pela linha de comando, para que seja gravado a saida do kinect no msm
-		nRetVal = g_Context.OpenFileRecording(argv[1]); 
-		if (nRetVal != XN_STATUS_OK){
+		nRetVal = g_Context.OpenFileRecording(argv[1]);
+		if (nRetVal != XN_STATUS_OK) {
 			printf("Can't open recording %s: %s\n", argv[1], xnGetStatusString(nRetVal));
 			return 1;
 		}
-	}
-	else{
+	} else {
 		xn::EnumerationErrors errors;
 
 		//le as configuracoes do Sample.xml, que define as configuracoes iniciais acima
-		nRetVal = g_Context.InitFromXmlFile(SAMPLE_XML_PATH, &errors); 
-		
-		if (nRetVal == XN_STATUS_NO_NODE_PRESENT){
+		nRetVal = g_Context.InitFromXmlFile(SAMPLE_XML_PATH, &errors);
+
+		if (nRetVal == XN_STATUS_NO_NODE_PRESENT) {
 			XnChar strError[1024];
 			errors.ToString(strError, 1024);
 			printf("%s\n", strError);
 			return (nRetVal);
-		}
-		else if (nRetVal != XN_STATUS_OK){
+		} else if (nRetVal != XN_STATUS_OK) {
 			printf("Open failed: %s\n", xnGetStatusString(nRetVal));
 			return (nRetVal);
 		}
@@ -313,20 +347,19 @@ int main(int argc, char **argv){
 		execl("recognition", "recognition", (char *) 0);
 	}
 
-
 	nRetVal = g_SceneAnalyzer.Create(g_Context);
 
 	//procura por um node Depth nas configuracoes
-	nRetVal = g_Context.FindExistingNode(XN_NODE_TYPE_DEPTH, g_DepthGenerator); 
+	nRetVal = g_Context.FindExistingNode(XN_NODE_TYPE_DEPTH, g_DepthGenerator);
 	CHECK_RC(nRetVal, "Find depth generator");
 
 	//procura por um node image nas configuracoes
-	nRetVal = g_Context.FindExistingNode(XN_NODE_TYPE_IMAGE, g_ImageGenerator); 
+	nRetVal = g_Context.FindExistingNode(XN_NODE_TYPE_IMAGE, g_ImageGenerator);
 	CHECK_RC(nRetVal, "Find image generator");
 
 	//verifica se ha alguma config para User, se não ele cria
 	nRetVal = g_Context.FindExistingNode(XN_NODE_TYPE_USER, g_UserGenerator);
-	if (nRetVal != XN_STATUS_OK){
+	if (nRetVal != XN_STATUS_OK) {
 		nRetVal = g_UserGenerator.Create(g_Context);
 		CHECK_RC(nRetVal, "Find user generator");
 	}
@@ -334,7 +367,7 @@ int main(int argc, char **argv){
 	XnCallbackHandle hUserCallbacks, hCalibrationCallbacks, hPoseCallbacks;
 
 	//define os metodos responsaveis quando os eventos de novo usuario encontrado e usuario perdido ocorrem 
-	g_UserGenerator.RegisterUserCallbacks(User_NewUser, User_LostUser, NULL, hUserCallbacks); 
+	g_UserGenerator.RegisterUserCallbacks(User_NewUser, User_LostUser, NULL, hUserCallbacks);
 
 	// if(g_DepthGenerator.IsCapabilitySupported("AlternativeViewPoint")){ 
 	//   nRetVal = g_DepthGenerator.GetAlternativeViewPointCap().SetViewPoint(g_ImageGenerator); 
@@ -342,7 +375,7 @@ int main(int argc, char **argv){
 	// } 
 
 	//comecar a ler dados do kinect
-	nRetVal = g_Context.StartGeneratingAll(); 
+	nRetVal = g_Context.StartGeneratingAll();
 	CHECK_RC(nRetVal, "StartGenerating");
 
 	glInit(&argc, argv);
