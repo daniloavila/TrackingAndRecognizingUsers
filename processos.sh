@@ -4,7 +4,7 @@ while true;do
 	ps -l
 	echo
 	echo IPCS.....
-	ipcs
+	ipcs -b
 	sleep 1
 	clear
 done
