@@ -26,6 +26,36 @@ char* transformToCharAray(const XnRGB24Pixel* source) {
         return result;
 }
 
+void transformAreaVision(short unsigned int* source) {
+        if(source != NULL) {        
+                for(int i = 0; i < KINECT_HEIGHT_CAPTURE; i++) {
+                        for(int j = 0; j < KINECT_WIDTH_CAPTURE; j++) {
+                                if(source[(i*KINECT_WIDTH_CAPTURE*KINECT_NUMBER_OF_CHANNELS)+j] == 1) {
+                                        if(i > 0) {
+                                                // colocando 1 na linha de cima
+                                                //source[((i-1)*KINECT_WIDTH_CAPTURE*KINECT_NUMBER_OF_CHANNELS)+j] = 1;
+                                        }
+                                        
+                                        if(j > 0) {
+                                                // colocando 1 na coluna da esquerda
+                                                source[(i*KINECT_WIDTH_CAPTURE*KINECT_NUMBER_OF_CHANNELS)+(j-2)] = 1;
+                                                source[(i*KINECT_WIDTH_CAPTURE*KINECT_NUMBER_OF_CHANNELS)+(j-1)] = 1;
+                                        }
+
+                                        if(j < KINECT_WIDTH_CAPTURE) {
+                                                // colocando 1 na coluna da esquerda
+                                                source[(i*KINECT_WIDTH_CAPTURE*KINECT_NUMBER_OF_CHANNELS)+(j+1)] = 1;
+                                                j++;
+                                                source[(i*KINECT_WIDTH_CAPTURE*KINECT_NUMBER_OF_CHANNELS)+(j+1)] = 1;
+                                                j++;
+                                        }
+                                }
+                        }
+                }
+        }
+
+}
+
 /**
  * Inicia o Kinect
  */
