@@ -88,7 +88,7 @@ int id = 0;
 void recognitionCallback(int i) {
 
 	char nome[7];	
-	if(msgrcv(idQueueResponse, nome, sizeof(char) * 7, 0, IPC_NOWAIT)>=0){
+	if(msgrcv(idQueueResponse, nome, sizeof(char) * 15, 0, IPC_NOWAIT)>=0){
 		printf("Tracker - Received message %s\n", nome);
 	}
 
