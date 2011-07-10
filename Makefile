@@ -11,6 +11,7 @@ USED_LIBS += -lOpenNI
 
 EXE_TRACKER = tracker
 EXE_REC = recognition
+EXE_REG = register
 RELEASE_DIR = Release/
 
 ifeq ("$(OSTYPE)","Darwin")
@@ -23,11 +24,12 @@ else
 	LDFLAGS += `pkg-config --cflags opencv` `pkg-config --libs opencv`
 endif
 
-OBJS: $(RELEASE_DIR)FaceRecognition.o $(RELEASE_DIR)ImageUtil.o $(RELEASE_DIR)KeyboardUtil.o $(RELEASE_DIR)KinectUtil.o $(RELEASE_DIR)MessageQueue.o $(RELEASE_DIR)SceneDrawer.o $(RELEASE_DIR)UserUtil.o $(RELEASE_DIR)Tracker.o
+OBJS: $(RELEASE_DIR)FaceRecognition.o $(RELEASE_DIR)ImageUtil.o $(RELEASE_DIR)KeyboardUtil.o $(RELEASE_DIR)KinectUtil.o $(RELEASE_DIR)MessageQueue.o $(RELEASE_DIR)SceneDrawer.o $(RELEASE_DIR)UserUtil.o $(RELEASE_DIR)Tracker.o $(RELEASE_DIR)Register.o
 
 all: $(OBJS)
 	$(CC) -o $(EXE_TRACKER) $(RELEASE_DIR)KeyboardUtil.o $(RELEASE_DIR)KinectUtil.o $(RELEASE_DIR)MessageQueue.o $(RELEASE_DIR)SceneDrawer.o $(RELEASE_DIR)UserUtil.o $(RELEASE_DIR)Tracker.o $(CCFLAGS2) $(USED_LIBS) $(LDFLAGS)
 	$(CC) -o $(EXE_REC) $(RELEASE_DIR)ImageUtil.o $(RELEASE_DIR)KeyboardUtil.o $(RELEASE_DIR)KinectUtil.o $(RELEASE_DIR)MessageQueue.o $(RELEASE_DIR)UserUtil.o $(RELEASE_DIR)FaceRecognition.o $(CCFLAGS2) $(USED_LIBS) $(LDFLAGS)
+	$(CC) -o $(EXE_REG) $(RELEASE_DIR)ImageUtil.o $(RELEASE_DIR)KeyboardUtil.o $(RELEASE_DIR)KinectUtil.o $(RELEASE_DIR)MessageQueue.o $(RELEASE_DIR)UserUtil.o $(RELEASE_DIR)Register.o $(CCFLAGS2) $(USED_LIBS) $(LDFLAGS)
 
 $(RELEASE_DIR)ImageUtil.o: 
 	$(CC) $(CCFLAGS) $(INC_DIRS) -o $(RELEASE_DIR)ImageUtil.o ImageUtil.cpp
@@ -45,6 +47,8 @@ $(RELEASE_DIR)FaceRecognition.o: $(RELEASE_DIR)ImageUtil.o  $(RELEASE_DIR)Kinect
 	$(CC) $(CCFLAGS) $(INC_DIRS) -o $(RELEASE_DIR)FaceRecognition.o FaceRecognition.cpp
 $(RELEASE_DIR)Tracker.o: $(RELEASE_DIR)KeyboardUtil.o $(RELEASE_DIR)KinectUtil.o $(RELEASE_DIR)MessageQueue.o $(RELEASE_DIR)SceneDrawer.o $(RELEASE_DIR)UserUtil.o
 	$(CC) $(CCFLAGS) $(INC_DIRS) -o $(RELEASE_DIR)Tracker.o Tracker.cpp
+$(RELEASE_DIR)Register.o: $(RELEASE_DIR)ImageUtil.o  $(RELEASE_DIR)KinectUtil.o $(RELEASE_DIR)MessageQueue.o $(RELEASE_DIR)UserUtil.o
+	$(CC) $(CCFLAGS) $(INC_DIRS) -o $(RELEASE_DIR)Register.o Register.cpp
 
 clean: 
 	rm -rf $(RELEASE_DIR)*.o $(EXE_TRACKER) $(EXE_REC)
