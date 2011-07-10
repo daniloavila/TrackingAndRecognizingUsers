@@ -19,7 +19,7 @@ ifeq ("$(OSTYPE)","Darwin")
 	CCFLAGS2 += -arch x86_64
 else
 	USED_LIBS += -lglut -lglib-2.0 -lcv -lcv -lcxcore 
-	INC_DIRS += -IOpenNI/ -I/usr/local/include/opencv 
+	INC_DIRS += -I/usr/local/include/opencv 
 	LDFLAGS += `pkg-config --cflags opencv` `pkg-config --libs opencv`
 endif
 

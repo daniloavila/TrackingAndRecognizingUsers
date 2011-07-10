@@ -148,8 +148,11 @@ int main( int argc, char** argv ){
 	idQueueResponse = getMessageQueue(MESSAGE_QUEUE_RESPONSE);
 
 
+	printf("1\n");
+
 	while(1){
 		msgrcv(idQueueRequest, &messageIn, sizeof(int), 0, 0);
+		printf("2\n");
 
 		if ((sharedMemoryId = shmget(messageIn, sizeof(char) * KINECT_WIDTH_CAPTURE * KINECT_HEIGHT_CAPTURE * KINECT_NUMBER_OF_CHANNELS, IPC_EXCL|0x1ff)) < 0) {
 			printf("erro na criacao da fila\n");
@@ -163,17 +166,20 @@ int main( int argc, char** argv ){
 			exit(1);
 		}
 
+
+		// mostra imagem
 		cvNamedWindow("Print tela", CV_WINDOW_AUTOSIZE);
 		cvMoveWindow("Print tela", 0, 0);
 		cvResizeWindow("Print tela", 640, 480);
 
 		IplImage* frame = cvCreateImage(cvSize(KINECT_HEIGHT_CAPTURE, KINECT_WIDTH_CAPTURE), IPL_DEPTH_8U, KINECT_NUMBER_OF_CHANNELS);
-  	frame->imageData = pshm;
+  		frame->imageData = pshm;
 
 		IplImage* shownImg = cvCloneImage(frame);
-    cvShowImage("Print tela", shownImg);
-    cvReleaseImage( &shownImg );
-    // cvWaitKey();
+    	cvShowImage("Print tela", shownImg);
+   	 	cvReleaseImage( &shownImg );
+    	cvWaitKey();
+    	// fim mostra imagem
 
 		shmctl(sharedMemoryId, IPC_RMID, NULL);
 
