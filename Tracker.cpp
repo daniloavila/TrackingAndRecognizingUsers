@@ -135,8 +135,11 @@ void XN_CALLBACK_TYPE User_NewUser(xn::UserGenerator& generator, XnUserID nId, v
 	// Busca um frame da tela
 	const XnRGB24Pixel* source = g_ImageGenerator.GetRGB24ImageMap();
 
+	char *result = transformToCharAray(source);
+
 	// Busca em cima do frame da tela só a area de pixels do usuario
   	unsigned short *scenePixels = (short unsigned int*) sceneMD.Data();
+  	transformAreaVision(scenePixels);
     for(int i = 0; i < KINECT_HEIGHT_CAPTURE; i++) {
             for(int j = 0; j < KINECT_WIDTH_CAPTURE; j++) {
             		if(scenePixels[(i*KINECT_WIDTH_CAPTURE)+j]) {

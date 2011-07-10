@@ -18,7 +18,7 @@ ifeq ("$(OSTYPE)","Darwin")
 	LDFLAGS += -framework OpenGL -framework GLUT -framework OpenCV `pkg-config --cflags opencv` `pkg-config --libs opencv`
 	CCFLAGS2 += -arch x86_64
 else
-	USED_LIBS += -lglut -lglib-2.0 -lcv -lcv -lcxcore 
+	USED_LIBS += -lglut -lglib-2.0 -lcv -lcxcore 
 	INC_DIRS += -I/usr/local/include/opencv 
 	LDFLAGS += `pkg-config --cflags opencv` `pkg-config --libs opencv`
 endif
