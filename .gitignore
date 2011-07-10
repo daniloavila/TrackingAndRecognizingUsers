@@ -1,3 +1,5 @@
+Release/
 Release/*.o
+Debug/
 tracker
 recognition
