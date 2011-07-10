@@ -118,7 +118,7 @@ int main( int argc, char** argv ){
 	messageResponse messageOut;
 	char nome[255];
 
-	XnLabel *pshm;
+	char *pshm;
 	int sharedMemoryId;
 
 	// 	// Load the previously saved training data
@@ -147,39 +147,43 @@ int main( int argc, char** argv ){
 	idQueueRequest = getMessageQueue(MESSAGE_QUEUE_REQUEST);
 	idQueueResponse = getMessageQueue(MESSAGE_QUEUE_RESPONSE);
 
-	while(1){
-		// printf("Recoginition - Lendo a mensagem\n");
-		if(msgrcv(idQueueRequest, &messageIn, sizeof(int), 0, 0) > 0){
-			// printf("Erro ao receber mensagem");	
-		}	
-		// printf("Recoginition - Received message %d\n", messageIn);
 
-		// printf("Recoginition - Criando memoria compartilhada\n");
-		if ((sharedMemoryId = shmget(messageIn, sizeof(XnLabel), IPC_EXCL|0x1ff)) < 0) {
+	while(1){
+		msgrcv(idQueueRequest, &messageIn, sizeof(int), 0, 0);
+
+		if ((sharedMemoryId = shmget(messageIn, sizeof(char) * KINECT_WIDTH_CAPTURE * KINECT_HEIGHT_CAPTURE * KINECT_NUMBER_OF_CHANNELS, IPC_EXCL|0x1ff)) < 0) {
 			printf("erro na criacao da fila\n");
 			exit(1);
 		}
 
-		pshm = (XnLabel *) shmat(sharedMemoryId, (char *)0, 0);
-		if (pshm == (XnLabel *)-1) {
+
+		pshm = (char *) shmat(sharedMemoryId, (char *)0, 0);
+		if (pshm == (char *)-1) {
 			printf("erro no attach\n");
 			exit(1);
 		}
 
-		// printf("Recoginition - Received data %d\n", *pshm);
+		cvNamedWindow("Print tela", CV_WINDOW_AUTOSIZE);
+		cvMoveWindow("Print tela", 0, 0);
+		cvResizeWindow("Print tela", 640, 480);
+
+		IplImage* frame = cvCreateImage(cvSize(KINECT_HEIGHT_CAPTURE, KINECT_WIDTH_CAPTURE), IPL_DEPTH_8U, KINECT_NUMBER_OF_CHANNELS);
+  	frame->imageData = pshm;
+
+		IplImage* shownImg = cvCloneImage(frame);
+    cvShowImage("Print tela", shownImg);
+    cvReleaseImage( &shownImg );
+    // cvWaitKey();
 
 		shmctl(sharedMemoryId, IPC_RMID, NULL);
-		// printf("\t\t\tMatando %d\n", messageIn);
 
 		//RECONHECER A IMAGEM
 
-		// printf("Recognition - Enviando a mensagem\n");
 		char nome[7] = "Danilo";
 		int length = 7;
 		if(msgsnd(idQueueResponse, nome, sizeof(char)*length, 0) > 0) {
 			printf("Erro no envio de mensagem para o usuario\n");
 		}
-		// printf("Recognition - Enviou a mensagem: %s\n", nome);
 
 
 	}

@@ -87,9 +87,6 @@ int id = 0;
 //---------------------------------------------------------------------------
 void recognitionCallback(int i) {
 
-	printf(".");
-    
-
 	xn::SceneMetaData sceneMD;
 	const XnRGB24Pixel* source = g_ImageGenerator.GetRGB24ImageMap();
 	g_UserGenerator.GetUserPixels(id, sceneMD); 
@@ -97,61 +94,60 @@ void recognitionCallback(int i) {
      
 	// Create a GUI window for the user to see the camera image.
 	//cvNamedWindow("Print tela", CV_WINDOW_AUTOSIZE);
-	cvMoveWindow("Print tela", 0, 0);
+	// cvMoveWindow("Print tela", 0, 0);
 	//cvResizeWindow("Print tela", 640, 480);
 
-	IplImage* frame = cvCreateImage(cvSize(KINECT_HEIGHT_CAPTURE, KINECT_WIDTH_CAPTURE), IPL_DEPTH_8U, KINECT_NUMBER_OF_CHANNELS);
-	char* result = transformToCharAray(source);
-    frame->imageData = result;
+	// IplImage* frame = cvCreateImage(cvSize(KINECT_HEIGHT_CAPTURE, KINECT_WIDTH_CAPTURE), IPL_DEPTH_8U, KINECT_NUMBER_OF_CHANNELS);
+	// char* result = transformToCharAray(source);
+ //    frame->imageData = result;
 
-	IplImage* shownImg = cvCloneImage(frame);
-    cvShowImage("Print tela", shownImg);
-    cvReleaseImage( &shownImg );
-    //cvWaitKey();
+	// IplImage* shownImg = cvCloneImage(frame);
+ //    cvShowImage("Print tela", shownImg);
+ //    cvReleaseImage( &shownImg );
+ //    //cvWaitKey();
 
-  	unsigned short *scenePixels;
-	scenePixels = (short unsigned int*) sceneMD.Data();
+ //  	unsigned short *scenePixels;
+	// scenePixels = (short unsigned int*) sceneMD.Data();
 
-  	//char maskPixels[307200];
-  	char *maskPixels = (char *) malloc(KINECT_WIDTH_CAPTURE * KINECT_HEIGHT_CAPTURE * KINECT_NUMBER_OF_CHANNELS * sizeof(char));
+ //  	//char maskPixels[307200];
+ //  	char *maskPixels = (char *) malloc(KINECT_WIDTH_CAPTURE * KINECT_HEIGHT_CAPTURE * KINECT_NUMBER_OF_CHANNELS * sizeof(char));
     
-    for(int i = 0; i < KINECT_HEIGHT_CAPTURE; i++) {
-            for(int j = 0; j < KINECT_WIDTH_CAPTURE; j++) {
-            		if(scenePixels[(i*KINECT_WIDTH_CAPTURE)+j]) {
+ //    for(int i = 0; i < KINECT_HEIGHT_CAPTURE; i++) {
+ //            for(int j = 0; j < KINECT_WIDTH_CAPTURE; j++) {
+ //            		if(scenePixels[(i*KINECT_WIDTH_CAPTURE)+j]) {
 
-                    	maskPixels[(i*KINECT_WIDTH_CAPTURE*KINECT_NUMBER_OF_CHANNELS)+(j*KINECT_NUMBER_OF_CHANNELS)+2] = result[(i*KINECT_WIDTH_CAPTURE*KINECT_NUMBER_OF_CHANNELS)+(j*KINECT_NUMBER_OF_CHANNELS)+2];
-                    	maskPixels[(i*KINECT_WIDTH_CAPTURE*KINECT_NUMBER_OF_CHANNELS)+(j*KINECT_NUMBER_OF_CHANNELS)+1] = result[(i*KINECT_WIDTH_CAPTURE*KINECT_NUMBER_OF_CHANNELS)+(j*KINECT_NUMBER_OF_CHANNELS)+1];
-                    	maskPixels[(i*KINECT_WIDTH_CAPTURE*KINECT_NUMBER_OF_CHANNELS)+(j*KINECT_NUMBER_OF_CHANNELS)+0] = result[(i*KINECT_WIDTH_CAPTURE*KINECT_NUMBER_OF_CHANNELS)+(j*KINECT_NUMBER_OF_CHANNELS)+0];
-                    	// maskPixels[(i*KINECT_WIDTH_CAPTURE*KINECT_NUMBER_OF_CHANNELS)+(j*KINECT_NUMBER_OF_CHANNELS)+2] = 255;
-                    	// maskPixels[(i*KINECT_WIDTH_CAPTURE*KINECT_NUMBER_OF_CHANNELS)+(j*KINECT_NUMBER_OF_CHANNELS)+1] = 255;
-                    	// maskPixels[(i*KINECT_WIDTH_CAPTURE*KINECT_NUMBER_OF_CHANNELS)+(j*KINECT_NUMBER_OF_CHANNELS)+0] = 255;
-                    	//printf("(%d %d %d)\n", result[(i*KINECT_WIDTH_CAPTURE*KINECT_NUMBER_OF_CHANNELS)+(j*KINECT_NUMBER_OF_CHANNELS)+2], result[(i*KINECT_WIDTH_CAPTURE*KINECT_NUMBER_OF_CHANNELS)+(j*KINECT_NUMBER_OF_CHANNELS)+1], result[(i*KINECT_WIDTH_CAPTURE*KINECT_NUMBER_OF_CHANNELS)+(j*KINECT_NUMBER_OF_CHANNELS)+0]);
+ //                    	maskPixels[(i*KINECT_WIDTH_CAPTURE*KINECT_NUMBER_OF_CHANNELS)+(j*KINECT_NUMBER_OF_CHANNELS)+2] = result[(i*KINECT_WIDTH_CAPTURE*KINECT_NUMBER_OF_CHANNELS)+(j*KINECT_NUMBER_OF_CHANNELS)+2];
+ //                    	maskPixels[(i*KINECT_WIDTH_CAPTURE*KINECT_NUMBER_OF_CHANNELS)+(j*KINECT_NUMBER_OF_CHANNELS)+1] = result[(i*KINECT_WIDTH_CAPTURE*KINECT_NUMBER_OF_CHANNELS)+(j*KINECT_NUMBER_OF_CHANNELS)+1];
+ //                    	maskPixels[(i*KINECT_WIDTH_CAPTURE*KINECT_NUMBER_OF_CHANNELS)+(j*KINECT_NUMBER_OF_CHANNELS)+0] = result[(i*KINECT_WIDTH_CAPTURE*KINECT_NUMBER_OF_CHANNELS)+(j*KINECT_NUMBER_OF_CHANNELS)+0];
+ //                    	// maskPixels[(i*KINECT_WIDTH_CAPTURE*KINECT_NUMBER_OF_CHANNELS)+(j*KINECT_NUMBER_OF_CHANNELS)+2] = 255;
+ //                    	// maskPixels[(i*KINECT_WIDTH_CAPTURE*KINECT_NUMBER_OF_CHANNELS)+(j*KINECT_NUMBER_OF_CHANNELS)+1] = 255;
+ //                    	// maskPixels[(i*KINECT_WIDTH_CAPTURE*KINECT_NUMBER_OF_CHANNELS)+(j*KINECT_NUMBER_OF_CHANNELS)+0] = 255;
+ //                    	//printf("(%d %d %d)\n", result[(i*KINECT_WIDTH_CAPTURE*KINECT_NUMBER_OF_CHANNELS)+(j*KINECT_NUMBER_OF_CHANNELS)+2], result[(i*KINECT_WIDTH_CAPTURE*KINECT_NUMBER_OF_CHANNELS)+(j*KINECT_NUMBER_OF_CHANNELS)+1], result[(i*KINECT_WIDTH_CAPTURE*KINECT_NUMBER_OF_CHANNELS)+(j*KINECT_NUMBER_OF_CHANNELS)+0]);
 
-                	} else {
-                		maskPixels[(i*KINECT_WIDTH_CAPTURE*KINECT_NUMBER_OF_CHANNELS)+(j*KINECT_NUMBER_OF_CHANNELS)+2] = 0;
-                    	maskPixels[(i*KINECT_WIDTH_CAPTURE*KINECT_NUMBER_OF_CHANNELS)+(j*KINECT_NUMBER_OF_CHANNELS)+1] = 0;
-                    	maskPixels[(i*KINECT_WIDTH_CAPTURE*KINECT_NUMBER_OF_CHANNELS)+(j*KINECT_NUMBER_OF_CHANNELS)+0] = 0;
-                	}
-            }
-    }
+ //                	} else {
+ //                		maskPixels[(i*KINECT_WIDTH_CAPTURE*KINECT_NUMBER_OF_CHANNELS)+(j*KINECT_NUMBER_OF_CHANNELS)+2] = 0;
+ //                    	maskPixels[(i*KINECT_WIDTH_CAPTURE*KINECT_NUMBER_OF_CHANNELS)+(j*KINECT_NUMBER_OF_CHANNELS)+1] = 0;
+ //                    	maskPixels[(i*KINECT_WIDTH_CAPTURE*KINECT_NUMBER_OF_CHANNELS)+(j*KINECT_NUMBER_OF_CHANNELS)+0] = 0;
+ //                	}
+ //            }
+ //    }
 
 
 
-	// Create a GUI window for the user to see the camera image.
-	//cvNamedWindow("Print USUARIO", CV_WINDOW_AUTOSIZE);
-	cvMoveWindow("Print USUARIO", 640, 0);
-	//cvResizeWindow("Print tela", 640, 480);
+	// // Create a GUI window for the user to see the camera image.
+	// //cvNamedWindow("Print USUARIO", CV_WINDOW_AUTOSIZE);
+	// cvMoveWindow("Print USUARIO", 640, 0);
+	// //cvResizeWindow("Print tela", 640, 480);
 
-	frame = cvCreateImage(cvSize(KINECT_HEIGHT_CAPTURE, KINECT_WIDTH_CAPTURE), IPL_DEPTH_8U, KINECT_NUMBER_OF_CHANNELS);
-    frame->imageData = maskPixels;
+	// frame = cvCreateImage(cvSize(KINECT_HEIGHT_CAPTURE, KINECT_WIDTH_CAPTURE), IPL_DEPTH_8U, KINECT_NUMBER_OF_CHANNELS);
+ //    frame->imageData = maskPixels;
 
-	shownImg = cvCloneImage(frame);
-    cvShowImage("Print USUARIO", shownImg);
-    cvReleaseImage( &shownImg );
-    //cvWaitKey();
+	// shownImg = cvCloneImage(frame);
+ //    cvShowImage("Print USUARIO", shownImg);
+ //    cvReleaseImage( &shownImg );
+ //    //cvWaitKey();
 
 	char nome[7];	
-
 	if(msgrcv(idQueueResponse, nome, sizeof(char) * 7, 0, IPC_NOWAIT)>=0){
 		printf("Tracker - Received message %s\n", nome);			
 	}
@@ -172,7 +168,7 @@ void CleanupExit(){
 
 // Callback: New user was detected
 void XN_CALLBACK_TYPE User_NewUser(xn::UserGenerator& generator, XnUserID nId, void* pCookie){
-	XnLabel *pshm;
+	char *pshm;
 	int sharedMemoryId;
 
 	id = (int) nId;
@@ -181,52 +177,51 @@ void XN_CALLBACK_TYPE User_NewUser(xn::UserGenerator& generator, XnUserID nId, v
 
 	int key = SHARED_MEMORY + sharedMemoryCount;
 	// printf("\t\t\tCriando %d\n", key);
-	if ((sharedMemoryId = shmget(key, sizeof(XnLabel), IPC_CREAT|0x1ff)) < 0) {
-		printf("erro na criacao da fila\n");
+	if ((sharedMemoryId = shmget(key, sizeof(char) * KINECT_WIDTH_CAPTURE * KINECT_HEIGHT_CAPTURE * KINECT_NUMBER_OF_CHANNELS, IPC_CREAT|0x1ff)) < 0) {
+		printf("erro na criacao da memoria\n");
 		exit(1);
 	}
 
-	pshm = (XnLabel *) shmat(sharedMemoryId, (char *)0, 0);
-	if (pshm == (XnLabel *)-1) {
+	pshm = (char *) shmat(sharedMemoryId, (char *)0, 0);
+	if (pshm == (char *)-1) {
 		printf("erro no attach\n");
 		exit(1);
 	}
 
 	xn::SceneMetaData sceneMD;
 	generator.GetUserPixels(nId, sceneMD);
-	*pshm = *(sceneMD.Data());
+	// *pshm = *(sceneMD.Data());
 
 	// printf("Tracker - Data: %d\n", *pshm);
 
-	xn::SceneMetaData sceneMD;
 	const XnRGB24Pixel* source = g_ImageGenerator.GetRGB24ImageMap();
 	generator.GetUserPixels(nId, sceneMD); 
 	
      
 	// Create a GUI window for the user to see the camera image.
-	cvNamedWindow("Print tela", CV_WINDOW_AUTOSIZE);
-	cvMoveWindow("Print tela", 0, 0);
+	// cvNamedWindow("Print tela", CV_WINDOW_AUTOSIZE);
+	// cvMoveWindow("Print tela", 0, 0);
 	//cvResizeWindow("Print tela", 640, 480);
 
 	IplImage* frame = cvCreateImage(cvSize(KINECT_HEIGHT_CAPTURE, KINECT_WIDTH_CAPTURE), IPL_DEPTH_8U, KINECT_NUMBER_OF_CHANNELS);
 	char* result = transformToCharAray(source);
     frame->imageData = result;
 
-	IplImage* shownImg = cvCloneImage(frame);
-    cvShowImage("Print tela", shownImg);
-    cvReleaseImage( &shownImg );
+	// IplImage* shownImg = cvCloneImage(frame);
+    // cvShowImage("Print tela", shownImg);
+    // cvReleaseImage( &shownImg );
     //cvWaitKey();
 
-  	unsigned short *scenePixels;
+  unsigned short *scenePixels;
 	scenePixels = (short unsigned int*) sceneMD.Data();
 
   	//char maskPixels[307200];
   	char *maskPixels = (char *) malloc(KINECT_WIDTH_CAPTURE * KINECT_HEIGHT_CAPTURE * KINECT_NUMBER_OF_CHANNELS * sizeof(char));
-    
+
+  	int imageCorrect = 0;
     for(int i = 0; i < KINECT_HEIGHT_CAPTURE; i++) {
             for(int j = 0; j < KINECT_WIDTH_CAPTURE; j++) {
             		if(scenePixels[(i*KINECT_WIDTH_CAPTURE)+j]) {
-
                     	maskPixels[(i*KINECT_WIDTH_CAPTURE*KINECT_NUMBER_OF_CHANNELS)+(j*KINECT_NUMBER_OF_CHANNELS)+2] = result[(i*KINECT_WIDTH_CAPTURE*KINECT_NUMBER_OF_CHANNELS)+(j*KINECT_NUMBER_OF_CHANNELS)+2];
                     	maskPixels[(i*KINECT_WIDTH_CAPTURE*KINECT_NUMBER_OF_CHANNELS)+(j*KINECT_NUMBER_OF_CHANNELS)+1] = result[(i*KINECT_WIDTH_CAPTURE*KINECT_NUMBER_OF_CHANNELS)+(j*KINECT_NUMBER_OF_CHANNELS)+1];
                     	maskPixels[(i*KINECT_WIDTH_CAPTURE*KINECT_NUMBER_OF_CHANNELS)+(j*KINECT_NUMBER_OF_CHANNELS)+0] = result[(i*KINECT_WIDTH_CAPTURE*KINECT_NUMBER_OF_CHANNELS)+(j*KINECT_NUMBER_OF_CHANNELS)+0];
@@ -246,30 +241,27 @@ void XN_CALLBACK_TYPE User_NewUser(xn::UserGenerator& generator, XnUserID nId, v
 
 
 	// Create a GUI window for the user to see the camera image.
-	cvNamedWindow("Print USUARIO", CV_WINDOW_AUTOSIZE);
-	cvMoveWindow("Print USUARIO", 640, 0);
+	// cvNamedWindow("Print USUARIO", CV_WINDOW_AUTOSIZE);
+	// cvMoveWindow("Print USUARIO", 640, 0);
 	//cvResizeWindow("Print tela", 640, 480);
 
-	frame = cvCreateImage(cvSize(KINECT_HEIGHT_CAPTURE, KINECT_WIDTH_CAPTURE), IPL_DEPTH_8U, KINECT_NUMBER_OF_CHANNELS);
-    frame->imageData = maskPixels;
+	// frame = cvCreateImage(cvSize(KINECT_HEIGHT_CAPTURE, KINECT_WIDTH_CAPTURE), IPL_DEPTH_8U, KINECT_NUMBER_OF_CHANNELS);
+ //  frame->imageData = maskPixels;
 
-	shownImg = cvCloneImage(frame);
-    cvShowImage("Print USUARIO", shownImg);
-    cvReleaseImage( &shownImg );
-    cvWaitKey();
+  // printf("Tracker - %s\n", frame->imageData);
 
+	// shownImg = cvCloneImage(frame);
+ //    cvShowImage("Print USUARIO", shownImg);
+ //    cvReleaseImage( &shownImg );
+ //    cvWaitKey();
 
+  *pshm = *maskPixels;
 
-  	if(msgsnd(idQueueRequest, &messageReq, sizeof(messageRequest) - sizeof(long), 0) > 0) {
-		printf("Erro no envio de mensagem\n");
-	} else {
-		printf("Mensagem enviada com sucesso\n");
-
-	// printf("Tracker - Enviando a mensagem\n");
-	if(msgsnd(idQueueRequest, &key, sizeof(int), 0) > 0) {
+  if(msgsnd(idQueueRequest, &key, sizeof(int), 0) > 0) {
 		printf("Erro no envio de mensagem para o usuario %d\n", key);
 	}
 	// printf("Tracker - Enviou a mensagem\n");
+
 
 	sharedMemoryCount++;
 
