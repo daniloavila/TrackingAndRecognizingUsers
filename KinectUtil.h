@@ -5,6 +5,10 @@
 #include <opencv/cv.h>
 #include <opencv/cvaux.h>
 #include <opencv/highgui.h>
+#include <sys/types.h>
+#include <sys/ipc.h>
+#include <sys/msg.h>
+#include <sys/shm.h>
 
 // Impacta tb na fila de mensagens
 #define KINECT_WIDTH_CAPTURE 480
@@ -20,6 +24,8 @@ IplImage* getKinectFrame();
 char* transformToCharAray(const XnRGB24Pixel* source);
 
 void transformAreaVision(short unsigned int* source);
+
+char *getSharedMemory(int memory_id);
 
 #define KINECT_WIDTH_CAPTURE 480
 #define KINECT_HEIGHT_CAPTURE 640

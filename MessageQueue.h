@@ -17,16 +17,16 @@
 #define SHARED_MEMORY 0x1230
 
 // estrutura da mensagem trocada entre "UserTracker" e "FaceRec"
-typedef struct messageRequest {
+typedef struct MessageRequest {
 	long user_id;
-	int id_memoria;
-} messageRequest;
+	int memory_id;
+} MessageRequest;
 
 // estrutura da mensagem trocada entre "FaceRec" e "UserTracker"
-typedef struct messageResponse {
+typedef struct MessageResponse {
 	long user_id;
 	char user_name[255];
-} messageResponse;
+} MessageResponse;
 
 //cria fila de mensagens para comunicao entre o processo tracker e recognition
 int createMessageQueue(int key);

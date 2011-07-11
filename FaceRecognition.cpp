@@ -97,8 +97,8 @@ int main(int argc, char** argv) {
 	float * projectedTestFace;
 	CvHaarClassifierCascade* faceCascade;
 
-	int messageIn;
-	messageResponse messageOut;
+	MessageRequest messageRequest;
+	MessageResponse messageResponse;
 	char* nome;
 
 	char *pshm;
@@ -110,15 +110,11 @@ int main(int argc, char** argv) {
 		faceHeight = pAvgTrainImg->height;
 	}
 
-	printf("FaceRecognition - 1\n");
-
 	// Project the test images onto the PCA subspace
 	projectedTestFace = (float *) cvAlloc(nEigens * sizeof(float));
 
 	// Make sure there is a "data" folder, for storing the new person.
 	mkdir("Eigenfaces/data", 0777);
-
-	printf("FaceRecognition - 2\n");
 
 	// Load the HaarCascade classifier for face detection.
 	faceCascade = (CvHaarClassifierCascade*) cvLoad(faceCascadeFilename, 0, 0, 0);
@@ -127,48 +123,38 @@ int main(int argc, char** argv) {
 		exit(1);
 	}
 
-	printf("FaceRecognition - 3\n");
-
 	idQueueRequest = getMessageQueue(MESSAGE_QUEUE_REQUEST);
 	idQueueResponse = getMessageQueue(MESSAGE_QUEUE_RESPONSE);
 
 	while (1) {
-		printf("FaceRecognition - 4\n");
-		msgrcv(idQueueRequest, &messageIn, sizeof(int), 0, 0);
+		msgrcv(idQueueRequest, &messageRequest, sizeof(MessageRequest) - sizeof(long), 0, 0);
 
-		printf("FaceRecognition - 5\n");
-
-		if ((sharedMemoryId = shmget(messageIn, sizeof(char) * KINECT_WIDTH_CAPTURE * KINECT_HEIGHT_CAPTURE * KINECT_NUMBER_OF_CHANNELS, IPC_EXCL | 0x1ff)) < 0) {
-			printf("erro na criacao da fila\n");
-			exit(1);
+		if ((sharedMemoryId = shmget(messageRequest.memory_id, sizeof(char) * KINECT_WIDTH_CAPTURE * KINECT_HEIGHT_CAPTURE * KINECT_NUMBER_OF_CHANNELS, IPC_EXCL | 0x1ff)) < 0) {
+			printf("Erro na criacao da memoria\n");
 		}
-
-		printf("FaceRecognition - 6\n");
 
 		pshm = (char *) shmat(sharedMemoryId, (char *) 0, 0);
 		if (pshm == (char *) -1) {
-			printf("erro no attach\n");
-			exit(1);
+			printf("Erro no attach da memoria\n");
 		}
 
 		IplImage* frame = cvCreateImage(cvSize(KINECT_HEIGHT_CAPTURE, KINECT_WIDTH_CAPTURE), IPL_DEPTH_8U, KINECT_NUMBER_OF_CHANNELS);
 		frame->imageData = pshm;
-//
-		IplImage* shownImg = cvCloneImage(frame);
 
-		printf("FaceRecognition - 7\n");
+		IplImage* shownImg = cvCloneImage(frame);
 
 		nome = recognizeFromCam(shownImg, faceCascade, trainPersonNumMat, projectedTestFace);
 		cvReleaseImage(&shownImg);
 
-		printf("FaceRecognition - 9\n");
-
 		shmctl(sharedMemoryId, IPC_RMID, NULL);
 
-		printf("FaceRecognition - 8\n");
-
 		printf("Nome:%s\n", nome);
-		if (msgsnd(idQueueResponse, nome, sizeof(char) * 15, 0) > 0) {
+
+		MessageResponse messageResponse;
+		messageResponse.user_id = messageRequest.user_id;
+		strcpy(messageResponse.user_name, nome);
+
+		if (msgsnd(idQueueResponse, &messageResponse, sizeof(MessageResponse) - sizeof(long), 0) > 0) {
 			printf("Erro no envio de mensagem para o usuario\n");
 		}
 

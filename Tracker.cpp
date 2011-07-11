@@ -94,32 +94,26 @@ unsigned int getMemoryKey() {
 void recognitionCallback(int i) {
 
 	char nome[7];
-	if (msgrcv(idQueueResponse, nome, sizeof(char) * 7, 0, IPC_NOWAIT) >= 0) {
+	MessageResponse messageResponse;
+	if (msgrcv(idQueueResponse, &messageResponse, sizeof(MessageResponse) - sizeof(long), 0, IPC_NOWAIT) >= 0) {
 		printf("Tracker - Received message %s\n", nome);
 	}
 
+	// Criar loop para reenviar o n
 	if (id) {
-		int sharedMemoryId;
+		MessageRequest messageRequest;
 
 		printf("User %d\n", id);
 
-		int key = getMemoryKey();
-
-		if ((sharedMemoryId = shmget(key, sizeof(char) * KINECT_WIDTH_CAPTURE * KINECT_HEIGHT_CAPTURE * KINECT_NUMBER_OF_CHANNELS, IPC_CREAT | 0x1ff)) < 0) {
-			printf("erro na criacao da memoria\n");
-			exit(1);
-		}
-		char *maskPixels = (char*) (shmat(sharedMemoryId, (char*) (0), 0));
-		if (maskPixels == (char*) (-1)) {
-			printf("erro no attach\n");
-			exit(1);
-		}
+		messageRequest.user_id = id;
+		messageRequest.memory_id = getMemoryKey();
+		char *maskPixels = getSharedMemory(messageRequest.memory_id);
 
 		// Busca a area da imagem onde o usuario está.
 		getFrameFromUserId(id, maskPixels);
 
-		if (msgsnd(idQueueRequest, &key, sizeof(int), 0) > 0) {
-			printf("Erro no envio de mensagem para o usuario %d\n", key);
+		if (msgsnd(idQueueRequest, &messageRequest, sizeof(MessageRequest) - sizeof(long), 0) > 0) {
+			printf("Erro no envio de mensagem para o usuario %d\n", messageRequest.memory_id);
 		}
 
 		sharedMemoryCount++;
@@ -142,15 +136,20 @@ void CleanupExit() {
  * Busca o frame do usuario isolando os seus pixels
  */
 void getFrameFromUserId(XnUserID nId, char *maskPixels) {
+
 	// Busca a area da imagem onde o usuario está.
 	xn::SceneMetaData sceneMD;
 	g_UserGenerator.GetUserPixels(nId, sceneMD);
+
 	// Busca um frame da tela
 	const XnRGB24Pixel *source = g_ImageGenerator.GetRGB24ImageMap();
 	char *result = transformToCharAray(source);
+
 	// Busca em cima do frame da tela só a area de pixels do usuario
 	unsigned short *scenePixels = (unsigned short int*) (sceneMD.Data());
+
 	transformAreaVision(scenePixels);
+
 	for (int i = 0; i < KINECT_HEIGHT_CAPTURE; i++) {
 		for (int j = 0; j < KINECT_WIDTH_CAPTURE; j++) {
 			int index = (i * KINECT_WIDTH_CAPTURE * KINECT_NUMBER_OF_CHANNELS) + (j * KINECT_NUMBER_OF_CHANNELS);
@@ -170,27 +169,23 @@ void getFrameFromUserId(XnUserID nId, char *maskPixels) {
 // Callback: New user was detected
 void XN_CALLBACK_TYPE User_NewUser(xn::UserGenerator& generator, XnUserID nId, void* pCookie) {
 	int sharedMemoryId;
+	MessageRequest messageRequest;
 
 	id = (int) (nId);
 	printf("New User %d\n", nId);
 
-	int key = getMemoryKey();
+	messageRequest.user_id = id;
+	messageRequest.memory_id = getMemoryKey();
 
-	if ((sharedMemoryId = shmget(key, sizeof(char) * KINECT_WIDTH_CAPTURE * KINECT_HEIGHT_CAPTURE * KINECT_NUMBER_OF_CHANNELS, IPC_CREAT | 0x1ff)) < 0) {
-		printf("erro na criacao da memoria\n");
-		exit(1);
-	}
-	char *maskPixels = (char*) (shmat(sharedMemoryId, (char*) (0), 0));
-	if (maskPixels == (char*) (-1)) {
-		printf("erro no attach\n");
-		exit(1);
-	}
+	char *maskPixels = getSharedMemory(messageRequest.memory_id);
 
 	// Busca a area da imagem onde o usuario está.
 	getFrameFromUserId(nId, maskPixels);
 
-	if (msgsnd(idQueueRequest, &key, sizeof(int), 0) > 0) {
-		printf("Erro no envio de mensagem para o usuario %d\n", key);
+	printf("Tracker - 5 -> user_id = %d id_memoria = %d\n", messageRequest.user_id, messageRequest.memory_id);
+
+	if (msgsnd(idQueueRequest, &messageRequest, sizeof(MessageRequest) - sizeof(long), 0) > 0) {
+		printf("Erro no envio de mensagem para o usuario %d\n", messageRequest.memory_id);
 	}
 
 	sharedMemoryCount++;
