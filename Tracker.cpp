@@ -56,7 +56,7 @@ XnBool g_bDrawSkeleton = TRUE;
 XnBool g_bPrintID = TRUE;
 XnBool g_bPrintState = TRUE;
 
-#define INTERVAL_IN_MILISECONDS 1000
+#define INTERVAL_IN_MILISECONDS 100000
 
 int idQueueRequest;
 int idQueueResponse;
@@ -153,17 +153,15 @@ void getFrameFromUserId(XnUserID nId, char *maskPixels) {
 	transformAreaVision(scenePixels);
 	for (int i = 0; i < KINECT_HEIGHT_CAPTURE; i++) {
 		for (int j = 0; j < KINECT_WIDTH_CAPTURE; j++) {
+			int index = (i * KINECT_WIDTH_CAPTURE * KINECT_NUMBER_OF_CHANNELS) + (j * KINECT_NUMBER_OF_CHANNELS);
 			if (scenePixels[(i * KINECT_WIDTH_CAPTURE) + j]) {
-				maskPixels[(i * KINECT_WIDTH_CAPTURE * KINECT_NUMBER_OF_CHANNELS) + (j * KINECT_NUMBER_OF_CHANNELS) + 2] = result[(i * KINECT_WIDTH_CAPTURE
-						* KINECT_NUMBER_OF_CHANNELS) + (j * KINECT_NUMBER_OF_CHANNELS) + 2];
-				maskPixels[(i * KINECT_WIDTH_CAPTURE * KINECT_NUMBER_OF_CHANNELS) + (j * KINECT_NUMBER_OF_CHANNELS) + 1] = result[(i * KINECT_WIDTH_CAPTURE
-						* KINECT_NUMBER_OF_CHANNELS) + (j * KINECT_NUMBER_OF_CHANNELS) + 1];
-				maskPixels[(i * KINECT_WIDTH_CAPTURE * KINECT_NUMBER_OF_CHANNELS) + (j * KINECT_NUMBER_OF_CHANNELS) + 0] = result[(i * KINECT_WIDTH_CAPTURE
-						* KINECT_NUMBER_OF_CHANNELS) + (j * KINECT_NUMBER_OF_CHANNELS) + 0];
+				maskPixels[index + 2] = result[index + 2];
+				maskPixels[index + 1] = result[index + 1];
+				maskPixels[index + 0] = result[index + 0];
 			} else {
-				maskPixels[(i * KINECT_WIDTH_CAPTURE * KINECT_NUMBER_OF_CHANNELS) + (j * KINECT_NUMBER_OF_CHANNELS) + 2] = 0;
-				maskPixels[(i * KINECT_WIDTH_CAPTURE * KINECT_NUMBER_OF_CHANNELS) + (j * KINECT_NUMBER_OF_CHANNELS) + 1] = 0;
-				maskPixels[(i * KINECT_WIDTH_CAPTURE * KINECT_NUMBER_OF_CHANNELS) + (j * KINECT_NUMBER_OF_CHANNELS) + 0] = 0;
+				maskPixels[index + 2] = 0;
+				maskPixels[index + 1] = 0;
+				maskPixels[index + 0] = 0;
 			}
 		}
 	}
