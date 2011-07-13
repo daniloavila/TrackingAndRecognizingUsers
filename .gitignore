@@ -3,3 +3,6 @@ Release/*.o
 Debug/
 tracker
 recognition
+register
+Eigenfaces/*
+Eigenfaces/

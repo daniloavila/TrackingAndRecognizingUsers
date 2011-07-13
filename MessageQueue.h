@@ -26,6 +26,7 @@ typedef struct MessageRequest {
 typedef struct MessageResponse {
 	long user_id;
 	char user_name[255];
+	float confidence;
 } MessageResponse;
 
 //cria fila de mensagens para comunicao entre o processo tracker e recognition

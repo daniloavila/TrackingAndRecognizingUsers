@@ -4,7 +4,6 @@ int kinectMounted = 0;
 xn::Context context;
 xn::ImageGenerator image;
 
-
 char *getSharedMemory(int memory_id) {
 	int sharedMemoryId;
 	if ((sharedMemoryId = shmget(memory_id, sizeof(char) * KINECT_WIDTH_CAPTURE * KINECT_HEIGHT_CAPTURE * KINECT_NUMBER_OF_CHANNELS, IPC_CREAT | 0x1ff)) < 0) {
@@ -94,16 +93,31 @@ void transformAreaVision(short unsigned int* source) {
 /**
  * Inicia o Kinect
  */
-void mountKinect() {
-	printf("\nInitializing Kinect...\n");
+char mountKinect() {
 	XnStatus nRetVal = XN_STATUS_OK;
 
 	// Initialize context object
 	nRetVal = context.Init();
+
+	if (nRetVal != XN_STATUS_OK) {
+		return false;
+	}
+
+	printf("\nInitializing Kinect...\n");
+
 	// Create a ImageGenerator node
 	nRetVal = image.Create(context);
+
+	if (nRetVal != XN_STATUS_OK) {
+		return false;
+	}
+
 	// Make it start generating data
 	nRetVal = context.StartGeneratingAll();
+
+	if (nRetVal != XN_STATUS_OK) {
+		return false;
+	}
 
 	XnMapOutputMode mapMode;
 	mapMode.nXRes = KINECT_HEIGHT_CAPTURE;
@@ -111,7 +125,13 @@ void mountKinect() {
 	mapMode.nFPS = KINECT_FPS_CAPTURE;
 
 	nRetVal = image.SetMapOutputMode(mapMode);
+
+	if (nRetVal != XN_STATUS_OK) {
+		return false;
+	}
 	printf("Kinect Ready\n");
+
+	return true;
 }
 
 /**
@@ -121,7 +141,9 @@ IplImage* getKinectFrame() {
 	XnStatus nRetVal = XN_STATUS_OK;
 
 	if (!kinectMounted) {
-		mountKinect();
+		if(!mountKinect()) {
+			return NULL;
+		}
 		kinectMounted = 1;
 	}
 

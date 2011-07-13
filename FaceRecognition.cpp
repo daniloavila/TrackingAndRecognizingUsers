@@ -33,6 +33,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <vector>
+#include <list>
 #include <string.h>
 #include <opencv/cv.h>
 #include <opencv/cvaux.h>
@@ -59,16 +60,13 @@ int idQueueResponse;
 // Haar Cascade file, used for Face Detection.
 const char *faceCascadeFilename = "Eigenfaces/haarcascade_frontalface_alt.xml";
 const int NUMBER_OF_PHOTOS = 19;
-extern const int VK_ESCAPE;
 
 int SAVE_EIGENFACE_IMAGES = 1; // Set to 0 if you dont want images of the Eigenvectors saved to files (for debugging).
-//#define USE_MAHALANOBIS_DISTANCE	// You might get better recognition accuracy if you enable this.
 
 // Global variables
 IplImage ** faceImgArr = 0; // array of face images
 CvMat * personNumTruthMat = 0; // array of person numbers
-//#define	MAX_NAME_LENGTH 256		// Give each name a fixed size for easier code.
-//char **personNames = 0;			// array of person names (indexed by the person number). Added by Shervin.
+
 vector<string> personNames; // array of person names (indexed by the person number). Added by Shervin.
 int faceWidth = 120; // Default dimensions for faces in the face recognition database. Added by Shervin.
 int faceHeight = 90; //	"		"		"		"		"		"		"		"
@@ -85,10 +83,9 @@ CvCapture* camera = 0; // The camera device.
 // Function prototypes
 void doPCA();
 int loadTrainingData(CvMat ** pTrainPersonNumMat);
-int findNearestNeighbor(float * projectedTestFace);
 int findNearestNeighbor(float * projectedTestFace, float *pConfidence);
 int loadFaceImgArray(char * filename);
-char* recognizeFromCam(IplImage *camImg, CvHaarClassifierCascade* faceCascade, CvMat * trainPersonNumMat, float * projectedTestFace);
+char* recognizeFromCam(IplImage *camImg, CvHaarClassifierCascade* faceCascade, CvMat * trainPersonNumMat, float * projectedTestFace, float * pointerConfidence);
 
 // Startup routine.
 int main(int argc, char** argv) {
@@ -128,6 +125,7 @@ int main(int argc, char** argv) {
 
 	while (1) {
 		msgrcv(idQueueRequest, &messageRequest, sizeof(MessageRequest) - sizeof(long), 0, 0);
+		printf("Recebeu pedido de reconhecimento -> user_id = %d id_memoria = %d\n", messageRequest.user_id, messageRequest.memory_id);
 
 		if ((sharedMemoryId = shmget(messageRequest.memory_id, sizeof(char) * KINECT_WIDTH_CAPTURE * KINECT_HEIGHT_CAPTURE * KINECT_NUMBER_OF_CHANNELS, IPC_EXCL | 0x1ff)) < 0) {
 			printf("Erro na criacao da memoria\n");
@@ -143,16 +141,20 @@ int main(int argc, char** argv) {
 
 		IplImage* shownImg = cvCloneImage(frame);
 
-		nome = recognizeFromCam(shownImg, faceCascade, trainPersonNumMat, projectedTestFace);
+		float confidence = 0.0;
+		nome = recognizeFromCam(shownImg, faceCascade, trainPersonNumMat, projectedTestFace, &confidence);
 		cvReleaseImage(&shownImg);
 
 		shmctl(sharedMemoryId, IPC_RMID, NULL);
 
-		printf("Nome:%s\n", nome);
-
 		MessageResponse messageResponse;
 		messageResponse.user_id = messageRequest.user_id;
-		strcpy(messageResponse.user_name, nome);
+		messageResponse.confidence = confidence;
+		if (nome != NULL) {
+			strcpy(messageResponse.user_name, nome);
+		}
+
+		printf("Enviando mensagem de usuario reconhecido - user_id = %d nome = %s\n", messageRequest.user_id, nome);
 
 		if (msgsnd(idQueueResponse, &messageResponse, sizeof(MessageResponse) - sizeof(long), 0) > 0) {
 			printf("Erro no envio de mensagem para o usuario\n");
@@ -162,6 +164,7 @@ int main(int argc, char** argv) {
 
 	cvReleaseHaarClassifierCascade(&faceCascade);
 
+	return 0;
 }
 
 // Save all the eigenvectors as images, so that they can be checked.
@@ -427,7 +430,7 @@ int loadFaceImgArray(char * filename) {
 }
 
 // Continuously recognize the person in the camera.
-char* recognizeFromCam(IplImage *camImg, CvHaarClassifierCascade* faceCascade, CvMat * trainPersonNumMat, float * projectedTestFace) {
+char* recognizeFromCam(IplImage *camImg, CvHaarClassifierCascade* faceCascade, CvMat * trainPersonNumMat, float * projectedTestFace, float * pointerConfidence) {
 	int i;
 	char cstr[256];
 	int saveNextFaces = FALSE;
@@ -473,15 +476,15 @@ char* recognizeFromCam(IplImage *camImg, CvHaarClassifierCascade* faceCascade, C
 		if (nEigens > 0) {
 			// project the test image onto the PCA subspace
 			cvEigenDecomposite(processedFaceImg, nEigens, eigenVectArr, 0, 0, pAvgTrainImg, projectedTestFace);
-
 			// Check which person it is most likely to be.
 			iNearest = findNearestNeighbor(projectedTestFace, &confidence);
 			nearest = trainPersonNumMat->data.i[iNearest];
 
-			printf("Most likely person in camera: '%s' (confidence=%f.\n", personNames[nearest - 1].c_str(), confidence);
+			*pointerConfidence = confidence;
+
+			printf("Most likely person in camera: '%s' (confidence=%f).\n", personNames[nearest - 1].c_str(), confidence);
 
 			return (char*) personNames[nearest - 1].c_str();
-
 		}
 
 		// Free the resources used for this frame.
@@ -492,4 +495,3 @@ char* recognizeFromCam(IplImage *camImg, CvHaarClassifierCascade* faceCascade, C
 	}
 	return NULL;
 }
-

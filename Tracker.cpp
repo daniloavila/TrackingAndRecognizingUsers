@@ -1,43 +1,34 @@
-/*****************************************************************************
- *                                                                            *
- *  OpenNI 1.0 Alpha                                                          *
- *  Copyright (C) 2010 PrimeSense Ltd.                                        *
- *                                                                            *
- *  This file is part of OpenNI.                                              *
- *                                                                            *
- *  OpenNI is free software: you can redistribute it and/or modify            *
- *  it under the terms of the GNU Lesser General Public License as published  *
- *  by the Free Software Foundation, either version 3 of the License, or      *
- *  (at your option) any later version.                                       *
- *                                                                            *
- *  OpenNI is distributed in the hope that it will be useful,                 *
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of            *
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the              *
- *  GNU Lesser General Public License for more details.                       *
- *                                                                            *
- *  You should have received a copy of the GNU Lesser General Public License  *
- *  along with OpenNI. If not, see <http://www.gnu.org/licenses/>.            *
- *                                                                            *
- *****************************************************************************/
-
 //---------------------------------------------------------------------------
 // Includes
 //---------------------------------------------------------------------------
 #include <XnOpenNI.h>
 #include <XnCodecIDs.h>
 #include <XnCppWrapper.h>
+
 #include <sys/types.h>
 #include <sys/ipc.h>
 #include <sys/msg.h>
 #include <sys/shm.h>
+#include <sys/stat.h>
+
 #include <signal.h>
+
+#include <iostream>
+#include <map>
+#include <string>
+
 #include <opencv/cv.h>
 #include <opencv/cvaux.h>
 #include <opencv/highgui.h>
+
 #include "SceneDrawer.h"
 #include "UserUtil.h"
 #include "KinectUtil.h"
 #include "MessageQueue.h"
+#include <stdio.h>
+#include <curses.h>
+
+using namespace std;
 
 //---------------------------------------------------------------------------
 // Globals
@@ -56,7 +47,7 @@ XnBool g_bDrawSkeleton = TRUE;
 XnBool g_bPrintID = TRUE;
 XnBool g_bPrintState = TRUE;
 
-#define INTERVAL_IN_MILISECONDS 100000
+#define INTERVAL_IN_MILISECONDS 1000
 
 int idQueueRequest;
 int idQueueResponse;
@@ -74,10 +65,10 @@ int sharedMemoryCount = 0;
 
 XnBool g_bPause = false;
 XnBool g_bRecord = false;
-
 XnBool g_bQuit = false;
 
-int id = 0;
+map<int, char *> users;
+map<int, float> usersConfidence;
 
 void getFrameFromUserId(XnUserID nId, char *maskPixels);
 
@@ -92,15 +83,24 @@ unsigned int getMemoryKey() {
  * Recebe as mensagens da fila de resposta e reenvia as frames dos usuarios não reconhecidos.
  */
 void recognitionCallback(int i) {
+	map<int, string>::iterator it;
 
 	char nome[7];
 	MessageResponse messageResponse;
-	if (msgrcv(idQueueResponse, &messageResponse, sizeof(MessageResponse) - sizeof(long), 0, IPC_NOWAIT) >= 0) {
-		printf("Tracker - Received message %s\n", nome);
-	}
 
-	// Criar loop para reenviar o n
-	if (id) {
+	printf(".\n");
+
+	if (msgrcv(idQueueResponse, &messageResponse, sizeof(MessageResponse) - sizeof(long), 0, IPC_NOWAIT) >= 0) {
+		users[messageResponse.user_id] = (char *) malloc(sizeof(char) * strlen(messageResponse.user_name));
+		usersConfidence[messageResponse.user_id] = messageResponse.confidence;
+		strcpy(users[messageResponse.user_id], messageResponse.user_name);
+
+		printf("Recebeu mensagem de usuario reconhecido - user => %d - %s - %f\n", messageResponse.user_id, users[messageResponse.user_id], messageResponse.confidence);
+
+		// TODO : Verificação removida para que fique sempre mandado verificar no banco de dados.
+		// if (strlen(messageResponse.user_name) == 0) {
+		int id = messageResponse.user_id;
+
 		MessageRequest messageRequest;
 
 		printf("User %d\n", id);
@@ -112,12 +112,42 @@ void recognitionCallback(int i) {
 		// Busca a area da imagem onde o usuario está.
 		getFrameFromUserId(id, maskPixels);
 
+		printf("Enviando pedido de reconhecimento -> user_id = %d id_memoria = %d\n", messageRequest.user_id, messageRequest.memory_id);
+
 		if (msgsnd(idQueueRequest, &messageRequest, sizeof(MessageRequest) - sizeof(long), 0) > 0) {
 			printf("Erro no envio de mensagem para o usuario %d\n", messageRequest.memory_id);
 		}
 
 		sharedMemoryCount++;
+
+//		}
 	}
+
+	// Criar loop para reenviar o n
+	/*	for (it = users.begin(); it != users.end(); it++) {
+	 if ((*it).second.length() == 0) {
+
+	 int id = (*it).first;
+
+	 MessageRequest messageRequest;
+
+	 printf("User %d\n", id);
+
+	 messageRequest.user_id = id;
+	 messageRequest.memory_id = getMemoryKey();
+	 char *maskPixels = getSharedMemory(messageRequest.memory_id);
+
+	 // Busca a area da imagem onde o usuario está.
+	 getFrameFromUserId(id, maskPixels);
+
+	 if (msgsnd(idQueueRequest, &messageRequest, sizeof(MessageRequest) - sizeof(long), 0) > 0) {
+	 printf("Erro no envio de mensagem para o usuario %d\n", messageRequest.memory_id);
+	 }
+
+	 sharedMemoryCount++;
+	 }
+	 }*/
+
 	glutTimerFunc(INTERVAL_IN_MILISECONDS, recognitionCallback, 0);
 }
 
@@ -171,8 +201,10 @@ void XN_CALLBACK_TYPE User_NewUser(xn::UserGenerator& generator, XnUserID nId, v
 	int sharedMemoryId;
 	MessageRequest messageRequest;
 
-	id = (int) (nId);
+	int id = (int) (nId);
 	printf("New User %d\n", nId);
+
+	users[id] = "";
 
 	messageRequest.user_id = id;
 	messageRequest.memory_id = getMemoryKey();
@@ -182,7 +214,7 @@ void XN_CALLBACK_TYPE User_NewUser(xn::UserGenerator& generator, XnUserID nId, v
 	// Busca a area da imagem onde o usuario está.
 	getFrameFromUserId(nId, maskPixels);
 
-	printf("Tracker - 5 -> user_id = %d id_memoria = %d\n", messageRequest.user_id, messageRequest.memory_id);
+	printf("Enviando pedido de reconhecimento -> user_id = %d id_memoria = %d\n", messageRequest.user_id, messageRequest.memory_id);
 
 	if (msgsnd(idQueueRequest, &messageRequest, sizeof(MessageRequest) - sizeof(long), 0) > 0) {
 		printf("Erro no envio de mensagem para o usuario %d\n", messageRequest.memory_id);
@@ -194,6 +226,7 @@ void XN_CALLBACK_TYPE User_NewUser(xn::UserGenerator& generator, XnUserID nId, v
 // Callback: An existing user was lost
 void XN_CALLBACK_TYPE User_LostUser(xn::UserGenerator& generator, XnUserID nId, void* pCookie) {
 	printf("Lost user %d\n", nId);
+	users.erase((int) nId);
 }
 
 // this function is called each frame
@@ -224,7 +257,7 @@ void glutDisplay(void) {
 	g_DepthGenerator.GetMetaData(depthMD);
 	// g_ImageGenerator.GetMetaData(imageMD);
 	g_UserGenerator.GetUserPixels(0, sceneMD);
-	DrawDepthMap(depthMD, sceneMD);
+	DrawDepthMap(depthMD, sceneMD, users, usersConfidence);
 
 	glutSwapBuffers();
 }
