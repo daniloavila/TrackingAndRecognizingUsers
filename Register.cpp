@@ -1,35 +1,5 @@
-//////////////////////////////////////////////////////////////////////////////////////
-// OnlineFaceRec.cpp, by Shervin Emami (www.shervinemami.co.cc) on 2nd June 2010.
-// Online Face Recognition from a camera using Eigenfaces.
-//////////////////////////////////////////////////////////////////////////////////////
-//
-// Some parts are based on the code example by Robin Hewitt (2007) at:
-// "http://www.cognotics.com/opencv/servo_2007_series/part_5/index.html"
-//
-// Command-line Usage (for offline mode, without a webcam):
-//
-// First, you need some face images. I used the ORL face database.
-// You can download it for free at
-//    www.cl.cam.ac.uk/research/dtg/attarchive/facedatabase.html
-//
-// List the training and test face images you want to use in the
-// input files train.txt and test.txt. (Example input files are provided
-// in the download.) To use these input files exactly as provided, unzip
-// the ORL face database, and place train.txt, test.txt, and eigenface.exe
-// at the root of the unzipped database.
-//
-// To run the learning phase of eigenface, enter in the command prompt:
-//    OnlineFaceRec train <train_file>
-// To run the recognition phase, enter:
-//    OnlineFaceRec test <test_file>
-// To run online recognition from a camera, enter:
-//    OnlineFaceRec
-//
-//////////////////////////////////////////////////////////////////////////////////////
 #include <stdio.h>
 #include <curses.h>
-//#include <conio.h>		// For _kbhit()
-//#include <direct.h>		// For mkdir()
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <vector>
@@ -81,7 +51,6 @@ void learn(char *szFileTrain);
 void doPCA();
 void storeTrainingData();
 int loadTrainingData(CvMat ** pTrainPersonNumMat);
-int findNearestNeighbor(float * projectedTestFace);
 int findNearestNeighbor(float * projectedTestFace, float *pConfidence);
 int loadFaceImgArray(char * filename);
 void recognizeFromCam(void);
@@ -89,10 +58,8 @@ CvMat* retrainOnline(void);
 
 // Startup routine.
 int main(int argc, char** argv) {
-
 	printf("register\n");
 	recognizeFromCam();
-
 }
 
 // Save all the eigenvectors as images, so that they can be checked.

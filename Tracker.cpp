@@ -30,6 +30,14 @@
 
 using namespace std;
 
+#define SAMPLE_XML_PATH "Config/SamplesConfig.xml"
+
+#define CHECK_RC(nRetVal, what) \
+	if (nRetVal != XN_STATUS_OK){\
+		printf("%s failed: %s\n", what, xnGetStatusString(nRetVal));\
+		return nRetVal; \
+	}
+
 //---------------------------------------------------------------------------
 // Globals
 //---------------------------------------------------------------------------
@@ -47,7 +55,8 @@ XnBool g_bDrawSkeleton = TRUE;
 XnBool g_bPrintID = TRUE;
 XnBool g_bPrintState = TRUE;
 
-#define INTERVAL_IN_MILISECONDS 1000
+#define INTERVAL_IN_MILISECONDS_TREAT_RESPONSE 1000
+#define INTERVAL_IN_MILISECONDS_RECHECK 10000
 
 int idQueueRequest;
 int idQueueResponse;
@@ -68,98 +77,19 @@ XnBool g_bRecord = false;
 XnBool g_bQuit = false;
 
 map<int, char *> users;
+map<int, map<string, float> > usersNameConfidence;
+map<int, map<string, int> > usersNameAttempts;
 map<int, float> usersConfidence;
 
-void getFrameFromUserId(XnUserID nId, char *maskPixels);
+/*************************************************************************
+ * UTIL
+ *************************************************************************/
 
 /**
  * Calcula a proxima key da memoria compartilhada.
  */
 unsigned int getMemoryKey() {
 	return SHARED_MEMORY + (sharedMemoryCount * 4);
-}
-
-/**
- * Recebe as mensagens da fila de resposta e reenvia as frames dos usuarios não reconhecidos.
- */
-void recognitionCallback(int i) {
-	map<int, string>::iterator it;
-
-	char nome[7];
-	MessageResponse messageResponse;
-
-	printf(".\n");
-
-	if (msgrcv(idQueueResponse, &messageResponse, sizeof(MessageResponse) - sizeof(long), 0, IPC_NOWAIT) >= 0) {
-		users[messageResponse.user_id] = (char *) malloc(sizeof(char) * strlen(messageResponse.user_name));
-		usersConfidence[messageResponse.user_id] = messageResponse.confidence;
-		strcpy(users[messageResponse.user_id], messageResponse.user_name);
-
-		printf("Recebeu mensagem de usuario reconhecido - user => %d - %s - %f\n", messageResponse.user_id, users[messageResponse.user_id], messageResponse.confidence);
-
-		// TODO : Verificação removida para que fique sempre mandado verificar no banco de dados.
-		// if (strlen(messageResponse.user_name) == 0) {
-		int id = messageResponse.user_id;
-
-		MessageRequest messageRequest;
-
-		printf("User %d\n", id);
-
-		messageRequest.user_id = id;
-		messageRequest.memory_id = getMemoryKey();
-		char *maskPixels = getSharedMemory(messageRequest.memory_id);
-
-		// Busca a area da imagem onde o usuario está.
-		getFrameFromUserId(id, maskPixels);
-
-		printf("Enviando pedido de reconhecimento -> user_id = %d id_memoria = %d\n", messageRequest.user_id, messageRequest.memory_id);
-
-		if (msgsnd(idQueueRequest, &messageRequest, sizeof(MessageRequest) - sizeof(long), 0) > 0) {
-			printf("Erro no envio de mensagem para o usuario %d\n", messageRequest.memory_id);
-		}
-
-		sharedMemoryCount++;
-
-//		}
-	}
-
-	// Criar loop para reenviar o n
-	/*	for (it = users.begin(); it != users.end(); it++) {
-	 if ((*it).second.length() == 0) {
-
-	 int id = (*it).first;
-
-	 MessageRequest messageRequest;
-
-	 printf("User %d\n", id);
-
-	 messageRequest.user_id = id;
-	 messageRequest.memory_id = getMemoryKey();
-	 char *maskPixels = getSharedMemory(messageRequest.memory_id);
-
-	 // Busca a area da imagem onde o usuario está.
-	 getFrameFromUserId(id, maskPixels);
-
-	 if (msgsnd(idQueueRequest, &messageRequest, sizeof(MessageRequest) - sizeof(long), 0) > 0) {
-	 printf("Erro no envio de mensagem para o usuario %d\n", messageRequest.memory_id);
-	 }
-
-	 sharedMemoryCount++;
-	 }
-	 }*/
-
-	glutTimerFunc(INTERVAL_IN_MILISECONDS, recognitionCallback, 0);
-}
-
-void CleanupExit() {
-	g_Context.Shutdown();
-
-	//matando a fila de mensagens
-	msgctl(idQueueRequest, IPC_RMID, NULL);
-	msgctl(idQueueResponse, IPC_RMID, NULL);
-	kill(faceRecId, SIGKILL);
-
-	exit(1);
 }
 
 /**
@@ -196,15 +126,60 @@ void getFrameFromUserId(XnUserID nId, char *maskPixels) {
 	}
 }
 
-// Callback: New user was detected
-void XN_CALLBACK_TYPE User_NewUser(xn::UserGenerator& generator, XnUserID nId, void* pCookie) {
-	int sharedMemoryId;
+/**
+ * Recalcula as estatisticas de confianca e tentativas a partir da mensagem de resposta.
+ */
+void calculateNewStatistics(MessageResponse *messageResponse) {
+	// Inicio - recalcula a confiança da nova label
+	map<string, int> *nameAttempts = &usersNameAttempts[messageResponse->user_id];
+	map<string, float> *nameConfidence = &usersNameConfidence[messageResponse->user_id];
+
+	float acumulatedConfidence = (*nameConfidence)[messageResponse->user_name];
+	int attempts = (*nameAttempts)[messageResponse->user_name];
+
+	// confidence
+	(*nameConfidence)[messageResponse->user_name] = ((acumulatedConfidence * attempts) + messageResponse->confidence) / (attempts + 1);
+
+	// tentativas
+	(*nameAttempts)[messageResponse->user_name] = attempts + 1;
+}
+
+/**
+ * Escolhe estatisticamente baseado no numero de vezes que o reconhecedor escolheu a label e o grau de confiança que o mesmo a escolheu.
+ */
+void choiceNewLabelToUser(MessageResponse *messageResponse) {
+	// Inicio - escolhe a nova label do usuario de acordo com a maior confiança estatistica
+	map<string, int> *nameAttempts = &usersNameAttempts[messageResponse->user_id];
+	map<string, float> *nameConfidence = &usersNameConfidence[messageResponse->user_id];
+
+	string name;
+	float confidence;
+	double maxStatisticConfidence = 0;
+	map<string, int>::iterator itAttempts;
+	for (itAttempts = nameAttempts->begin(); itAttempts != nameAttempts->end(); itAttempts++) {
+		double statisticConfidence = itAttempts->second * (*nameConfidence)[itAttempts->first];
+		if (statisticConfidence > maxStatisticConfidence) {
+			maxStatisticConfidence = statisticConfidence;
+			name = itAttempts->first;
+			confidence = (*nameConfidence)[itAttempts->first];
+		}
+	}
+
+	users[messageResponse->user_id] = (char*) (((malloc(sizeof(char) * strlen(messageResponse->user_name)))));
+	if (name.length() > 0) {
+		strcpy(users[messageResponse->user_id], name.c_str());
+	}
+	usersConfidence[messageResponse->user_id] = confidence;
+	printf("Nome: %s - Tentativas => %d - Confiança => %f\n", messageResponse->user_name, (*nameAttempts)[messageResponse->user_name],
+			(*nameConfidence)[messageResponse->user_name]);
+	printf("========> %s - %f\n", users[messageResponse->user_id], usersConfidence[messageResponse->user_id]);
+}
+
+/**
+ * Pede para o processo de reconhecimento reconhecer o usuario com esse id passado.
+ */
+void requestRecognition(int id) {
 	MessageRequest messageRequest;
-
-	int id = (int) (nId);
-	printf("New User %d\n", nId);
-
-	users[id] = "";
 
 	messageRequest.user_id = id;
 	messageRequest.memory_id = getMemoryKey();
@@ -212,7 +187,7 @@ void XN_CALLBACK_TYPE User_NewUser(xn::UserGenerator& generator, XnUserID nId, v
 	char *maskPixels = getSharedMemory(messageRequest.memory_id);
 
 	// Busca a area da imagem onde o usuario está.
-	getFrameFromUserId(nId, maskPixels);
+	getFrameFromUserId((XnUserID) id, maskPixels);
 
 	printf("Enviando pedido de reconhecimento -> user_id = %d id_memoria = %d\n", messageRequest.user_id, messageRequest.memory_id);
 
@@ -223,9 +198,102 @@ void XN_CALLBACK_TYPE User_NewUser(xn::UserGenerator& generator, XnUserID nId, v
 	sharedMemoryCount++;
 }
 
-// Callback: An existing user was lost
-void XN_CALLBACK_TYPE User_LostUser(xn::UserGenerator& generator, XnUserID nId, void* pCookie) {
+/*************************************************************************
+ * FIM - UTIL
+ *************************************************************************/
+
+/**
+ * Recebe as mensagens da fila de resposta e reenvia as frames dos usuarios não reconhecidos.
+ */
+void treatQueueResponse(int i) {
+	char nome[7];
+	MessageResponse messageResponse;
+
+	printf(".\n");
+
+	if (msgrcv(idQueueResponse, &messageResponse, sizeof(MessageResponse) - sizeof(long), 0, IPC_NOWAIT) >= 0) {
+
+		calculateNewStatistics(&messageResponse);
+
+		printf("Recebeu mensagem de usuario reconhecido - user => %d - %s - %f\n", messageResponse.user_id, messageResponse.user_name, messageResponse.confidence);
+
+		choiceNewLabelToUser(&messageResponse);
+
+		map<string, int>::iterator itAttempts;
+		int total = 0;
+		for (itAttempts = usersNameAttempts[messageResponse.user_id].begin(); itAttempts != usersNameAttempts[messageResponse.user_id].end(); itAttempts++) {
+			total = total + (*itAttempts).second;
+		}
+
+		printf("Total => %d\n", total);
+
+		if (strlen(messageResponse.user_name) == 0 || total < 5) {
+			int id = messageResponse.user_id;
+
+			MessageRequest messageRequest;
+			messageRequest.user_id = id;
+			messageRequest.memory_id = getMemoryKey();
+			char *maskPixels = getSharedMemory(messageRequest.memory_id);
+
+			// Busca a area da imagem onde o usuario está.
+			getFrameFromUserId(id, maskPixels);
+
+			printf("Enviando pedido de reconhecimento -> user_id = %d id_memoria = %d\n", messageRequest.user_id, messageRequest.memory_id);
+
+			if (msgsnd(idQueueRequest, &messageRequest, sizeof(MessageRequest) - sizeof(long), 0) > 0) {
+				printf("Erro no envio de mensagem para o usuario %d\n", messageRequest.memory_id);
+			}
+
+			sharedMemoryCount++;
+		}
+	}
+
+	glutTimerFunc(INTERVAL_IN_MILISECONDS_TREAT_RESPONSE, treatQueueResponse, 0);
+}
+
+/**
+ * Pede para reconhecer todos os usuários.
+ */
+void recheckUsers(int i) {
+	map<int, char *>::iterator it;
+
+	printf("-\n");
+
+	for (it = users.begin(); it != users.end(); it++) {
+		requestRecognition((*it).first);
+	}
+
+	glutTimerFunc(INTERVAL_IN_MILISECONDS_RECHECK, recheckUsers, 0);
+}
+
+void cleanupQueueAndExit() {
+	g_Context.Shutdown();
+
+	//matando a fila de mensagens
+	msgctl(idQueueRequest, IPC_RMID, NULL);
+	msgctl(idQueueResponse, IPC_RMID, NULL);
+	kill(faceRecId, SIGKILL);
+
+	exit(1);
+}
+
+/**
+ * Registra a entrada de um novo usuário e pede para o mesmo ser reconhecido.
+ */
+void XN_CALLBACK_TYPE registerNewUser(xn::UserGenerator& generator, XnUserID nId, void* pCookie) {
+	int id = (int) ((nId));
+
+	printf("New User %d\n", id);
+	users[id] = "";
+	requestRecognition(id);
+}
+
+/**
+ * Apaga a entrada do novo usuário.
+ */
+void XN_CALLBACK_TYPE registerLostUser(xn::UserGenerator& generator, XnUserID nId, void* pCookie) {
 	printf("Lost user %d\n", nId);
+	// TODO : Verificar se ao apagar e apos disso receber a mensagem não cria um usuário fantasma.
 	users.erase((int) nId);
 }
 
@@ -264,7 +332,7 @@ void glutDisplay(void) {
 
 void glutIdle(void) {
 	if (g_bQuit) {
-		CleanupExit();
+		cleanupQueueAndExit();
 	}
 
 	// Display the frame
@@ -274,7 +342,7 @@ void glutIdle(void) {
 void glutKeyboard(unsigned char key, int x, int y) {
 	switch (key) {
 	case 27:
-		CleanupExit();
+		cleanupQueueAndExit();
 	case 'b':
 		// Draw background?
 		g_bDrawBackground = !g_bDrawBackground;
@@ -310,7 +378,8 @@ void glInit(int * pargc, char ** argv) {
 	glutDisplayFunc(glutDisplay);
 	glutIdleFunc(glutIdle);
 
-	glutTimerFunc(INTERVAL_IN_MILISECONDS, recognitionCallback, 0);
+	glutTimerFunc(INTERVAL_IN_MILISECONDS_TREAT_RESPONSE, treatQueueResponse, 0);
+	glutTimerFunc(INTERVAL_IN_MILISECONDS_RECHECK, recheckUsers, 0);
 
 	glDisable(GL_DEPTH_TEST);
 	glEnable(GL_TEXTURE_2D);
@@ -318,14 +387,6 @@ void glInit(int * pargc, char ** argv) {
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glDisableClientState(GL_COLOR_ARRAY);
 }
-
-#define SAMPLE_XML_PATH "Config/SamplesConfig.xml"
-
-#define CHECK_RC(nRetVal, what) \
-	if (nRetVal != XN_STATUS_OK){\
-		printf("%s failed: %s\n", what, xnGetStatusString(nRetVal));\
-		return nRetVal; \
-	}
 
 int main(int argc, char **argv) {
 	//variavel que mantem o status: caso um erro seja lançado, da para acessa-lo por meio desta
@@ -393,12 +454,7 @@ int main(int argc, char **argv) {
 	XnCallbackHandle hUserCallbacks, hCalibrationCallbacks, hPoseCallbacks;
 
 	//define os metodos responsaveis quando os eventos de novo usuario encontrado e usuario perdido ocorrem 
-	g_UserGenerator.RegisterUserCallbacks(User_NewUser, User_LostUser, NULL, hUserCallbacks);
-
-	// if(g_DepthGenerator.IsCapabilitySupported("AlternativeViewPoint")){ 
-	//   nRetVal = g_DepthGenerator.GetAlternativeViewPointCap().SetViewPoint(g_ImageGenerator); 
-	//   CHECK_RC(nRetVal, "SetViewPoint for depth generator"); 
-	// } 
+	g_UserGenerator.RegisterUserCallbacks(registerNewUser, registerLostUser, NULL, hUserCallbacks);
 
 	//comecar a ler dados do kinect
 	nRetVal = g_Context.StartGeneratingAll();

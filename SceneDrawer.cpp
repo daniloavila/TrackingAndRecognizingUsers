@@ -219,8 +219,6 @@ void DrawDepthMap(const xn::DepthMetaData& dmd, const xn::SceneMetaData& smd, ma
 	glDisable(GL_TEXTURE_2D);
 
 	char strLabel[50] = "";
-	// XnUserID aUsers[15];
-	// XnUInt16 nUsers = 15;
 	XnUInt16 nUsers = g_UserGenerator.GetNumberOfUsers();
 	XnUserID* aUsers = new XnUserID[nUsers];
 
@@ -238,7 +236,7 @@ void DrawDepthMap(const xn::DepthMetaData& dmd, const xn::SceneMetaData& smd, ma
 			} else {
 				// Nothing
 				if(strlen((users)[aUsers[i]]) == 0) {
-					sprintf(strLabel, "%d - Recognition...", aUsers[i]);
+					sprintf(strLabel, "%d - Recognizing...", aUsers[i]);
 				} else {
 					sprintf(strLabel, "%d - %s\n%f", aUsers[i], (users)[aUsers[i]], (usersConfidence)[aUsers[i]]);
 				}
