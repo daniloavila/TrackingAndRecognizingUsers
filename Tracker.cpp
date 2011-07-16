@@ -431,7 +431,7 @@ int main(int argc, char **argv) {
 
 	//inicinado o processo que reconhece os novoc usuarios encontrados
 	if (faceRecId == 0) {
-		execl("recognition", "recognition", (char *) 0);
+		execl("recognizer", "recognizer", (char *) 0);
 	}
 
 	nRetVal = g_SceneAnalyzer.Create(g_Context);
