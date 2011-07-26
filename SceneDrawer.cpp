@@ -3,6 +3,7 @@
 //---------------------------------------------------------------------------
 
 #include "SceneDrawer.h"
+#include <time.h>
 
 using namespace std;
 
@@ -236,7 +237,15 @@ void DrawDepthMap(const xn::DepthMetaData& dmd, const xn::SceneMetaData& smd, ma
 			} else {
 				// Nothing
 				if(strlen((users)[aUsers[i]]) == 0) {
-					sprintf(strLabel, "%d - Recognizing...", aUsers[i]);
+					long long int timeseconds = time(NULL);
+
+					if(timeseconds % 3 == 0) {
+						sprintf(strLabel, "%d - Recognizing.", aUsers[i]);
+					} else if(timeseconds % 3 == 1) {
+						sprintf(strLabel, "%d - Recognizing..", aUsers[i]);
+					} else if(timeseconds % 3 == 2) {
+						sprintf(strLabel, "%d - Recognizing...", aUsers[i]);
+					}
 				} else {
 					sprintf(strLabel, "%d - %s\n%f", aUsers[i], (users)[aUsers[i]], (usersConfidence)[aUsers[i]]);
 				}
