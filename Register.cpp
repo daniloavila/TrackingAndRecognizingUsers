@@ -453,6 +453,7 @@ void recognizeFromCam(void) {
 	int saveNextFaces = FALSE;
 	char newPersonName[256];
 	int newPersonFaces;
+	int kinectFail = 0;
 
 	trainPersonNumMat = 0; // the person numbers during training
 	projectedTestFace = 0;
@@ -556,9 +557,12 @@ void recognizeFromCam(void) {
 		}
 
 		// Get the camera frame
-		camImg = getKinectFrame();
+		if(!kinectFail) {
+			camImg = getKinectFrame();
+		}
 
-		if (!camImg) {
+		if (kinectFail || !camImg) {
+			kinectFail = 1;
 			camImg = getCameraFrame();
 		}
 
