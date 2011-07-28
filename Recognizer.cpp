@@ -57,6 +57,21 @@ int findNearestNeighbor(float * projectedTestFace, float *pConfidence);
 int loadFaceImgArray(char * filename);
 char* recognizeFromCamImg(IplImage *camImg, CvHaarClassifierCascade* faceCascade, CvMat * trainPersonNumMat, float * projectedTestFace, float * pointerConfidence);
 
+/**
+ * Verifica se o nome é algum dos conhecidos.
+ */
+bool validarNome(char *& nome) {
+	vector<string>::iterator it;
+	for (it = personNames.begin(); it < personNames.end(); it++) {
+		if ((*it).compare(nome) == 0) {
+			printf("-----------> Nome valido => %s\n", nome);
+			return true;
+		}
+	}
+	printf("-----------> Nome invalido => %s\n", nome);
+	return false;
+}
+
 // Startup routine.
 int main(int argc, char** argv) {
 	int i;
@@ -97,6 +112,8 @@ int main(int argc, char** argv) {
 		msgrcv(idQueueRequest, &messageRequest, sizeof(MessageRequest) - sizeof(long), 0, 0);
 		printf("Recebeu pedido de reconhecimento -> user_id = %d id_memoria = %d\n", messageRequest.user_id, messageRequest.memory_id);
 
+//		pshm = getSharedMemory(messageRequest.memory_id, false);
+
 		if ((sharedMemoryId = shmget(messageRequest.memory_id, sizeof(char) * KINECT_WIDTH_CAPTURE * KINECT_HEIGHT_CAPTURE * KINECT_NUMBER_OF_CHANNELS, IPC_EXCL | 0x1ff)) < 0) {
 			printf("Erro na criacao da memoria\n");
 		}
@@ -105,6 +122,8 @@ int main(int argc, char** argv) {
 		if (pshm == (char *) -1) {
 			printf("Erro no attach da memoria\n");
 		}
+
+		printf("---------------------------------------------\n");
 
 		IplImage* frame = cvCreateImage(cvSize(KINECT_HEIGHT_CAPTURE, KINECT_WIDTH_CAPTURE), IPL_DEPTH_8U, KINECT_NUMBER_OF_CHANNELS);
 		frame->imageData = pshm;
@@ -115,6 +134,12 @@ int main(int argc, char** argv) {
 		nome = recognizeFromCamImg(shownImg, faceCascade, trainPersonNumMat, projectedTestFace, &confidence);
 		cvReleaseImage(&shownImg);
 
+		// Verificando se nome é valido
+//		if(!validarNome(nome)) {
+//			nome[0] = NULL;
+//		}
+
+		// deleta memoria compartilhada
 		shmctl(sharedMemoryId, IPC_RMID, NULL);
 
 		MessageResponse messageResponse;

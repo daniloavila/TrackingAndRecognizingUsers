@@ -4,8 +4,16 @@ int kinectMounted = 0;
 xn::Context context;
 xn::ImageGenerator image;
 
-char *getSharedMemory(int memory_id) {
+char *getSharedMemory(int memory_id, bool create) {
 	int sharedMemoryId;
+
+	short flag = 0;
+	if(create) {
+		flag = IPC_CREAT;
+	} else {
+		flag = IPC_EXCL;
+	}
+
 	if ((sharedMemoryId = shmget(memory_id, sizeof(char) * KINECT_WIDTH_CAPTURE * KINECT_HEIGHT_CAPTURE * KINECT_NUMBER_OF_CHANNELS, IPC_CREAT | 0x1ff)) < 0) {
 		printf("erro na criacao da memoria\n");
 	}
@@ -15,6 +23,8 @@ char *getSharedMemory(int memory_id) {
 	}
 	return maskPixels;
 }
+
+
 
 /**
  * Transforma um array de XnRGB24Pixel para um array de char representando a mesma infromação.

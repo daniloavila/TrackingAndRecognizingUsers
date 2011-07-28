@@ -76,10 +76,13 @@ XnBool g_bPause = false;
 XnBool g_bRecord = false;
 XnBool g_bQuit = false;
 
+// Usados para salvar o que será mostrado na tela
 map<int, char *> users;
+map<int, float> usersConfidence;
+
+// Mapas auxiliares pra ajudar a calcular a mulher label e o seu indice de confiança.
 map<int, map<string, float> > usersNameConfidence;
 map<int, map<string, int> > usersNameAttempts;
-map<int, float> usersConfidence;
 
 /*************************************************************************
  * UTIL
@@ -184,7 +187,7 @@ void requestRecognition(int id) {
 	messageRequest.user_id = id;
 	messageRequest.memory_id = getMemoryKey();
 
-	char *maskPixels = getSharedMemory(messageRequest.memory_id);
+	char *maskPixels = getSharedMemory(messageRequest.memory_id, true);
 
 	// Busca a area da imagem onde o usuario está.
 	getFrameFromUserId((XnUserID) id, maskPixels);
@@ -211,7 +214,14 @@ void treatQueueResponse(int i) {
 
 	printf(".\n");
 
-	if (msgrcv(idQueueResponse, &messageResponse, sizeof(MessageResponse) - sizeof(long), 0, IPC_NOWAIT) >= 0) {
+	while (msgrcv(idQueueResponse, &messageResponse, sizeof(MessageResponse) - sizeof(long), 0, IPC_NOWAIT) >= 0) {
+		printf("*\n");
+
+		// verifica se o usuário ainda está sendo trackeado.
+		if (users.find(messageResponse.user_id) == users.end())
+			continue;
+
+		printf("**\n");
 
 		calculateNewStatistics(&messageResponse);
 
@@ -219,32 +229,16 @@ void treatQueueResponse(int i) {
 
 		choiceNewLabelToUser(&messageResponse);
 
+		// Calcula o total de vezes que o usuario foi reconhecido. Independentemente da resposta.
 		map<string, int>::iterator itAttempts;
 		int total = 0;
 		for (itAttempts = usersNameAttempts[messageResponse.user_id].begin(); itAttempts != usersNameAttempts[messageResponse.user_id].end(); itAttempts++) {
 			total = total + (*itAttempts).second;
 		}
-
 		printf("Total => %d\n", total);
 
 		if (strlen(messageResponse.user_name) == 0 || total < 5) {
-			int id = messageResponse.user_id;
-
-			MessageRequest messageRequest;
-			messageRequest.user_id = id;
-			messageRequest.memory_id = getMemoryKey();
-			char *maskPixels = getSharedMemory(messageRequest.memory_id);
-
-			// Busca a area da imagem onde o usuario está.
-			getFrameFromUserId(id, maskPixels);
-
-			printf("Enviando pedido de reconhecimento -> user_id = %d id_memoria = %d\n", messageRequest.user_id, messageRequest.memory_id);
-
-			if (msgsnd(idQueueRequest, &messageRequest, sizeof(MessageRequest) - sizeof(long), 0) > 0) {
-				printf("Erro no envio de mensagem para o usuario %d\n", messageRequest.memory_id);
-			}
-
-			sharedMemoryCount++;
+			requestRecognition(messageResponse.user_id);
 		}
 	}
 
@@ -293,8 +287,12 @@ void XN_CALLBACK_TYPE registerNewUser(xn::UserGenerator& generator, XnUserID nId
  */
 void XN_CALLBACK_TYPE registerLostUser(xn::UserGenerator& generator, XnUserID nId, void* pCookie) {
 	printf("Lost user %d\n", nId);
+
 	// TODO : Verificar se ao apagar e apos disso receber a mensagem não cria um usuário fantasma.
 	users.erase((int) nId);
+	usersConfidence.erase((int) nId);
+	usersNameConfidence.erase((int) nId);
+	usersNameAttempts.erase((int) nId);
 }
 
 // this function is called each frame
