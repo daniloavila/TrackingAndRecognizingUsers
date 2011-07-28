@@ -460,6 +460,7 @@ void recognizeFromCam(void) {
 	saveNextFaces = FALSE;
 	newPersonFaces = 0;
 
+
 	printf("Recognizing person in the camera ...\n");
 
 	// Load the previously saved training data

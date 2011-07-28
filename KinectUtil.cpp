@@ -1,8 +1,17 @@
 #include "KinectUtil.h"
 
+#define CHECK_RC(nRetVal, what) \
+	if (nRetVal != XN_STATUS_OK){\
+		printf("%s failed: %s\n", what, xnGetStatusString(nRetVal));\
+		return nRetVal; \
+	}
+
+#define SAMPLE_XML_PATH "Config/SamplesConfig.xml"
+
 int kinectMounted = 0;
 xn::Context context;
 xn::ImageGenerator image;
+xn::SceneAnalyzer sceneAnalyzer;
 
 char *getSharedMemory(int memory_id, bool create) {
 	int sharedMemoryId;
@@ -100,6 +109,39 @@ void transformAreaVision(short unsigned int* source) {
 
 }
 
+char mountKinect2(){
+	XnStatus nRetVal = XN_STATUS_OK;
+
+	xn::EnumerationErrors errors;
+
+	//le as configuracoes do Sample.xml, que define as configuracoes iniciais acima
+	nRetVal = context.InitFromXmlFile(SAMPLE_XML_PATH, &errors);
+
+	if (nRetVal == XN_STATUS_NO_NODE_PRESENT) {
+		XnChar strError[1024];
+		errors.ToString(strError, 1024);
+		printf("%s\n", strError);
+		return false;
+	} else if (nRetVal != XN_STATUS_OK) {
+		printf("Open failed: %s\n", xnGetStatusString(nRetVal));
+		return false;
+	}
+
+	nRetVal = sceneAnalyzer.Create(context);
+
+	//procura por um node image nas configuracoes
+	nRetVal = context.FindExistingNode(XN_NODE_TYPE_IMAGE, image);
+	CHECK_RC(nRetVal, "Find image generator");
+
+
+
+	//comecar a ler dados do kinect
+	nRetVal = context.StartGeneratingAll();
+	CHECK_RC(nRetVal, "StartGenerating");
+
+	return true;
+}
+
 /**
  * Inicia o Kinect
  */
@@ -110,15 +152,17 @@ char mountKinect() {
 	nRetVal = context.Init();
 
 	if (nRetVal != XN_STATUS_OK) {
+		printf("Mounting Kinect: Não inicializou o contexto.\n");
 		return false;
 	}
 
-	printf("\nInitializing Kinect...\n");
+	// printf("\nInitializing Kinect...\n");
 
 	// Create a ImageGenerator node
 	nRetVal = image.Create(context);
 
 	if (nRetVal != XN_STATUS_OK) {
+		printf("Mounting Kinect: Não criou contexto de imagem.\n");
 		return false;
 	}
 
@@ -126,6 +170,7 @@ char mountKinect() {
 	nRetVal = context.StartGeneratingAll();
 
 	if (nRetVal != XN_STATUS_OK) {
+		printf("Mounting Kinect: Não começou a obter dados.\n");
 		return false;
 	}
 
@@ -137,6 +182,7 @@ char mountKinect() {
 	nRetVal = image.SetMapOutputMode(mapMode);
 
 	if (nRetVal != XN_STATUS_OK) {
+		printf("Mounting Kinect: Não coneseguiu definir o modo de saida.\n");
 		return false;
 	}
 	printf("Kinect Ready\n");
@@ -151,7 +197,7 @@ IplImage* getKinectFrame() {
 	XnStatus nRetVal = XN_STATUS_OK;
 
 	if (!kinectMounted) {
-		if(!mountKinect()) {
+		if(!mountKinect2()) {
 			return NULL;
 		}
 		kinectMounted = 1;
