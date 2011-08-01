@@ -59,7 +59,15 @@ CvMat* retrainOnline(void);
 // Startup routine.
 int main(int argc, char** argv) {
 	printf("register\n");
-	recognizeFromCam();
+
+	if( argc >= 2 && strcmp(argv[1], "train") == 0 ) {
+		char *szFileTrain;
+		szFileTrain = "Eigenfaces/train.txt";
+		learn(szFileTrain);
+
+	}else{
+		recognizeFromCam();	
+	}
 }
 
 // Save all the eigenvectors as images, so that they can be checked.

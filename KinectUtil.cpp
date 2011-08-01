@@ -99,7 +99,10 @@ void transformAreaVision(short unsigned int* source) {
 
 }
 
-char mountKinect2(){
+/**
+ * Inicia o Kinect
+ */
+char mountKinect(){
 	XnStatus nRetVal = XN_STATUS_OK;
 
 	xn::EnumerationErrors errors;
@@ -133,61 +136,13 @@ char mountKinect2(){
 }
 
 /**
- * Inicia o Kinect
- */
-char mountKinect() {
-	XnStatus nRetVal = XN_STATUS_OK;
-
-	// Initialize context object
-	nRetVal = context.Init();
-
-	if (nRetVal != XN_STATUS_OK) {
-		printf("Mounting Kinect: Não inicializou o contexto.\n");
-		return false;
-	}
-
-	// printf("\nInitializing Kinect...\n");
-
-	// Create a ImageGenerator node
-	nRetVal = image.Create(context);
-
-	if (nRetVal != XN_STATUS_OK) {
-		printf("Mounting Kinect: Não criou contexto de imagem.\n");
-		return false;
-	}
-
-	// Make it start generating data
-	nRetVal = context.StartGeneratingAll();
-
-	if (nRetVal != XN_STATUS_OK) {
-		printf("Mounting Kinect: Não começou a obter dados.\n");
-		return false;
-	}
-
-	XnMapOutputMode mapMode;
-	mapMode.nXRes = KINECT_HEIGHT_CAPTURE;
-	mapMode.nYRes = KINECT_WIDTH_CAPTURE;
-	mapMode.nFPS = KINECT_FPS_CAPTURE;
-
-	nRetVal = image.SetMapOutputMode(mapMode);
-
-	if (nRetVal != XN_STATUS_OK) {
-		printf("Mounting Kinect: Não coneseguiu definir o modo de saida.\n");
-		return false;
-	}
-	printf("Kinect Ready\n");
-
-	return true;
-}
-
-/**
  * Retorna um frame do Kinect e inicia o mesmo caso ainda não o tenha sido feito.
  */
 IplImage* getKinectFrame() {
 	XnStatus nRetVal = XN_STATUS_OK;
 
 	if (!kinectMounted) {
-		if(!mountKinect2()) {
+		if(!mountKinect()) {
 			return NULL;
 		}
 		kinectMounted = 1;
