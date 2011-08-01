@@ -25,7 +25,7 @@ char* transformToCharAray(const XnRGB24Pixel* source);
 
 void transformAreaVision(short unsigned int* source);
 
-char *getSharedMemory(int memory_id);
+char *getSharedMemory(int memory_id, bool create);
 
 #define KINECT_WIDTH_CAPTURE 480
 #define KINECT_HEIGHT_CAPTURE 640

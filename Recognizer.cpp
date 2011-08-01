@@ -57,6 +57,21 @@ int findNearestNeighbor(float * projectedTestFace, float *pConfidence);
 int loadFaceImgArray(char * filename);
 char* recognizeFromCamImg(IplImage *camImg, CvHaarClassifierCascade* faceCascade, CvMat * trainPersonNumMat, float * projectedTestFace, float * pointerConfidence);
 
+/**
+ * Verifica se o nome é algum dos conhecidos.
+ */
+bool validarNome(char *& nome) {
+	vector<string>::iterator it;
+	for (it = personNames.begin(); it < personNames.end(); it++) {
+		if ((*it).compare(nome) == 0) {
+			printf("Log - Recognizer diz: A label '%s' é valida.\n", nome);
+			return true;
+		}
+	}
+	printf("Log - Recognizer diz: A label '%s' não é valida.\n", nome);
+	return false;
+}
+
 // Startup routine.
 int main(int argc, char** argv) {
 	int i;
@@ -95,7 +110,9 @@ int main(int argc, char** argv) {
 
 	while (1) {
 		msgrcv(idQueueRequest, &messageRequest, sizeof(MessageRequest) - sizeof(long), 0, 0);
-		printf("Recebeu pedido de reconhecimento -> user_id = %d id_memoria = %d\n", messageRequest.user_id, messageRequest.memory_id);
+		printf("Log - Recognizer diz: Recebi pedido de reconhecimento. user_id = %d e id_memoria = %d\n", messageRequest.user_id, messageRequest.memory_id);
+
+//		pshm = getSharedMemory(messageRequest.memory_id, false);
 
 		if ((sharedMemoryId = shmget(messageRequest.memory_id, sizeof(char) * KINECT_WIDTH_CAPTURE * KINECT_HEIGHT_CAPTURE * KINECT_NUMBER_OF_CHANNELS, IPC_EXCL | 0x1ff)) < 0) {
 			printf("Erro na criacao da memoria\n");
@@ -115,6 +132,13 @@ int main(int argc, char** argv) {
 		nome = recognizeFromCamImg(shownImg, faceCascade, trainPersonNumMat, projectedTestFace, &confidence);
 		cvReleaseImage(&shownImg);
 
+
+		// Verificando se nome é valido
+		if(nome != NULL && !validarNome(nome)) {
+			nome[0] = NULL;
+		}
+
+		// deleta memoria compartilhada
 		shmctl(sharedMemoryId, IPC_RMID, NULL);
 
 		MessageResponse messageResponse;
@@ -126,7 +150,7 @@ int main(int argc, char** argv) {
 			messageResponse.user_name[0] = NULL;
 		}
 
-		printf("Enviando mensagem de usuario reconhecido - user_id = %d nome = %s\n", messageRequest.user_id, nome);
+		printf("Log - Recognizer diz: Enviando mensagem de usuario reconhecido. user_id = %d e nome = '%s'\n", messageRequest.user_id, nome);
 
 		if (msgsnd(idQueueResponse, &messageResponse, sizeof(MessageResponse) - sizeof(long), 0) > 0) {
 			printf("Erro no envio de mensagem para o usuario\n");
@@ -430,8 +454,10 @@ char* recognizeFromCamImg(IplImage *camImg, CvHaarClassifierCascade* faceCascade
 
 	// Perform face detection on the input image, using the given Haar cascade classifier.
 	faceRect = detectFaceInImage(greyImg, faceCascade);
+
 	// Make sure a valid face was detected.
 	if (faceRect.width > 0) {
+
 		faceImg = cropImage(greyImg, faceRect); // Get the detected face image.
 		// Make sure the image is the same dimensions as the training images.
 		sizedImg = resizeImage(faceImg, faceWidth, faceHeight);
@@ -454,7 +480,7 @@ char* recognizeFromCamImg(IplImage *camImg, CvHaarClassifierCascade* faceCascade
 
 			*pointerConfidence = confidence;
 
-			printf("Most likely person in camera: '%s' (confidence=%f).\n", personNames[nearest - 1].c_str(), confidence);
+			//printf("Most likely person in camera: '%s' (confidence=%f).\n", personNames[nearest - 1].c_str(), confidence);
 
 			return (char*) personNames[nearest - 1].c_str();
 		}
@@ -465,5 +491,6 @@ char* recognizeFromCamImg(IplImage *camImg, CvHaarClassifierCascade* faceCascade
 		cvReleaseImage(&sizedImg);
 		cvReleaseImage(&equalizedImg);
 	}
+
 	return NULL;
 }
