@@ -509,6 +509,7 @@ void recognizeFromCam(void) {
 		int keyPressed = 0;
 		FILE *trainFile;
 		float confidence;
+		int numberOfSavedFaces = 50;
 
 		// Handle keyboard input in the console.
 		if (kbhit())
@@ -611,7 +612,7 @@ void recognizeFromCam(void) {
 				} //endif nEigens
 
 				// Possibly save the processed face to the training set.
-				if (saveNextFaces) {
+				if (saveNextFaces && newPersonFaces < numberOfSavedFaces) {
 					// MAYBE GET IT TO ONLY TRAIN SOME IMAGES ?
 					// Use a different filename each time.
 					sprintf(cstr, "Eigenfaces/data/%d_%s%d.pgm", nPersons + 1, newPersonName, newPersonFaces + 1);

@@ -13,14 +13,6 @@ class RemoveUser
 		@file_path = ''
 		path.each {|dir| @file_path << "#{dir}/"}
 
-		#deletando o facedata.xml que sera gerado novamente ao treinar o algoritmo.
-		begin
-			File.delete(@file_path + "facedata.xml") 
-			File.delete(@file_path + "out_averageImage.bmp")
-			File.delete(@file_path + "out_eigenfaces.bmp")
-		rescue
-		end
-
 		@data_path = @file_path.clone
 		@data_path << 'data/'
 
@@ -29,6 +21,18 @@ class RemoveUser
 	end
 
 	def remove 
+		user_lines = @lines.select {|line| line.match("#{@name}")}
+
+		return "Usuário não cadastrado" if user_lines.nil? or user_lines.empty?
+
+		#deletando o facedata.xml que sera gerado novamente ao treinar o algoritmo.
+		begin
+			File.delete(@file_path + "facedata.xml") 
+			File.delete(@file_path + "out_averageImage.bmp")
+			File.delete(@file_path + "out_eigenfaces.bmp")
+		rescue
+		end
+
 		lines = index_update_train_file
 		File.delete @file_path + "train.txt"
 		@train = File.new(@file_path + "train.txt", "w+")
@@ -38,17 +42,23 @@ class RemoveUser
 		index_update_file(user_index(files.first)) #corrigindo index dos outros arquivos
 		files.map!{|file| @data_path + file}
 		delete_all files #deletando as imagens da pessoas
+
+		return "Remoção do usuário #{@name} realizada com sucesso."
 	end
 
 	def index_update_train_file 
 		lines = @lines.select {|line| line.match("#{@name}")}
-		index = index lines.first
+		user_index = index lines.first
 
-		update_lines = @lines.select{|line| index(line) > index}
-		new_lines = @lines.select{|line| index(line) < index}
+		update_lines = @lines.select{|line| index(line).to_i > user_index.to_i}
+		new_lines = @lines.select{|line| index(line).to_i < user_index.to_i}
 
 		update_lines.each do |line|
-			new_line = line.split
+			#separando por espaços
+			new_line = line.split 
+
+			#atualizando novo index
+			new_index = index line
 			new_line[0] = (new_line.first.to_i - 1).to_s
 			new_line[-1] = new_line.last.split("_")
 			new_line[-1][0] = new_line[-1][0].split("/")
@@ -69,7 +79,7 @@ class RemoveUser
 	end
 
 	def index_update_file  index
-		files = @entries.select{|entrie| user_index(entrie) > index}
+		files = @entries.select{|entrie| user_index(entrie).to_i > index.to_i}
 
 		files.each do |file|
 			new_name = file.split('_')
@@ -90,4 +100,4 @@ class RemoveUser
 end
 
 user = RemoveUser.new ARGV.first , "../Eigenfaces/train.txt"
-user.remove	
+puts user.remove	
