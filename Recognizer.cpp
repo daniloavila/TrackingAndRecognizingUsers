@@ -112,7 +112,7 @@ int main(int argc, char** argv) {
 		msgrcv(idQueueRequest, &messageRequest, sizeof(MessageRequest) - sizeof(long), 0, 0);
 		printf("Log - Recognizer diz: Recebi pedido de reconhecimento. user_id = %d e id_memoria = %d\n", messageRequest.user_id, messageRequest.memory_id);
 
-//		pshm = getSharedMemory(messageRequest.memory_id, false);
+//		pshm = getSharedMemory(messageRequest.mem-ory_id, false);
 
 		if ((sharedMemoryId = shmget(messageRequest.memory_id, sizeof(char) * KINECT_WIDTH_CAPTURE * KINECT_HEIGHT_CAPTURE * KINECT_NUMBER_OF_CHANNELS, IPC_EXCL | 0x1ff)) < 0) {
 			printf("Erro na criacao da memoria\n");
