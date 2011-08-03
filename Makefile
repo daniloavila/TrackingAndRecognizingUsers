@@ -24,10 +24,10 @@ else
 	LDFLAGS += `pkg-config --cflags opencv` `pkg-config --libs opencv`
 endif
 
-OBJS: $(RELEASE_DIR)Recognizer.o $(RELEASE_DIR)ImageUtil.o $(RELEASE_DIR)KeyboardUtil.o $(RELEASE_DIR)KinectUtil.o $(RELEASE_DIR)MessageQueue.o $(RELEASE_DIR)SceneDrawer.o $(RELEASE_DIR)UserUtil.o $(RELEASE_DIR)Tracker.o $(RELEASE_DIR)Register.o
+OBJS: $(RELEASE_DIR)Recognizer.o $(RELEASE_DIR)ImageUtil.o $(RELEASE_DIR)KeyboardUtil.o $(RELEASE_DIR)KinectUtil.o $(RELEASE_DIR)MessageQueue.o $(RELEASE_DIR)SceneDrawer.o $(RELEASE_DIR)UserUtil.o $(RELEASE_DIR)StatisticsUtil.o $(RELEASE_DIR)Tracker.o $(RELEASE_DIR)Register.o
 
 all: $(OBJS)
-	$(CC) -o $(EXE_TRACKER) $(RELEASE_DIR)KeyboardUtil.o $(RELEASE_DIR)KinectUtil.o $(RELEASE_DIR)MessageQueue.o $(RELEASE_DIR)SceneDrawer.o $(RELEASE_DIR)UserUtil.o $(RELEASE_DIR)Tracker.o $(CCFLAGS2) $(USED_LIBS) $(LDFLAGS)
+	$(CC) -o $(EXE_TRACKER) $(RELEASE_DIR)KeyboardUtil.o $(RELEASE_DIR)KinectUtil.o $(RELEASE_DIR)MessageQueue.o $(RELEASE_DIR)SceneDrawer.o $(RELEASE_DIR)UserUtil.o $(RELEASE_DIR)StatisticsUtil.o $(RELEASE_DIR)Tracker.o $(CCFLAGS2) $(USED_LIBS) $(LDFLAGS) 
 	$(CC) -o $(EXE_REC) $(RELEASE_DIR)ImageUtil.o $(RELEASE_DIR)KeyboardUtil.o $(RELEASE_DIR)KinectUtil.o $(RELEASE_DIR)MessageQueue.o $(RELEASE_DIR)UserUtil.o $(RELEASE_DIR)Recognizer.o $(CCFLAGS2) $(USED_LIBS) $(LDFLAGS)
 	$(CC) -o $(EXE_REG) $(RELEASE_DIR)ImageUtil.o $(RELEASE_DIR)KeyboardUtil.o $(RELEASE_DIR)KinectUtil.o $(RELEASE_DIR)MessageQueue.o $(RELEASE_DIR)UserUtil.o $(RELEASE_DIR)Register.o $(CCFLAGS2) $(USED_LIBS) $(LDFLAGS)
 
@@ -43,9 +43,11 @@ $(RELEASE_DIR)SceneDrawer.o:
 	$(CC) $(CCFLAGS) $(INC_DIRS) -o $(RELEASE_DIR)SceneDrawer.o SceneDrawer.cpp
 $(RELEASE_DIR)UserUtil.o: $(RELEASE_DIR)MessageQueue.o
 	$(CC) $(CCFLAGS) $(INC_DIRS) -o $(RELEASE_DIR)UserUtil.o UserUtil.cpp
+$(RELEASE_DIR)StatisticsUtil.o: $(RELEASE_DIR)MessageQueue.o
+	$(CC) $(CCFLAGS) $(INC_DIRS) -o $(RELEASE_DIR)StatisticsUtil.o StatisticsUtil.cpp	
 $(RELEASE_DIR)Recognizer.o: $(RELEASE_DIR)ImageUtil.o  $(RELEASE_DIR)KinectUtil.o $(RELEASE_DIR)MessageQueue.o $(RELEASE_DIR)UserUtil.o
 	$(CC) $(CCFLAGS) $(INC_DIRS) -o $(RELEASE_DIR)Recognizer.o Recognizer.cpp
-$(RELEASE_DIR)Tracker.o: $(RELEASE_DIR)KeyboardUtil.o $(RELEASE_DIR)KinectUtil.o $(RELEASE_DIR)MessageQueue.o $(RELEASE_DIR)SceneDrawer.o $(RELEASE_DIR)UserUtil.o
+$(RELEASE_DIR)Tracker.o: $(RELEASE_DIR)KeyboardUtil.o $(RELEASE_DIR)KinectUtil.o $(RELEASE_DIR)MessageQueue.o $(RELEASE_DIR)SceneDrawer.o $(RELEASE_DIR)UserUtil.o $(RELEASE_DIR)StatisticsUtil.o
 	$(CC) $(CCFLAGS) $(INC_DIRS) -o $(RELEASE_DIR)Tracker.o Tracker.cpp
 $(RELEASE_DIR)Register.o: $(RELEASE_DIR)ImageUtil.o  $(RELEASE_DIR)KinectUtil.o $(RELEASE_DIR)MessageQueue.o $(RELEASE_DIR)UserUtil.o
 	$(CC) $(CCFLAGS) $(INC_DIRS) -o $(RELEASE_DIR)Register.o Register.cpp

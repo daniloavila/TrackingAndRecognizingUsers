@@ -13,11 +13,20 @@ xn::Context context;
 xn::ImageGenerator image;
 xn::SceneAnalyzer sceneAnalyzer;
 
+int sharedMemoryCount = 0;
+
+/**
+ * Calcula a proxima key da memoria compartilhada.
+ */
+unsigned int getMemoryKey() {
+	return SHARED_MEMORY + (sharedMemoryCount++ * 4);
+}
+
 char *getSharedMemory(int memory_id, bool create) {
 	int sharedMemoryId;
 
 	short flag = 0;
-	if(create) {
+	if (create) {
 		flag = IPC_CREAT;
 	} else {
 		flag = IPC_EXCL;
@@ -32,8 +41,6 @@ char *getSharedMemory(int memory_id, bool create) {
 	}
 	return maskPixels;
 }
-
-
 
 /**
  * Transforma um array de XnRGB24Pixel para um array de char representando a mesma infromação.
@@ -109,7 +116,7 @@ void transformAreaVision(short unsigned int* source) {
 
 }
 
-char mountKinect2(){
+char mountKinect2() {
 	XnStatus nRetVal = XN_STATUS_OK;
 
 	xn::EnumerationErrors errors;
@@ -132,8 +139,6 @@ char mountKinect2(){
 	//procura por um node image nas configuracoes
 	nRetVal = context.FindExistingNode(XN_NODE_TYPE_IMAGE, image);
 	CHECK_RC(nRetVal, "Find image generator");
-
-
 
 	//comecar a ler dados do kinect
 	nRetVal = context.StartGeneratingAll();
@@ -197,7 +202,7 @@ IplImage* getKinectFrame() {
 	XnStatus nRetVal = XN_STATUS_OK;
 
 	if (!kinectMounted) {
-		if(!mountKinect2()) {
+		if (!mountKinect2()) {
 			return NULL;
 		}
 		kinectMounted = 1;

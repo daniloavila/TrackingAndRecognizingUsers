@@ -1,18 +1,15 @@
 #include "ImageUtil.h"
 
-
 // Return a new image that is always greyscale, whether the input image was RGB or Greyscale.
 // Remember to free the returned image using cvReleaseImage() when finished.
-IplImage* convertImageToGreyscale(const IplImage *imageSrc)
-{
+IplImage* convertImageToGreyscale(const IplImage *imageSrc) {
 	IplImage *imageGrey;
 	// Either convert the image to greyscale, or make a copy of the existing greyscale image.
 	// This is to make sure that the user can always call cvReleaseImage() on the output, whether it was greyscale or not.
 	if (imageSrc->nChannels == 3) {
-		imageGrey = cvCreateImage( cvGetSize(imageSrc), IPL_DEPTH_8U, 1 );
-		cvCvtColor( imageSrc, imageGrey, CV_BGR2GRAY );
-	}
-	else {
+		imageGrey = cvCreateImage(cvGetSize(imageSrc), IPL_DEPTH_8U, 1);
+		cvCvtColor(imageSrc, imageGrey, CV_BGR2GRAY);
+	} else {
 		imageGrey = cvCloneImage(imageSrc);
 	}
 	return imageGrey;
@@ -20,8 +17,7 @@ IplImage* convertImageToGreyscale(const IplImage *imageSrc)
 
 // Creates a new image copy that is of a desired size.
 // Remember to free the new image later.
-IplImage* resizeImage(const IplImage *origImg, int newWidth, int newHeight)
-{
+IplImage* resizeImage(const IplImage *origImg, int newWidth, int newHeight) {
 	IplImage *outImg = 0;
 	int origWidth;
 	int origHeight;
@@ -38,21 +34,19 @@ IplImage* resizeImage(const IplImage *origImg, int newWidth, int newHeight)
 	outImg = cvCreateImage(cvSize(newWidth, newHeight), origImg->depth, origImg->nChannels);
 	if (newWidth > origImg->width && newHeight > origImg->height) {
 		// Make the image larger
-		cvResetImageROI((IplImage*)origImg);
-		cvResize(origImg, outImg, CV_INTER_LINEAR);	// CV_INTER_CUBIC or CV_INTER_LINEAR is good for enlarging
-	}
-	else {
+		cvResetImageROI((IplImage*) origImg);
+		cvResize(origImg, outImg, CV_INTER_LINEAR); // CV_INTER_CUBIC or CV_INTER_LINEAR is good for enlarging
+	} else {
 		// Make the image smaller
-		cvResetImageROI((IplImage*)origImg);
-		cvResize(origImg, outImg, CV_INTER_AREA);	// CV_INTER_AREA is good for shrinking / decimation, but bad at enlarging.
+		cvResetImageROI((IplImage*) origImg);
+		cvResize(origImg, outImg, CV_INTER_AREA); // CV_INTER_AREA is good for shrinking / decimation, but bad at enlarging.
 	}
 
 	return outImg;
 }
 
 // Returns a new image that is a cropped version of the original image. 
-IplImage* cropImage(const IplImage *img, const CvRect region)
-{
+IplImage* cropImage(const IplImage *img, const CvRect region) {
 	IplImage *imageTmp;
 	IplImage *imageRGB;
 	CvSize size;
@@ -75,16 +69,15 @@ IplImage* cropImage(const IplImage *img, const CvRect region)
 	size.width = region.width;
 	size.height = region.height;
 	imageRGB = cvCreateImage(size, IPL_DEPTH_8U, img->nChannels);
-	cvCopy(imageTmp, imageRGB, NULL);	// Copy just the region.
+	cvCopy(imageTmp, imageRGB, NULL); // Copy just the region.
 
-    cvReleaseImage( &imageTmp );
-	return imageRGB;		
+	cvReleaseImage(&imageTmp);
+	return imageRGB;
 }
 
 // Get an 8-bit equivalent of the 32-bit Float image.
 // Returns a new image, so remember to call 'cvReleaseImage()' on the result.
-IplImage* convertFloatImageToUcharImage(const IplImage *srcImg)
-{
+IplImage* convertFloatImageToUcharImage(const IplImage *srcImg) {
 	IplImage *dstImg = 0;
 	if ((srcImg) && (srcImg->width > 0 && srcImg->height > 0)) {
 
@@ -99,20 +92,19 @@ IplImage* convertFloatImageToUcharImage(const IplImage *srcImg)
 			minVal = -1e30;
 		if (cvIsNaN(maxVal) || maxVal > 1e30)
 			maxVal = 1e30;
-		if (maxVal-minVal == 0.0f)
-			maxVal = minVal + 0.001;	// remove potential divide by zero errors.
+		if (maxVal - minVal == 0.0f)
+			maxVal = minVal + 0.001; // remove potential divide by zero errors.
 
 		// Convert the format
 		dstImg = cvCreateImage(cvSize(srcImg->width, srcImg->height), 8, 1);
-		cvConvertScale(srcImg, dstImg, 255.0 / (maxVal - minVal), - minVal * 255.0 / (maxVal-minVal));
+		cvConvertScale(srcImg, dstImg, 255.0 / (maxVal - minVal), -minVal * 255.0 / (maxVal - minVal));
 	}
 	return dstImg;
 }
 
 // Store a greyscale floating-point CvMat image into a BMP/JPG/GIF/PNG image,
 // since cvSaveImage() can only handle 8bit images (not 32bit float images).
-void saveFloatImage(const char *filename, const IplImage *srcImg)
-{
+void saveFloatImage(const char *filename, const IplImage *srcImg) {
 	//cout << "Saving Float Image '" << filename << "' (" << srcImg->width << "," << srcImg->height << "). " << endl;
 	IplImage *byteImg = convertFloatImageToUcharImage(srcImg);
 	cvSaveImage(filename, byteImg);
@@ -121,10 +113,9 @@ void saveFloatImage(const char *filename, const IplImage *srcImg)
 
 // Perform face detection on the input image, using the given Haar cascade classifier.
 // Returns a rectangle for the detected region in the given image.
-CvRect detectFaceInImage(const IplImage *inputImg, const CvHaarClassifierCascade* cascade )
-{
+CvRect detectFaceInImage(const IplImage *inputImg, const CvHaarClassifierCascade* cascade) {
 	const CvSize minFeatureSize = cvSize(20, 20);
-	const int flags = CV_HAAR_FIND_BIGGEST_OBJECT | CV_HAAR_DO_ROUGH_SEARCH;	// Only search for 1 face.
+	const int flags = CV_HAAR_FIND_BIGGEST_OBJECT | CV_HAAR_DO_ROUGH_SEARCH; // Only search for 1 face.
 	const float search_scale_factor = 1.1f;
 	IplImage *detectImg;
 	IplImage *greyImg = 0;
@@ -135,36 +126,41 @@ CvRect detectFaceInImage(const IplImage *inputImg, const CvHaarClassifierCascade
 	int i;
 
 	storage = cvCreateMemStorage(0);
-	cvClearMemStorage( storage );
+	cvClearMemStorage(storage);
 
 	// If the image is color, use a greyscale copy of the image.
-	detectImg = (IplImage*)inputImg;	// Assume the input image is to be used.
-	if (inputImg->nChannels > 1) 
-	{
-		greyImg = cvCreateImage(cvSize(inputImg->width, inputImg->height), IPL_DEPTH_8U, 1 );
-		cvCvtColor( inputImg, greyImg, CV_BGR2GRAY );
-		detectImg = greyImg;	// Use the greyscale version as the input.
+	detectImg = (IplImage*) inputImg; // Assume the input image is to be used.
+	if (inputImg->nChannels > 1) {
+		greyImg = cvCreateImage(cvSize(inputImg->width, inputImg->height), IPL_DEPTH_8U, 1);
+		cvCvtColor(inputImg, greyImg, CV_BGR2GRAY);
+		detectImg = greyImg; // Use the greyscale version as the input.
 	}
 
 	// Detect all the faces.
-	t = (double)cvGetTickCount();
-	rects = cvHaarDetectObjects( detectImg, (CvHaarClassifierCascade*)cascade, storage,
-				search_scale_factor, 3, flags, minFeatureSize );
-	t = (double)cvGetTickCount() - t;
+	t = (double) cvGetTickCount();
+	rects = cvHaarDetectObjects(detectImg, (CvHaarClassifierCascade*) cascade, storage, search_scale_factor, 3, flags, minFeatureSize);
+	t = (double) cvGetTickCount() - t;
 	// printf("[Face Detection took %d ms and found %d objects]\n", cvRound( t/((double)cvGetTickFrequency()*1000.0) ), rects->total );
 
 	// Get the first detected face (the biggest).
 	if (rects->total > 0) {
-        rc = *(CvRect*)cvGetSeqElem( rects, 0 );
-    }
-	else
-		rc = cvRect(-1,-1,-1,-1);	// Couldn't find the face.
+		rc = *(CvRect*) cvGetSeqElem(rects, 0);
+	} else
+		rc = cvRect(-1, -1, -1, -1); // Couldn't find the face.
 
 	//cvReleaseHaarClassifierCascade( &cascade );
 	//cvReleaseImage( &detectImg );
 	if (greyImg)
-		cvReleaseImage( &greyImg );
-	cvReleaseMemStorage( &storage );
+		cvReleaseImage(&greyImg);
+	cvReleaseMemStorage(&storage);
 
-	return rc;	// Return the biggest face found, or (-1,-1,-1,-1).
+	return rc; // Return the biggest face found, or (-1,-1,-1,-1).
+}
+
+Mat rotateImage(const Mat& source, double angle) {
+	Point2f src_center(source.cols / 2.0F, source.rows / 2.0F);
+	Mat rot_mat = getRotationMatrix2D(src_center, angle, 1.0);
+	Mat dst;
+	warpAffine(source, dst, rot_mat, source.size());
+	return dst;
 }
