@@ -1,3 +1,4 @@
+
 #include <stdio.h>
 #include <curses.h>
 #include <sys/types.h>
@@ -10,6 +11,8 @@
 #include <opencv/highgui.h>
 #include <XnCppWrapper.h>
 #include <sys/shm.h>
+#include <signal.h>
+#include <errno.h>
 
 #if (XN_PLATFORM == XN_PLATFORM_MACOSX)
 #include <GLUT/glut.h>
@@ -51,6 +54,7 @@ CvMat * projectedTrainFaceMat = 0; // projected training faces
 CvCapture* camera = 0; // The camera device.
 
 // Function prototypes
+void cleanup(int i);
 void doPCA();
 int loadTrainingData(CvMat ** pTrainPersonNumMat);
 int findNearestNeighbor(float * projectedTestFace, float *pConfidence);
@@ -81,10 +85,12 @@ int main(int argc, char** argv) {
 
 	MessageRequest messageRequest;
 	MessageResponse messageResponse;
+	int sharedMemoryId;
 	char* nome;
 
 	char *pshm;
-	int sharedMemoryId;
+
+	signal(SIGUSR1, cleanup);
 
 	// Load the previously saved training data
 	if (loadTrainingData(&trainPersonNumMat)) {
@@ -139,6 +145,7 @@ int main(int argc, char** argv) {
 		}
 
 		// deleta memoria compartilhada
+		shmdt(pshm);
 		shmctl(sharedMemoryId, IPC_RMID, NULL);
 
 		MessageResponse messageResponse;
@@ -494,3 +501,19 @@ char* recognizeFromCamImg(IplImage *camImg, CvHaarClassifierCascade* faceCascade
 
 	return NULL;
 }
+
+void cleanup(int i){
+	MessageRequest messageRequest;
+	int sharedMemoryId;
+
+	while(msgrcv(idQueueRequest, &messageRequest, sizeof(MessageRequest) - sizeof(long), 0, IPC_NOWAIT) >= 0){
+		sharedMemoryId = shmget(messageRequest.memory_id, sizeof(char) * KINECT_WIDTH_CAPTURE * KINECT_HEIGHT_CAPTURE * KINECT_NUMBER_OF_CHANNELS, IPC_EXCL | 0x1ff);
+		shmctl(sharedMemoryId, IPC_RMID, NULL);	
+	};
+
+	msgctl(idQueueRequest, IPC_RMID, NULL);
+
+	exit(1);
+			
+}
+
