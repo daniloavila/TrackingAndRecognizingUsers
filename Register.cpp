@@ -615,6 +615,7 @@ void recognizeFromCam(void) {
 				if (saveNextFaces && newPersonFaces < numberOfSavedFaces) {
 					// MAYBE GET IT TO ONLY TRAIN SOME IMAGES ?
 					// Use a different filename each time.
+					sleep(0.5);
 					sprintf(cstr, "Eigenfaces/data/%d_%s%d.pgm", nPersons + 1, newPersonName, newPersonFaces + 1);
 					printf("Storing the current face of '%s' into image '%s'.\n", newPersonName, cstr);
 					cvSaveImage(cstr, processedFaceImg, NULL);
