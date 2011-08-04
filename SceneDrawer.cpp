@@ -226,19 +226,20 @@ void DrawDepthMap(const xn::DepthMetaData& dmd, const xn::SceneMetaData& smd, ma
 	g_UserGenerator.GetUsers(aUsers, nUsers);
 	for (int i = 0; i < nUsers; ++i) {
 		if (g_bPrintID) {
-			XnPoint3D com;
+			XnPoint3D com, comPosition;
+
 			g_UserGenerator.GetCoM(aUsers[i], com);
+			comPosition = com;
 			g_DepthGenerator.ConvertRealWorldToProjective(1, &com, &com);
 
 			xnOSMemSet(strLabel, 0, sizeof(strLabel));
 			if (!g_bPrintState) {
 				// Tracking
-				sprintf(strLabel, "%d", aUsers[i]);
+					sprintf(strLabel, "%d", aUsers[i]);	
 			} else {
 				// Nothing
 				if(strlen((users)[aUsers[i]]) == 0) {
 					long long int timeseconds = time(NULL);
-
 					if(timeseconds % 3 == 0) {
 						sprintf(strLabel, "%d - Recognizing.", aUsers[i]);
 					} else if(timeseconds % 3 == 1) {
@@ -247,7 +248,11 @@ void DrawDepthMap(const xn::DepthMetaData& dmd, const xn::SceneMetaData& smd, ma
 						sprintf(strLabel, "%d - Recognizing...", aUsers[i]);
 					}
 				} else {
-					sprintf(strLabel, "%d - %s\n%f", aUsers[i], (users)[aUsers[i]], (usersConfidence)[aUsers[i]]);
+						if(&com != NULL){
+							sprintf(strLabel, "%d - %s\n%f - (%.2lf, %.2lf, %.2lf)", aUsers[i], (users)[aUsers[i]], (usersConfidence)[aUsers[i]], comPosition.X, comPosition.Y, comPosition.Z);	
+						}else{
+							sprintf(strLabel, "%d - %s\n%f", aUsers[i], (users)[aUsers[i]], (usersConfidence)[aUsers[i]]);
+						}
 				}
 			}
 
