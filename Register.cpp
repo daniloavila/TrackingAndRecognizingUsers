@@ -59,7 +59,15 @@ CvMat* retrainOnline(void);
 // Startup routine.
 int main(int argc, char** argv) {
 	printf("register\n");
-	recognizeFromCam();
+
+	if( argc >= 2 && strcmp(argv[1], "train") == 0 ) {
+		char *szFileTrain;
+		szFileTrain = "Eigenfaces/train.txt";
+		learn(szFileTrain);
+
+	}else{
+		recognizeFromCam();	
+	}
 }
 
 // Save all the eigenvectors as images, so that they can be checked.
@@ -501,6 +509,7 @@ void recognizeFromCam(void) {
 		int keyPressed = 0;
 		FILE *trainFile;
 		float confidence;
+		int numberOfSavedFaces = 50;
 
 		// Handle keyboard input in the console.
 		if (kbhit())
@@ -603,7 +612,7 @@ void recognizeFromCam(void) {
 				} //endif nEigens
 
 				// Possibly save the processed face to the training set.
-				if (saveNextFaces) {
+				if (saveNextFaces && newPersonFaces < numberOfSavedFaces) {
 					// MAYBE GET IT TO ONLY TRAIN SOME IMAGES ?
 					// Use a different filename each time.
 					sprintf(cstr, "Eigenfaces/data/%d_%s%d.pgm", nPersons + 1, newPersonName, newPersonFaces + 1);
