@@ -131,6 +131,8 @@ void requestRecognition(int id) {
 	// Busca a area da imagem onde o usuario está.
 	getFrameFromUserId((XnUserID) id, maskPixels);
 
+	shmdt(maskPixels);
+
 	printf("Log - Tracker diz: Enviando pedido de reconhecimento. user_id = %d e id_memoria = %d\n", messageRequest.user_id, messageRequest.memory_id);
 
 	if (msgsnd(idQueueRequest, &messageRequest, sizeof(MessageRequest) - sizeof(long), 0) > 0) {
@@ -205,9 +207,8 @@ void cleanupQueueAndExit() {
 	g_Context.Shutdown();
 
 	//matando a fila de mensagens
-	msgctl(idQueueRequest, IPC_RMID, NULL);
 	msgctl(idQueueResponse, IPC_RMID, NULL);
-	kill(faceRecId, SIGKILL);
+	kill(faceRecId, SIGUSR1);
 
 	exit(1);
 }
@@ -300,8 +301,8 @@ void glutKeyboard(unsigned char key, int x, int y) {
 	case 'p':
 		g_bPause = !g_bPause;
 		break;
-	case 'c':
-		printUsersCoM(g_UserGenerator, g_SceneAnalyzer);
+	// case 'c':
+		// printUsersCoM(g_UserGenerator, g_SceneAnalyzer);
 	}
 }
 void glInit(int * pargc, char ** argv) {
