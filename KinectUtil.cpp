@@ -116,14 +116,10 @@ void transformAreaVision(short unsigned int* source) {
 
 }
 
-<<<<<<< HEAD
-char mountKinect2() {
-=======
 /**
  * Inicia o Kinect
  */
 char mountKinect(){
->>>>>>> 09d275ba30826170f03ab867115fc53ec639d3dd
 	XnStatus nRetVal = XN_STATUS_OK;
 
 	xn::EnumerationErrors errors;
@@ -161,11 +157,7 @@ IplImage* getKinectFrame() {
 	XnStatus nRetVal = XN_STATUS_OK;
 
 	if (!kinectMounted) {
-<<<<<<< HEAD
-		if (!mountKinect2()) {
-=======
 		if(!mountKinect()) {
->>>>>>> 09d275ba30826170f03ab867115fc53ec639d3dd
 			return NULL;
 		}
 		kinectMounted = 1;
