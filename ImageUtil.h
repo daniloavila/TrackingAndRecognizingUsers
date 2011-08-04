@@ -14,6 +14,6 @@ IplImage* convertFloatImageToUcharImage(const IplImage *srcImg);
 void saveFloatImage(const char *filename, const IplImage *srcImg);
 CvRect detectFaceInImage(const IplImage *inputImg, const CvHaarClassifierCascade* cascade );
 
-Mat rotateImage(const Mat& source, double angle);
+IplImage rotateImage(const IplImage *sourceImage, double angle);
 
 #endif

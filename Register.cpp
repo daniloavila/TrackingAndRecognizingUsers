@@ -10,6 +10,8 @@
 #include <XnCppWrapper.h>
 #include <sys/shm.h>
 
+#include <cstdlib>
+
 #if (XN_PLATFORM == XN_PLATFORM_MACOSX)
 #include <GLUT/glut.h>
 #else
@@ -616,9 +618,27 @@ void recognizeFromCam(void) {
 					// MAYBE GET IT TO ONLY TRAIN SOME IMAGES ?
 					// Use a different filename each time.
 					sleep(0.5);
+
 					sprintf(cstr, "Eigenfaces/data/%d_%s%d.pgm", nPersons + 1, newPersonName, newPersonFaces + 1);
 					printf("Storing the current face of '%s' into image '%s'.\n", newPersonName, cstr);
 					cvSaveImage(cstr, processedFaceImg, NULL);
+
+					// #############################################
+					char cstrRotate[256];
+
+					double angle = rand() % 10;
+					int signedAngle = rand() % 1;
+					if(signedAngle == 1) {
+						printf("NEGATIVO\n");
+						angle = angle * -1;
+					}
+
+					IplImage rotateFaceImg = rotateImage(processedFaceImg, 10);
+					sprintf(cstrRotate, "Eigenfaces/data/%d_%s%d_rotate%d°.pgm", nPersons + 1, newPersonName, newPersonFaces + 1, angle);
+					printf("Storing the rotate current face of '%s' into image '%s'.\n", newPersonName, cstrRotate);
+					cvSaveImage(cstrRotate, &rotateFaceImg, NULL);
+					// #############################################
+
 					newPersonFaces++;
 				}
 

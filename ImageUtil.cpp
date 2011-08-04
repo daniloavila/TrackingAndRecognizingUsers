@@ -157,10 +157,12 @@ CvRect detectFaceInImage(const IplImage *inputImg, const CvHaarClassifierCascade
 	return rc; // Return the biggest face found, or (-1,-1,-1,-1).
 }
 
-Mat rotateImage(const Mat& source, double angle) {
+IplImage rotateImage(const IplImage *sourceImage, double angle) {
+	Mat source(sourceImage, false);
 	Point2f src_center(source.cols / 2.0F, source.rows / 2.0F);
 	Mat rot_mat = getRotationMatrix2D(src_center, angle, 1.0);
 	Mat dst;
 	warpAffine(source, dst, rot_mat, source.size());
-	return dst;
+	IplImage rotateImage = IplImage(dst);
+	return rotateImage;
 }
