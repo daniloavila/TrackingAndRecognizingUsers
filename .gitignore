@@ -1,8 +1,6 @@
 Release/
-Release/*.o
 Debug/
 tracker
 recognizer
 register
 Eigenfaces/
-Eigenfaces/*
