@@ -155,6 +155,7 @@ CvRect detectFaceInImage(const IplImage *inputImg, const CvHaarClassifierCascade
 	cvReleaseMemStorage(&storage);
 
 	return rc; // Return the biggest face found, or (-1,-1,-1,-1).
+
 }
 
 IplImage rotateImage(const IplImage *sourceImage, double angle) {
@@ -165,4 +166,30 @@ IplImage rotateImage(const IplImage *sourceImage, double angle) {
 	warpAffine(source, dst, rot_mat, source.size());
 	IplImage rotateImage = IplImage(dst);
 	return rotateImage;
+}
+
+// Returns a uniformly distributed random number
+double uniform() {
+	return (rand() / (float) 0x7fff) - 0.5;
+}
+
+IplImage* generateNoiseImage(IplImage* img, float amount) {
+	CvSize imgSize = cvGetSize(img);
+	IplImage* imgTemp = cvCloneImage(img); // This will hold the noisy image
+
+	for (int y = 0; y < imgSize.height; y++) {
+		for (int x = 0; x < imgSize.width; x++) {
+			int randomValue = (char) ((uniform()) * amount);
+			CvScalar scalar = cvGet2D(imgTemp, y, x);
+
+			scalar.val[0] = scalar.val[0] + randomValue;
+			scalar.val[1] = scalar.val[1] + randomValue;
+			scalar.val[2] = scalar.val[2] + randomValue;
+			scalar.val[3] = scalar.val[3] + randomValue;
+
+			cvSet2D(imgTemp, y, x, scalar);
+		}
+	}
+
+	return imgTemp;
 }

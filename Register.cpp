@@ -9,6 +9,7 @@
 #include <opencv/highgui.h>
 #include <XnCppWrapper.h>
 #include <sys/shm.h>
+
 #include <cstdlib>
 
 #if (XN_PLATFORM == XN_PLATFORM_MACOSX)
@@ -20,6 +21,15 @@
 #include "KeyboardUtil.h"
 #include "ImageUtil.h"
 #include "KinectUtil.h"
+
+#define NUMBER_OF_SAVED_FACES 50
+#define MAX_ANGLE_OF_ROTATE 10
+#define NUMBER_OF_ROTATE_IMAGES 20
+#define NUMBER_OF_FLIP_IMAGES 20
+#define NUMBER_OF_NOISE_IMAGES 20
+
+// vai de 0 a 255 e quanto menor mais ruído.
+#define LEVEL_OF_NOISE_IMAGES 10
 
 using namespace std;
 
@@ -61,13 +71,13 @@ CvMat* retrainOnline(void);
 int main(int argc, char** argv) {
 	printf("register\n");
 
-	if( argc >= 2 && strcmp(argv[1], "train") == 0 ) {
+	if (argc >= 2 && strcmp(argv[1], "train") == 0) {
 		char *szFileTrain;
 		szFileTrain = "Eigenfaces/train.txt";
 		learn(szFileTrain);
 
-	}else{
-		recognizeFromCam();	
+	} else {
+		recognizeFromCam();
 	}
 }
 
@@ -450,6 +460,76 @@ IplImage* getCameraFrame(void) {
 	return frame;
 }
 
+int saveRotateImages(int personId, char *newPersonName, int numberOfSavedFaces) {
+	printf("Rotate images...\n");
+	for (int i = 1; i <= NUMBER_OF_ROTATE_IMAGES; i++) {
+		char cstrRotate[256], cstr[256];
+		IplImage *processedFaceImg;
+
+		int personFace = rand() % numberOfSavedFaces;
+
+		sprintf(cstr, "Eigenfaces/data/%d_%s%d.pgm", personId, newPersonName, personFace);
+		processedFaceImg = cvLoadImage(cstr);
+
+		int randNumber = rand();
+		int angle = randNumber % MAX_ANGLE_OF_ROTATE;
+		int signedAngle = randNumber % 2;
+		if (signedAngle == 1) {
+			angle = angle * -1;
+		}
+
+		IplImage rotateFaceImg = rotateImage(processedFaceImg, (double) angle);
+		sprintf(cstrRotate, "Eigenfaces/data/%d_%s%d.pgm", personId, newPersonName, numberOfSavedFaces + i);
+		printf("Storing the current face of '%s' into image '%s'.\n", newPersonName, cstrRotate);
+
+		cvSaveImage(cstrRotate, &rotateFaceImg, NULL);
+	}
+
+	return NUMBER_OF_ROTATE_IMAGES;
+}
+
+int saveFlipImages(int personId, char *newPersonName, int numberOfSavedFaces) {
+	printf("Flip images...\n");
+	for (int i = 1; i <= NUMBER_OF_FLIP_IMAGES; i++) {
+		char cstrFlip[256], cstr[256];
+		IplImage *processedFaceImg;
+
+		int personFace = rand() % numberOfSavedFaces;
+
+		sprintf(cstr, "Eigenfaces/data/%d_%s%d.pgm", personId, newPersonName, personFace);
+		processedFaceImg = cvLoadImage(cstr);
+
+		sprintf(cstrFlip, "Eigenfaces/data/%d_%s%d.pgm", personId, newPersonName, numberOfSavedFaces + i);
+		printf("Storing the current face of '%s' into image '%s'.\n", newPersonName, cstrFlip);
+
+		cvConvertImage(processedFaceImg, processedFaceImg, CV_CVTIMG_FLIP);
+		cvSaveImage(cstrFlip, processedFaceImg, NULL);
+	}
+
+	return NUMBER_OF_FLIP_IMAGES;
+}
+
+int saveNoiseImages(int personId, char *newPersonName, int numberOfSavedFaces) {
+	printf("Noise images...\n");
+	for (int i = 1; i <= NUMBER_OF_NOISE_IMAGES; i++) {
+		char cstrNoise[256], cstr[256];
+		IplImage *processedFaceImg;
+
+		int personFace = rand() % numberOfSavedFaces;
+
+		sprintf(cstr, "Eigenfaces/data/%d_%s%d.pgm", personId, newPersonName, personFace);
+		processedFaceImg = cvLoadImage(cstr);
+
+		sprintf(cstrNoise, "Eigenfaces/data/%d_%s%d.pgm", personId, newPersonName, numberOfSavedFaces + i);
+		printf("Storing the current face of '%s' into image '%s'.\n", newPersonName, cstrNoise);
+
+		IplImage *noiseFaceImg = generateNoiseImage(processedFaceImg, LEVEL_OF_NOISE_IMAGES);
+		cvSaveImage(cstrNoise, noiseFaceImg, NULL);
+	}
+
+	return NUMBER_OF_NOISE_IMAGES;
+}
+
 // Continuously recognize the person in the camera.
 void recognizeFromCam(void) {
 	int i;
@@ -458,7 +538,7 @@ void recognizeFromCam(void) {
 	double timeFaceRecognizeStart;
 	double tallyFaceRecognizeTime;
 	CvHaarClassifierCascade* faceCascade;
-	char cstr[256], cstrRotate[256];
+	char cstr[256];
 	int saveNextFaces = FALSE;
 	char newPersonName[256];
 	int newPersonFaces;
@@ -468,7 +548,6 @@ void recognizeFromCam(void) {
 	projectedTestFace = 0;
 	saveNextFaces = FALSE;
 	newPersonFaces = 0;
-
 
 	printf("Recognizing person in the camera ...\n");
 
@@ -486,6 +565,7 @@ void recognizeFromCam(void) {
 
 	// Create a GUI window for the user to see the camera image.
 	cvNamedWindow("Input", CV_WINDOW_AUTOSIZE);
+	cvMoveWindow("Input", 10, 10);
 
 	// Make sure there is a "data" folder, for storing the new person.
 	mkdir("Eigenfaces/data", 0777);
@@ -510,7 +590,6 @@ void recognizeFromCam(void) {
 		int keyPressed = 0;
 		FILE *trainFile;
 		float confidence;
-		int numberOfSavedFaces = 50;
 
 		// Handle keyboard input in the console.
 		if (kbhit())
@@ -568,7 +647,7 @@ void recognizeFromCam(void) {
 		}
 
 		// Get the camera frame
-		if(!kinectFail) {
+		if (!kinectFail) {
 			camImg = getKinectFrame();
 		}
 
@@ -613,7 +692,7 @@ void recognizeFromCam(void) {
 				} //endif nEigens
 
 				// Possibly save the processed face to the training set.
-				if (saveNextFaces && newPersonFaces < numberOfSavedFaces) {
+				if (saveNextFaces && newPersonFaces < NUMBER_OF_SAVED_FACES) {
 					// MAYBE GET IT TO ONLY TRAIN SOME IMAGES ?
 					// Use a different filename each time.
 					sleep(0.5);
@@ -622,29 +701,11 @@ void recognizeFromCam(void) {
 					printf("Storing the current face of '%s' into image '%s'.\n", newPersonName, cstr);
 					cvSaveImage(cstr, processedFaceImg, NULL);
 
-					// #############################################
-					printf("\nANTES\n");
-					printf("agora");
-					printf("agora123123\n\n\n");
-					printf("%f\n\n\n", rand());
-					double angle = rand() % 10;
-					printf("agora2");
-					int signedAngle = rand() % 1;
-					printf("agora3");
-					if(signedAngle == 1) {
-						printf("NEGATIVO\n");
-						angle = angle * -1;
-					}
-
-					IplImage rotateFaceImg = rotateImage(processedFaceImg, 10);
-					printf("\nDEPOIS\n");
-
-					sprintf(cstrRotate, "Eigenfaces/data/%d_%s%d_rotate%d°.pgm", nPersons + 1, newPersonName, newPersonFaces + 1, angle);
-					printf("Storing the rotate current face of '%s' into image '%s'.\n", newPersonName, cstrRotate);
-					cvSaveImage(cstrRotate, &rotateFaceImg, NULL);
-					// #############################################
-
 					newPersonFaces++;
+				} else if (newPersonFaces == NUMBER_OF_SAVED_FACES) {
+					newPersonFaces = newPersonFaces + saveRotateImages(nPersons + 1, newPersonName, newPersonFaces);
+					newPersonFaces = newPersonFaces + saveFlipImages(nPersons + 1, newPersonName, newPersonFaces);
+					newPersonFaces = newPersonFaces + saveNoiseImages(nPersons + 1, newPersonName, newPersonFaces);
 				}
 
 				// Free the resources used for this frame.
@@ -693,4 +754,3 @@ void recognizeFromCam(void) {
 	cvReleaseCapture(&camera);
 	cvReleaseHaarClassifierCascade(&faceCascade);
 }
-
