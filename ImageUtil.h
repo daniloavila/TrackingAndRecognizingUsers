@@ -15,5 +15,6 @@ void saveFloatImage(const char *filename, const IplImage *srcImg);
 CvRect detectFaceInImage(const IplImage *inputImg, const CvHaarClassifierCascade* cascade );
 
 IplImage rotateImage(const IplImage *sourceImage, double angle);
+IplImage* generateNoiseImage(IplImage* img, float amount = 255);
 
 #endif

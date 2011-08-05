@@ -25,6 +25,8 @@
 #define NUMBER_OF_SAVED_FACES 50
 #define MAX_ANGLE_OF_ROTATE 10
 #define NUMBER_OF_ROTATE_IMAGES 20
+#define NUMBER_OF_FLIP_IMAGES 20
+#define NUMBER_OF_NOISE_IMAGES 20
 
 using namespace std;
 
@@ -455,13 +457,13 @@ IplImage* getCameraFrame(void) {
 	return frame;
 }
 
-int saveRotateImages(int personId, char *newPersonName) {
+int saveRotateImages(int personId, char *newPersonName, int numberOfSavedFaces) {
 	printf("Rotate images...\n");
 	for (int i = 1; i <= NUMBER_OF_ROTATE_IMAGES; i++) {
 		char cstrRotate[256], cstr[256];
 		IplImage *processedFaceImg;
 
-		int personFace = rand() % NUMBER_OF_SAVED_FACES;
+		int personFace = rand() % numberOfSavedFaces;
 
 		sprintf(cstr, "Eigenfaces/data/%d_%s%d.pgm", personId, newPersonName, personFace);
 		processedFaceImg = cvLoadImage(cstr);
@@ -474,12 +476,55 @@ int saveRotateImages(int personId, char *newPersonName) {
 		}
 
 		IplImage rotateFaceImg = rotateImage(processedFaceImg, (double) angle);
-		sprintf(cstrRotate, "Eigenfaces/data/%d_%s%d.pgm", personId, newPersonName, NUMBER_OF_SAVED_FACES + i);
+		sprintf(cstrRotate, "Eigenfaces/data/%d_%s%d.pgm", personId, newPersonName, numberOfSavedFaces + i);
 		printf("Storing the current face of '%s' into image '%s'.\n", newPersonName, cstrRotate);
+
 		cvSaveImage(cstrRotate, &rotateFaceImg, NULL);
 	}
 
 	return NUMBER_OF_ROTATE_IMAGES;
+}
+
+int saveFlipImages(int personId, char *newPersonName, int numberOfSavedFaces) {
+	printf("Flip images...\n");
+	for (int i = 1; i <= NUMBER_OF_FLIP_IMAGES; i++) {
+		char cstrFlip[256], cstr[256];
+		IplImage *processedFaceImg;
+
+		int personFace = rand() % numberOfSavedFaces;
+
+		sprintf(cstr, "Eigenfaces/data/%d_%s%d.pgm", personId, newPersonName, personFace);
+		processedFaceImg = cvLoadImage(cstr);
+
+		sprintf(cstrFlip, "Eigenfaces/data/%d_%s%d.pgm", personId, newPersonName, numberOfSavedFaces + i);
+		printf("Storing the current face of '%s' into image '%s'.\n", newPersonName, cstrFlip);
+
+		cvConvertImage(processedFaceImg, processedFaceImg, CV_CVTIMG_FLIP);
+		cvSaveImage(cstrFlip, processedFaceImg, NULL);
+	}
+
+	return NUMBER_OF_FLIP_IMAGES;
+}
+
+int saveNoiseImages(int personId, char *newPersonName, int numberOfSavedFaces) {
+	printf("Noise images...\n");
+	for (int i = 1; i <= NUMBER_OF_NOISE_IMAGES; i++) {
+		char cstrRotate[256], cstr[256];
+		IplImage *processedFaceImg;
+
+		int personFace = rand() % numberOfSavedFaces;
+
+		sprintf(cstr, "Eigenfaces/data/%d_%s%d.pgm", personId, newPersonName, personFace);
+		processedFaceImg = cvLoadImage(cstr);
+
+		sprintf(cstrRotate, "Eigenfaces/data/%d_%s%d.pgm", personId, newPersonName, numberOfSavedFaces + i);
+		printf("Storing the current face of '%s' into image '%s'.\n", newPersonName, cstrRotate);
+
+		IplImage *noiseFaceImg = generateNoiseImage(processedFaceImg, 10);
+		cvSaveImage(cstrRotate, noiseFaceImg, NULL);
+	}
+
+	return NUMBER_OF_NOISE_IMAGES;
 }
 
 // Continuously recognize the person in the camera.
@@ -517,6 +562,7 @@ void recognizeFromCam(void) {
 
 	// Create a GUI window for the user to see the camera image.
 	cvNamedWindow("Input", CV_WINDOW_AUTOSIZE);
+	cvMoveWindow("Input", 10, 10);
 
 	// Make sure there is a "data" folder, for storing the new person.
 	mkdir("Eigenfaces/data", 0777);
@@ -654,7 +700,9 @@ void recognizeFromCam(void) {
 
 					newPersonFaces++;
 				} else if (newPersonFaces == NUMBER_OF_SAVED_FACES) {
-					newPersonFaces = newPersonFaces + saveRotateImages(nPersons + 1, newPersonName);
+					newPersonFaces = newPersonFaces + saveRotateImages(nPersons + 1, newPersonName, newPersonFaces);
+					newPersonFaces = newPersonFaces + saveFlipImages(nPersons + 1, newPersonName, newPersonFaces);
+					newPersonFaces = newPersonFaces + saveNoiseImages(nPersons + 1, newPersonName, newPersonFaces);
 				}
 
 				// Free the resources used for this frame.
