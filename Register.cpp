@@ -9,7 +9,6 @@
 #include <opencv/highgui.h>
 #include <XnCppWrapper.h>
 #include <sys/shm.h>
-
 #include <cstdlib>
 
 #if (XN_PLATFORM == XN_PLATFORM_MACOSX)
@@ -459,7 +458,7 @@ void recognizeFromCam(void) {
 	double timeFaceRecognizeStart;
 	double tallyFaceRecognizeTime;
 	CvHaarClassifierCascade* faceCascade;
-	char cstr[256];
+	char cstr[256], cstrRotate[256];
 	int saveNextFaces = FALSE;
 	char newPersonName[256];
 	int newPersonFaces;
@@ -624,16 +623,22 @@ void recognizeFromCam(void) {
 					cvSaveImage(cstr, processedFaceImg, NULL);
 
 					// #############################################
-					char cstrRotate[256];
-
+					printf("\nANTES\n");
+					printf("agora");
+					printf("agora123123\n\n\n");
+					printf("%f\n\n\n", rand());
 					double angle = rand() % 10;
+					printf("agora2");
 					int signedAngle = rand() % 1;
+					printf("agora3");
 					if(signedAngle == 1) {
 						printf("NEGATIVO\n");
 						angle = angle * -1;
 					}
 
 					IplImage rotateFaceImg = rotateImage(processedFaceImg, 10);
+					printf("\nDEPOIS\n");
+
 					sprintf(cstrRotate, "Eigenfaces/data/%d_%s%d_rotate%d°.pgm", nPersons + 1, newPersonName, newPersonFaces + 1, angle);
 					printf("Storing the rotate current face of '%s' into image '%s'.\n", newPersonName, cstrRotate);
 					cvSaveImage(cstrRotate, &rotateFaceImg, NULL);
