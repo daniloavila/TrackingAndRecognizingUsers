@@ -28,6 +28,9 @@
 #define NUMBER_OF_FLIP_IMAGES 20
 #define NUMBER_OF_NOISE_IMAGES 20
 
+// vai de 0 a 255 e quanto menor mais ruído.
+#define LEVEL_OF_NOISE_IMAGES 10
+
 using namespace std;
 
 // Haar Cascade file, used for Face Detection.
@@ -509,7 +512,7 @@ int saveFlipImages(int personId, char *newPersonName, int numberOfSavedFaces) {
 int saveNoiseImages(int personId, char *newPersonName, int numberOfSavedFaces) {
 	printf("Noise images...\n");
 	for (int i = 1; i <= NUMBER_OF_NOISE_IMAGES; i++) {
-		char cstrRotate[256], cstr[256];
+		char cstrNoise[256], cstr[256];
 		IplImage *processedFaceImg;
 
 		int personFace = rand() % numberOfSavedFaces;
@@ -517,11 +520,11 @@ int saveNoiseImages(int personId, char *newPersonName, int numberOfSavedFaces) {
 		sprintf(cstr, "Eigenfaces/data/%d_%s%d.pgm", personId, newPersonName, personFace);
 		processedFaceImg = cvLoadImage(cstr);
 
-		sprintf(cstrRotate, "Eigenfaces/data/%d_%s%d.pgm", personId, newPersonName, numberOfSavedFaces + i);
-		printf("Storing the current face of '%s' into image '%s'.\n", newPersonName, cstrRotate);
+		sprintf(cstrNoise, "Eigenfaces/data/%d_%s%d.pgm", personId, newPersonName, numberOfSavedFaces + i);
+		printf("Storing the current face of '%s' into image '%s'.\n", newPersonName, cstrNoise);
 
-		IplImage *noiseFaceImg = generateNoiseImage(processedFaceImg, 10);
-		cvSaveImage(cstrRotate, noiseFaceImg, NULL);
+		IplImage *noiseFaceImg = generateNoiseImage(processedFaceImg, LEVEL_OF_NOISE_IMAGES);
+		cvSaveImage(cstrNoise, noiseFaceImg, NULL);
 	}
 
 	return NUMBER_OF_NOISE_IMAGES;
