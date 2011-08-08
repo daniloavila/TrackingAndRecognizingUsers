@@ -467,21 +467,17 @@ int saveRotateImages(int personId, char *newPersonName, int numberOfSavedFaces) 
 		IplImage *processedFaceImg;
 
 		int personFace = rand() % numberOfSavedFaces;
-
 		sprintf(cstr, "Eigenfaces/data/%d_%s%d.pgm", personId, newPersonName, personFace);
 		processedFaceImg = cvLoadImage(cstr);
-
 		int randNumber = rand();
 		int angle = randNumber % MAX_ANGLE_OF_ROTATE;
 		int signedAngle = randNumber % 2;
 		if (signedAngle == 1) {
 			angle = angle * -1;
 		}
-
 		IplImage rotateFaceImg = rotateImage(processedFaceImg, (double) angle);
 		sprintf(cstrRotate, "Eigenfaces/data/%d_%s%d.pgm", personId, newPersonName, numberOfSavedFaces + i);
 		printf("Storing the current face of '%s' into image '%s'.\n", newPersonName, cstrRotate);
-
 		cvSaveImage(cstrRotate, &rotateFaceImg, NULL);
 	}
 
@@ -502,8 +498,19 @@ int saveFlipImages(int personId, char *newPersonName, int numberOfSavedFaces) {
 		sprintf(cstrFlip, "Eigenfaces/data/%d_%s%d.pgm", personId, newPersonName, numberOfSavedFaces + i);
 		printf("Storing the current face of '%s' into image '%s'.\n", newPersonName, cstrFlip);
 
-		cvConvertImage(processedFaceImg, processedFaceImg, CV_CVTIMG_FLIP);
-		cvSaveImage(cstrFlip, processedFaceImg, NULL);
+		printf("1\n");
+		Mat source(processedFaceImg, false);
+		printf("2\n");
+		Mat dst;
+		printf("3\n");
+		flip(source, dst, 1);
+		printf("4\n");
+		IplImage rotateImage = IplImage(dst);
+		printf("5\n");
+		cvSaveImage(cstrFlip, &rotateImage, NULL);
+		printf("6\n");
+		// cvConvertImage(processedFaceImg, processedFaceImg, CV_CVTIMG_FLIP);
+		// cvSaveImage(cstrFlip, processedFaceImg, NULL);
 	}
 
 	return NUMBER_OF_FLIP_IMAGES;
@@ -516,7 +523,6 @@ int saveNoiseImages(int personId, char *newPersonName, int numberOfSavedFaces) {
 		IplImage *processedFaceImg;
 
 		int personFace = rand() % numberOfSavedFaces;
-
 		sprintf(cstr, "Eigenfaces/data/%d_%s%d.pgm", personId, newPersonName, personFace);
 		processedFaceImg = cvLoadImage(cstr);
 
@@ -703,9 +709,10 @@ void recognizeFromCam(void) {
 
 					newPersonFaces++;
 				} else if (newPersonFaces == NUMBER_OF_SAVED_FACES) {
-					newPersonFaces = newPersonFaces + saveRotateImages(nPersons + 1, newPersonName, newPersonFaces);
-					newPersonFaces = newPersonFaces + saveFlipImages(nPersons + 1, newPersonName, newPersonFaces);
-					newPersonFaces = newPersonFaces + saveNoiseImages(nPersons + 1, newPersonName, newPersonFaces);
+					
+					// newPersonFaces = newPersonFaces + saveRotateImages(nPersons + 1, newPersonName, newPersonFaces);
+					// newPersonFaces = newPersonFaces + saveFlipImages(nPersons + 1, newPersonName, newPersonFaces);
+					// newPersonFaces = newPersonFaces + saveNoiseImages(nPersons + 1, newPersonName, newPersonFaces);
 				}
 
 				// Free the resources used for this frame.
