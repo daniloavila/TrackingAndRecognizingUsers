@@ -6,7 +6,7 @@
 		return nRetVal; \
 	}
 
-#define SAMPLE_XML_PATH "Config/SamplesConfig.xml"
+#define SAMPLE_XML_PATH "Config/Register.xml"
 
 int kinectMounted = 0;
 xn::Context context;
