@@ -47,7 +47,7 @@ bool verifyChoice(string name, float confidence, map<int, char *> *users) {
 	printf("&&&&&&&&&&&&&&& 1\n");
 	for (itUsers = users->begin(); itUsers != users->end(); itUsers++) {
 		string name2(itUsers->second);
-		if (name2.compare(name) && itUsers->first != idUserInTime) {
+		if (name.compare(name2) == 0 && itUsers->first != idUserInTime) {
 			printf("&&&&&&&&&&&&&&& 2 -> %s == %s\n", name.c_str(), name2.c_str());
 			map<string, float> *nameConfidence = &usersNameConfidence[itUsers->first];
 			if ((*nameConfidence)[name] > confidence) {
