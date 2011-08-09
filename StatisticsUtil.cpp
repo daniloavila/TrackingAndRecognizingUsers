@@ -4,6 +4,19 @@
 map<int, map<string, float> > usersNameConfidence;
 map<int, map<string, int> > usersNameAttempts;
 
+int idUserInTime = 0;
+
+bool compareNameByConfidence(string first, string second) {
+	map<string, int> *nameAttempts = &usersNameAttempts[idUserInTime];
+	map<string, float> *nameConfidence = &usersNameConfidence[idUserInTime];
+
+	if ((*nameConfidence)[first] >= (*nameConfidence)[second]) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
 /**
  * Recalcula as estatisticas de confianca e tentativas a partir da mensagem de resposta.
  */
@@ -22,6 +35,23 @@ void calculateNewStatistics(MessageResponse *messageResponse) {
 	(*nameAttempts)[messageResponse->user_name] = attempts + 1;
 }
 
+bool verifyChoice(string name, float confidence, map<int, char *> *users) {
+	map<int, char *>::iterator itUsers;
+	for (itUsers = users->begin(); itUsers != users->end(); itUsers++) {
+		string name2(itUsers->second);
+		printf("&&&&&&&&&&&&&&& -> %s == %s\n", name.c_str(), name2.c_str());
+		if (name2.compare(name) && itUsers->first != idUserInTime) {
+			printf("&&&&&&&&&&&&&&&\n");
+			map<string, float> *nameConfidence = &usersNameConfidence[itUsers->first];
+			if ((*nameConfidence)[name] > confidence) {
+				printf("&&&&&&&&&&&&&&&\n");
+				return false;
+			}
+		}
+	}
+	return true;
+}
+
 /**
  * Escolhe estatisticamente baseado no numero de vezes que o reconhecedor escolheu a label e o grau de confiança que o mesmo a escolheu.
  */
@@ -30,28 +60,45 @@ void choiceNewLabelToUser(MessageResponse *messageResponse, map<int, char *> *us
 	map<string, int> *nameAttempts = &usersNameAttempts[messageResponse->user_id];
 	map<string, float> *nameConfidence = &usersNameConfidence[messageResponse->user_id];
 
+	idUserInTime = messageResponse->user_id;
+
 	string name;
 	float confidence;
-	double maxStatisticConfidence = 0;
+
+	list<string> listNameOrdered;
 	map<string, int>::iterator itAttempts;
 	for (itAttempts = nameAttempts->begin(); itAttempts != nameAttempts->end(); itAttempts++) {
-		double statisticConfidence = itAttempts->second * (*nameConfidence)[itAttempts->first];
-		if (statisticConfidence > maxStatisticConfidence) {
-			maxStatisticConfidence = statisticConfidence;
-			name = itAttempts->first;
-			confidence = (*nameConfidence)[itAttempts->first];
+		listNameOrdered.push_back(itAttempts->first);
+	}
+
+	listNameOrdered.sort(compareNameByConfidence);
+
+	while (listNameOrdered.size() > 0) {
+		name = listNameOrdered.front();
+		confidence = (*nameConfidence)[name];
+
+		if (verifyChoice(name, confidence, users)) {
+			break;
+		} else {
+			name = "";
+			printf("#######################################\n");
+			printf("======> Verificou que existe outro usuário no com a mesma label.\n");
+			printf("%d - %s - %.2f\n", idUserInTime, name.c_str(), confidence);
+			printf("#######################################\n");
+			listNameOrdered.pop_front();
 		}
 	}
 
-	(*users)[messageResponse->user_id] = (char*) (((malloc(sizeof(char) * strlen(messageResponse->user_name)))));
 	if (name.length() > 0) {
+		(*users)[messageResponse->user_id] = (char*) (malloc(sizeof(char) * name.size()));
 		strcpy((*users)[messageResponse->user_id], name.c_str());
+		(*usersConfidence)[messageResponse->user_id] = confidence;
 	}
-	(*usersConfidence)[messageResponse->user_id] = confidence;
 
 	printf("Log - Tracker diz: Nome => '%s' - Tentativas => %d - Confiança => %f\n", messageResponse->user_name, (*nameAttempts)[messageResponse->user_name],
 			(*nameConfidence)[messageResponse->user_name]);
-	printf("Log - Tracker diz: A label escolhida foi '%s' com o índice de confiança igual a %f\n", (*users)[messageResponse->user_id], (*usersConfidence)[messageResponse->user_id]);
+	printf("Log - Tracker diz: A label escolhida foi '%s' com o índice de confiança igual a %f\n", (*users)[messageResponse->user_id],
+			(*usersConfidence)[messageResponse->user_id]);
 }
 
 /**
@@ -70,4 +117,20 @@ int getTotalAttempts(int user_id) {
 void statisticsClear(int user_id) {
 	usersNameConfidence.erase(user_id);
 	usersNameAttempts.erase(user_id);
+}
+
+void printfLogComplete(map<int, char *> *users, map<int, float> *usersConfidence) {
+	printf("###################################\n");
+	printf("############# LOG #################\n");
+	map<int, map<string, int> >::iterator it;
+	for (it = usersNameAttempts.begin(); it != usersNameAttempts.end(); it++) {
+		map<string, int>::iterator itAttempts;
+		map<string, float> *nameConfidence = &usersNameConfidence[it->first];
+		printf("Usuário %d: (%s - %f)\n", it->first, (*users)[it->first], (*usersConfidence)[it->first]);
+		map<string, int> *second = &(it->second);
+		for (itAttempts = (*second).begin(); itAttempts != (*second).end(); itAttempts++) {
+			printf("\t %s => %d - %f\n", (*itAttempts).first.c_str(), (*itAttempts).second, (*nameConfidence)[(*itAttempts).first]);
+		}
+	}
+	printf("###################################\n");
 }

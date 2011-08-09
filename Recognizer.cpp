@@ -134,6 +134,10 @@ int main(int argc, char** argv) {
 
 		IplImage* shownImg = cvCloneImage(frame);
 
+		cvNamedWindow("Input", CV_WINDOW_AUTOSIZE);
+		cvMoveWindow("Input", 10, 10);
+		cvShowImage("Input", shownImg);
+
 		float confidence = 0.0;
 		nome = recognizeFromCamImg(shownImg, faceCascade, trainPersonNumMat, projectedTestFace, &confidence);
 		cvReleaseImage(&shownImg);

@@ -164,7 +164,11 @@ void treatQueueResponse(int i) {
 		// verifica se é uma label válida
 		if (messageResponse.user_name == NULL || strlen(messageResponse.user_name) == 0) {
 			printf("Log - Tracker diz: Nome está vazio\n");
-			requestRecognition(messageResponse.user_id);
+			// TODO : removido pois superlotava a fila de mensagens
+			int total = getTotalAttempts(messageResponse.user_id);
+			if (total < ATTEMPTS_INICIAL_RECOGNITION) {
+				requestRecognition(messageResponse.user_id);
+			}
 			continue;
 		}
 
@@ -209,6 +213,8 @@ void cleanupQueueAndExit() {
 	//matando a fila de mensagens
 	msgctl(idQueueResponse, IPC_RMID, NULL);
 	kill(faceRecId, SIGUSR1);
+
+	printfLogComplete(&users, &usersConfidence);
 
 	exit(1);
 }
