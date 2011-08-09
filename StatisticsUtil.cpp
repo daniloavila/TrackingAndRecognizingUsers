@@ -5,12 +5,19 @@ map<int, map<string, float> > usersNameConfidence;
 map<int, map<string, int> > usersNameAttempts;
 
 int idUserInTime = 0;
+double statisticConfidence;
 
 bool compareNameByConfidence(string first, string second) {
 	map<string, int> *nameAttempts = &usersNameAttempts[idUserInTime];
 	map<string, float> *nameConfidence = &usersNameConfidence[idUserInTime];
 
-	if ((*nameConfidence)[first] >= (*nameConfidence)[second]) {
+	double firstDif = abs((*nameConfidence)[first] - statisticConfidence);
+	double secondDif = abs((*nameConfidence)[second] - statisticConfidence);
+
+	printf("CONFIANCA1 - %s - %f - %f\n", first.c_str(), (*nameConfidence)[first], firstDif);
+	printf("CONFIANCA2- %s - %f - %f\n\n", second.c_str(), (*nameConfidence)[second], secondDif);
+
+	if (firstDif <= secondDif) {
 		return true;
 	} else {
 		return false;
@@ -65,8 +72,20 @@ void choiceNewLabelToUser(MessageResponse *messageResponse, map<int, char *> *us
 	string name;
 	float confidence;
 
-	list<string> listNameOrdered;
+
+	statisticConfidence = 0.0;
+	int totalAttempts = 0;
 	map<string, int>::iterator itAttempts;
+
+	for (itAttempts = nameAttempts->begin(); itAttempts != nameAttempts->end(); itAttempts++) {
+		statisticConfidence += itAttempts->second * (*nameConfidence)[itAttempts->first];
+		totalAttempts += itAttempts->second;
+	}
+
+	statisticConfidence = statisticConfidence / totalAttempts;
+	printf("CONFIANCA PONDERADA - %f\n", statisticConfidence);
+
+	list<string> listNameOrdered;
 	for (itAttempts = nameAttempts->begin(); itAttempts != nameAttempts->end(); itAttempts++) {
 		listNameOrdered.push_back(itAttempts->first);
 	}
