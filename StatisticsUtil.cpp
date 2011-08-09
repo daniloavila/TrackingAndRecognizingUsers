@@ -37,14 +37,14 @@ void calculateNewStatistics(MessageResponse *messageResponse) {
 
 bool verifyChoice(string name, float confidence, map<int, char *> *users) {
 	map<int, char *>::iterator itUsers;
+	printf("&&&&&&&&&&&&&&& 1\n");
 	for (itUsers = users->begin(); itUsers != users->end(); itUsers++) {
 		string name2(itUsers->second);
-		printf("&&&&&&&&&&&&&&& -> %s == %s\n", name.c_str(), name2.c_str());
 		if (name2.compare(name) && itUsers->first != idUserInTime) {
-			printf("&&&&&&&&&&&&&&&\n");
+			printf("&&&&&&&&&&&&&&& 2 -> %s == %s\n", name.c_str(), name2.c_str());
 			map<string, float> *nameConfidence = &usersNameConfidence[itUsers->first];
 			if ((*nameConfidence)[name] > confidence) {
-				printf("&&&&&&&&&&&&&&&\n");
+				printf("&&&&&&&&&&&&&&& 4\n");
 				return false;
 			}
 		}
