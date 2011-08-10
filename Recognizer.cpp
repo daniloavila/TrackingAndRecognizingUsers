@@ -1,4 +1,3 @@
-
 #include <stdio.h>
 #include <curses.h>
 #include <sys/types.h>
@@ -32,9 +31,6 @@ int idQueueResponse;
 
 // Haar Cascade file, used for Face Detection.
 const char *faceCascadeFilename = "Eigenfaces/haarcascade_frontalface_alt.xml";
-const int NUMBER_OF_PHOTOS = 19;
-
-int SAVE_EIGENFACE_IMAGES = 1; // Set to 0 if you dont want images of the Eigenvectors saved to files (for debugging).
 
 // Global variables
 IplImage ** faceImgArr = 0; // array of face images
@@ -50,8 +46,6 @@ IplImage * pAvgTrainImg = 0; // the average image
 IplImage ** eigenVectArr = 0; // eigenvectors
 CvMat * eigenValMat = 0; // eigenvalues
 CvMat * projectedTrainFaceMat = 0; // projected training faces
-
-CvCapture* camera = 0; // The camera device.
 
 // Function prototypes
 void cleanup(int i);
@@ -118,16 +112,7 @@ int main(int argc, char** argv) {
 		msgrcv(idQueueRequest, &messageRequest, sizeof(MessageRequest) - sizeof(long), 0, 0);
 		printf("Log - Recognizer diz: Recebi pedido de reconhecimento. user_id = %d e id_memoria = %d\n", messageRequest.user_id, messageRequest.memory_id);
 
-//		pshm = getSharedMemory(messageRequest.mem-ory_id, false);
-
-		if ((sharedMemoryId = shmget(messageRequest.memory_id, sizeof(char) * KINECT_WIDTH_CAPTURE * KINECT_HEIGHT_CAPTURE * KINECT_NUMBER_OF_CHANNELS, IPC_EXCL | 0x1ff)) < 0) {
-			printf("Erro na criacao da memoria\n");
-		}
-
-		pshm = (char *) shmat(sharedMemoryId, (char *) 0, 0);
-		if (pshm == (char *) -1) {
-			printf("Erro no attach da memoria\n");
-		}
+		pshm = getSharedMemory(messageRequest.memory_id, false);
 
 		IplImage* frame = cvCreateImage(cvSize(KINECT_HEIGHT_CAPTURE, KINECT_WIDTH_CAPTURE), IPL_DEPTH_8U, KINECT_NUMBER_OF_CHANNELS);
 		frame->imageData = pshm;

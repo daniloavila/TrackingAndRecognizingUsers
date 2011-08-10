@@ -30,9 +30,4 @@ char *getSharedMemory(int memory_id, bool create);
 
 unsigned int getMemoryKey();
 
-#define KINECT_WIDTH_CAPTURE 480
-#define KINECT_HEIGHT_CAPTURE 640
-#define KINECT_FPS_CAPTURE 30
-#define KINECT_NUMBER_OF_CHANNELS 3
-
 #endif 

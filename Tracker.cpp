@@ -27,18 +27,12 @@
 #include "MessageQueue.h"
 #include "StatisticsUtil.h"
 
+#include "Definitions.h"
+
 #include <stdio.h>
 #include <curses.h>
 
 using namespace std;
-
-#define SAMPLE_XML_PATH "Config/SamplesConfig.xml"
-
-#define CHECK_RC(nRetVal, what) \
-	if (nRetVal != XN_STATUS_OK){\
-		printf("%s failed: %s\n", what, xnGetStatusString(nRetVal));\
-		return nRetVal; \
-	}
 
 //---------------------------------------------------------------------------
 // Globals
@@ -57,11 +51,6 @@ XnBool g_bDrawSkeleton = TRUE;
 XnBool g_bPrintID = TRUE;
 XnBool g_bPrintState = TRUE;
 
-#define INTERVAL_IN_MILISECONDS_TREAT_RESPONSE 1000
-#define INTERVAL_IN_MILISECONDS_RECHECK 10000
-
-#define ATTEMPTS_INICIAL_RECOGNITION 5
-
 int idQueueRequest;
 int idQueueResponse;
 int faceRecId;
@@ -71,9 +60,6 @@ int faceRecId;
 #else
 #include <GL/glut.h>
 #endif
-
-#define GL_WIN_SIZE_X 720
-#define GL_WIN_SIZE_Y 480
 
 XnBool g_bPause = false;
 XnBool g_bRecord = false;

@@ -21,15 +21,7 @@
 #include "KeyboardUtil.h"
 #include "ImageUtil.h"
 #include "KinectUtil.h"
-
-#define NUMBER_OF_SAVED_FACES 50
-#define MAX_ANGLE_OF_ROTATE 10
-#define NUMBER_OF_ROTATE_IMAGES 20
-#define NUMBER_OF_FLIP_IMAGES 20
-#define NUMBER_OF_NOISE_IMAGES 20
-
-// vai de 0 a 255 e quanto menor mais ruído.
-#define LEVEL_OF_NOISE_IMAGES 10
+#include "Definitions.h"
 
 using namespace std;
 
@@ -42,8 +34,6 @@ int SAVE_EIGENFACE_IMAGES = 1; // Set to 0 if you dont want images of the Eigenv
 // Global variables
 IplImage ** faceImgArr = 0; // array of face images
 CvMat * personNumTruthMat = 0; // array of person numbers
-//#define	MAX_NAME_LENGTH 256		// Give each name a fixed size for easier code.
-//char **personNames = 0;			// array of person names (indexed by the person number). Added by Shervin.
 vector<string> personNames; // array of person names (indexed by the person number). Added by Shervin.
 int faceWidth = 120; // Default dimensions for faces in the face recognition database. Added by Shervin.
 int faceHeight = 90; //	"		"		"		"		"		"		"		"

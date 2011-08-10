@@ -7,6 +7,9 @@ map<int, map<string, int> > usersNameAttempts;
 int idUserInTime = 0;
 double statisticConfidence;
 
+/**
+ * Função que compara uma label com outra apartir da sua confiança.
+ */
 bool compareNameByConfidence(string first, string second) {
 	map<string, int> *nameAttempts = &usersNameAttempts[idUserInTime];
 	map<string, float> *nameConfidence = &usersNameConfidence[idUserInTime];
@@ -14,8 +17,8 @@ bool compareNameByConfidence(string first, string second) {
 	double firstDif = abs((*nameConfidence)[first] - statisticConfidence);
 	double secondDif = abs((*nameConfidence)[second] - statisticConfidence);
 
-	printf("CONFIANCA1 - %s - %f - %f\n", first.c_str(), (*nameConfidence)[first], firstDif);
-	printf("CONFIANCA2- %s - %f - %f\n\n", second.c_str(), (*nameConfidence)[second], secondDif);
+//	printf("CONFIANCA1 - %s - %f - %f\n", first.c_str(), (*nameConfidence)[first], firstDif);
+//	printf("CONFIANCA2- %s - %f - %f\n\n", second.c_str(), (*nameConfidence)[second], secondDif);
 
 	if (firstDif <= secondDif) {
 		return true;
@@ -42,16 +45,16 @@ void calculateNewStatistics(MessageResponse *messageResponse) {
 	(*nameAttempts)[messageResponse->user_name] = attempts + 1;
 }
 
+/**
+ * Verifica se a escolha é valida, ou seja, se já não existe outro usuário com a mesma label, e se existe qual deve prevalecer a partir da confiança.
+ */
 bool verifyChoice(string name, float confidence, map<int, char *> *users) {
 	map<int, char *>::iterator itUsers;
-	printf("&&&&&&&&&&&&&&& 1\n");
 	for (itUsers = users->begin(); itUsers != users->end(); itUsers++) {
 		string name2(itUsers->second);
 		if (name.compare(name2) == 0 && itUsers->first != idUserInTime) {
-			printf("&&&&&&&&&&&&&&& 2 -> %s == %s\n", name.c_str(), name2.c_str());
 			map<string, float> *nameConfidence = &usersNameConfidence[itUsers->first];
 			if ((*nameConfidence)[name] > confidence) {
-				printf("&&&&&&&&&&&&&&& 4\n");
 				return false;
 			}
 		}
@@ -72,7 +75,6 @@ void choiceNewLabelToUser(MessageResponse *messageResponse, map<int, char *> *us
 	string name;
 	float confidence;
 
-
 	statisticConfidence = 0.0;
 	int totalAttempts = 0;
 	map<string, int>::iterator itAttempts;
@@ -83,7 +85,7 @@ void choiceNewLabelToUser(MessageResponse *messageResponse, map<int, char *> *us
 	}
 
 	statisticConfidence = statisticConfidence / totalAttempts;
-	printf("CONFIANCA PONDERADA - %f\n", statisticConfidence);
+//	printf("CONFIANCA PONDERADA - %f\n", statisticConfidence);
 
 	list<string> listNameOrdered;
 	for (itAttempts = nameAttempts->begin(); itAttempts != nameAttempts->end(); itAttempts++) {
@@ -97,6 +99,7 @@ void choiceNewLabelToUser(MessageResponse *messageResponse, map<int, char *> *us
 		confidence = (*nameConfidence)[name];
 
 		if (verifyChoice(name, confidence, users)) {
+			printf("*\n");
 			break;
 		} else {
 			name = "";
@@ -111,7 +114,9 @@ void choiceNewLabelToUser(MessageResponse *messageResponse, map<int, char *> *us
 	if (name.length() > 0) {
 		(*users)[messageResponse->user_id] = (char*) (malloc(sizeof(char) * name.size()));
 		strcpy((*users)[messageResponse->user_id], name.c_str());
+		// TODO: Verificar qual das duas confianças usar.
 		(*usersConfidence)[messageResponse->user_id] = confidence;
+//		(*usersConfidence)[messageResponse->user_id] = statisticConfidence;
 	}
 
 	printf("Log - Tracker diz: Nome => '%s' - Tentativas => %d - Confiança => %f\n", messageResponse->user_name, (*nameAttempts)[messageResponse->user_name],

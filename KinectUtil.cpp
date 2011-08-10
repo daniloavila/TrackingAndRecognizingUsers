@@ -1,12 +1,5 @@
 #include "KinectUtil.h"
-
-#define CHECK_RC(nRetVal, what) \
-	if (nRetVal != XN_STATUS_OK){\
-		printf("%s failed: %s\n", what, xnGetStatusString(nRetVal));\
-		return nRetVal; \
-	}
-
-#define SAMPLE_XML_PATH "Config/Register.xml"
+#include "Definitions.h"
 
 int kinectMounted = 0;
 xn::Context context;
@@ -25,19 +18,17 @@ unsigned int getMemoryKey() {
 char *getSharedMemory(int memory_id, bool create) {
 	int sharedMemoryId;
 
-	short flag = 0;
-	if (create) {
-		flag = IPC_CREAT;
-	} else {
+	unsigned short flag = IPC_CREAT;
+	if (!create) {
 		flag = IPC_EXCL;
 	}
 
-	if ((sharedMemoryId = shmget(memory_id, sizeof(char) * KINECT_WIDTH_CAPTURE * KINECT_HEIGHT_CAPTURE * KINECT_NUMBER_OF_CHANNELS, IPC_CREAT | 0x1ff)) < 0) {
-		printf("erro na criacao da memoria\n");
+	if ((sharedMemoryId = shmget(memory_id, sizeof(char) * KINECT_WIDTH_CAPTURE * KINECT_HEIGHT_CAPTURE * KINECT_NUMBER_OF_CHANNELS, flag | 0x1ff)) < 0) {
+		printf("Log - KinectUtil diz: Erro na criacao da memoria - %s\n", create ? "CREATE" : "EXCL");
 	}
 	char *maskPixels = (char*) ((shmat(sharedMemoryId, (char*) ((0)), 0)));
 	if (maskPixels == (char*) ((-1))) {
-		printf("erro no attach\n");
+		printf("Log - KinectUtil diz: Erro no attach da memoria - %s\n", create ? "CREATE" : "EXCL");
 	}
 	return maskPixels;
 }
@@ -125,7 +116,7 @@ char mountKinect(){
 	xn::EnumerationErrors errors;
 
 	//le as configuracoes do Sample.xml, que define as configuracoes iniciais acima
-	nRetVal = context.InitFromXmlFile(SAMPLE_XML_PATH, &errors);
+	nRetVal = context.InitFromXmlFile(SAMPLE_XML_PATH_REGISTER, &errors);
 
 	if (nRetVal == XN_STATUS_NO_NODE_PRESENT) {
 		XnChar strError[1024];
