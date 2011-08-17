@@ -65,43 +65,82 @@ void setPixel(unsigned short int *source, int posicao) {
 
 void transformAreaVision(short unsigned int* source) {
 	if (source != NULL) {
+		// for (int i = 0; i < KINECT_HEIGHT_CAPTURE; i++) {
+		// 	for (int j = 0; j < KINECT_WIDTH_CAPTURE; j++) {
+		// 		if (source[(i * KINECT_WIDTH_CAPTURE) + j] == 1) {
+		// 			int posicaoAcima = ((i - 1) * KINECT_WIDTH_CAPTURE) + j;
+		// 			int posicaoAbaixo = ((i + 1) * KINECT_WIDTH_CAPTURE) + j;
+		// 			int posicaoEsquerda = (i * KINECT_WIDTH_CAPTURE) + (j - 1);
+		// 			int posicaoDireita = (i * KINECT_WIDTH_CAPTURE) + (j + 1);
+
+		// 			if (i > 0) {
+		// 				// colocando 1 na linha de cima
+		// 				//setPixel(source, posicaoAcima);
+		// 			}
+
+		// 			if (i < KINECT_HEIGHT_CAPTURE) {
+		// 				// colocando 1 na linha de cima
+		// 				//setPixel(source, posicaoAbaixo);
+		// 			}
+
+		// 			if (j > 0) {
+		// 				// colocando 1 na coluna da esquerda
+		// 				setPixel(source, posicaoDireita);
+		// 				setPixel(source, posicaoDireita - 1);
+		// 				setPixel(source, posicaoDireita - 2);
+		// 				setPixel(source, posicaoDireita - 3);
+		// 				setPixel(source, posicaoDireita - 4);
+		// 			}
+
+		// 			if (j < KINECT_WIDTH_CAPTURE) {
+		// 				// colocando 1 na coluna da esquerda
+		// 				setPixel(source, posicaoDireita);
+		// 				setPixel(source, posicaoDireita + 1);
+		// 				setPixel(source, posicaoDireita + 2);
+		// 				setPixel(source, posicaoDireita + 3);
+		// 				setPixel(source, posicaoDireita + 4);
+		// 			}
+		// 		}
+		// 	}
+		// }
+
+		int inicio;
+		int fim;
 		for (int i = 0; i < KINECT_HEIGHT_CAPTURE; i++) {
+			inicio = -1;
+			fim = -1;
+
 			for (int j = 0; j < KINECT_WIDTH_CAPTURE; j++) {
-				if (source[(i * KINECT_WIDTH_CAPTURE) + j] == 1) {
-					int posicaoAcima = ((i - 1) * KINECT_WIDTH_CAPTURE) + j;
-					int posicaoAbaixo = ((i + 1) * KINECT_WIDTH_CAPTURE) + j;
-					int posicaoEsquerda = (i * KINECT_WIDTH_CAPTURE) + (j - 1);
-					int posicaoDireita = (i * KINECT_WIDTH_CAPTURE) + (j + 1);
-
-					if (i > 0) {
-						// colocando 1 na linha de cima
-						//setPixel(source, posicaoAcima);
-					}
-
-					if (i < KINECT_HEIGHT_CAPTURE) {
-						// colocando 1 na linha de cima
-						//setPixel(source, posicaoAbaixo);
-					}
-
-					if (j > 0) {
-						// colocando 1 na coluna da esquerda
-						setPixel(source, posicaoDireita);
-						setPixel(source, posicaoDireita - 1);
-						setPixel(source, posicaoDireita - 2);
-						setPixel(source, posicaoDireita - 3);
-						setPixel(source, posicaoDireita - 4);
-					}
-
-					if (j < KINECT_WIDTH_CAPTURE) {
-						// colocando 1 na coluna da esquerda
-						setPixel(source, posicaoDireita);
-						setPixel(source, posicaoDireita + 1);
-						setPixel(source, posicaoDireita + 2);
-						setPixel(source, posicaoDireita + 3);
-						setPixel(source, posicaoDireita + 4);
-					}
+				if(source[(i * KINECT_WIDTH_CAPTURE) + j]){
+					inicio = j;
+					break;
 				}
 			}
+
+			if(inicio < 0) continue; 
+
+			for (int j = KINECT_WIDTH_CAPTURE - 1; j >= 0; j--) {
+				if(source[(i * KINECT_WIDTH_CAPTURE) + j]){
+					fim = j;
+					break;
+				}
+			}
+
+			if(fim < 0) continue; 
+
+
+			if(fim > KINECT_WIDTH_CAPTURE - 51){
+				fim = KINECT_WIDTH_CAPTURE - 1;
+			}else{
+				fim += 50;
+			}
+
+			// printf("Linha %d -(%d,%d)\n", i,inicio, fim);
+
+			for (int j = inicio; j <= fim; j++) {
+				source[(i * KINECT_WIDTH_CAPTURE) + j] = 1;
+			}
+
 		}
 	}
 
