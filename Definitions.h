@@ -39,4 +39,8 @@
 // key da memoria compartilhada entre "FaceRec" e "UserTracker". Utilizado para enviar a imagem do novo usuario detectado.
 #define SHARED_MEMORY 0x1230
 
+//define o numero de ajuste dos pixels do usuario da camera depth para o rgb
+#define ADJUSTMENT_LEFT 40
+#define ADJUSTMENT_RIGHT 20
+
 #endif
