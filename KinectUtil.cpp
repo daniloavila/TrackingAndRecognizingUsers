@@ -54,19 +54,19 @@ char* transformToCharAray(const XnRGB24Pixel* source) {
 	return result;
 }
 
-void setPixel(unsigned short int *source, int posicaoInicial, int posicaoFinal) {
+void setPixel(unsigned short int *source, int posicaoInicial, int posicaoFinal, int id) {
 	for(int i = posicaoInicial; i <= posicaoFinal; i++){
-		if(source[i] == 0) source[i] = 2;
+		if(source[i] != id) source[i] = -1;
 	}
 }
 
-void transformAreaVision(short unsigned int* source) {
+void transformAreaVision(short unsigned int* source, int id) {
 	if (source != NULL) {
 
 		for (int i = 0; i < KINECT_HEIGHT_CAPTURE; i++) {
 			for (int j = 0; j < KINECT_WIDTH_CAPTURE; j++) {
 
-				if (source[(i * KINECT_WIDTH_CAPTURE) + j] == 1) {
+				if (source[(i * KINECT_WIDTH_CAPTURE) + j] == id) {
 					int posicaoEsquerda;
 					int posicaoDireita;
 
@@ -82,8 +82,8 @@ void transformAreaVision(short unsigned int* source) {
 						posicaoDireita = j - ADJUSTMENT_RIGHT;
 					}
 
-					setPixel(source, i * KINECT_WIDTH_CAPTURE + j, i * KINECT_WIDTH_CAPTURE + posicaoEsquerda);
-					setPixel(source, i * KINECT_WIDTH_CAPTURE + posicaoDireita, i * KINECT_WIDTH_CAPTURE + j);
+					setPixel(source, i * KINECT_WIDTH_CAPTURE + j, i * KINECT_WIDTH_CAPTURE + posicaoEsquerda, id);
+					setPixel(source, i * KINECT_WIDTH_CAPTURE + posicaoDireita, i * KINECT_WIDTH_CAPTURE + j, id);
 				}
 			}
 		}

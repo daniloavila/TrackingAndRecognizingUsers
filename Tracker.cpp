@@ -89,12 +89,12 @@ void getFrameFromUserId(XnUserID nId, char *maskPixels) {
 		if(scenePixels[i] != nId) scenePixels[i] = 0;
 	}
 
-	transformAreaVision(scenePixels);
+	transformAreaVision(scenePixels, nId);
 
 	for (int i = 0; i < KINECT_HEIGHT_CAPTURE; i++) {
 		for (int j = 0; j < KINECT_WIDTH_CAPTURE; j++) {
 			int index = (i * KINECT_WIDTH_CAPTURE * KINECT_NUMBER_OF_CHANNELS) + (j * KINECT_NUMBER_OF_CHANNELS);
-			if (scenePixels[(i * KINECT_WIDTH_CAPTURE) + j] != 0) {
+			if (scenePixels[(i * KINECT_WIDTH_CAPTURE) + j] == nId || scenePixels[(i * KINECT_WIDTH_CAPTURE) + j] == -1) {
 				maskPixels[index + 2] = result[index + 2];
 				maskPixels[index + 1] = result[index + 1];
 				maskPixels[index + 0] = result[index + 0];
