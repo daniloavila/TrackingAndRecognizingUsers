@@ -54,52 +54,36 @@ char* transformToCharAray(const XnRGB24Pixel* source) {
 	return result;
 }
 
-void setPixel(unsigned short int *source, int posicao) {
-	if (posicao > 0 && posicao < KINECT_WIDTH_CAPTURE * KINECT_HEIGHT_CAPTURE) {
-		// colocando 1 na coluna da esquerda
-		if (!source[posicao]) {
-			source[posicao] = 2;
-		}
+void setPixel(unsigned short int *source, int posicaoInicial, int posicaoFinal) {
+	for(int i = posicaoInicial; i <= posicaoFinal; i++){
+		if(source[i] == 0) source[i] = 2;
 	}
 }
 
 void transformAreaVision(short unsigned int* source) {
 	if (source != NULL) {
+
 		for (int i = 0; i < KINECT_HEIGHT_CAPTURE; i++) {
 			for (int j = 0; j < KINECT_WIDTH_CAPTURE; j++) {
+
 				if (source[(i * KINECT_WIDTH_CAPTURE) + j] == 1) {
-					int posicaoAcima = ((i - 1) * KINECT_WIDTH_CAPTURE) + j;
-					int posicaoAbaixo = ((i + 1) * KINECT_WIDTH_CAPTURE) + j;
-					int posicaoEsquerda = (i * KINECT_WIDTH_CAPTURE) + (j - 1);
-					int posicaoDireita = (i * KINECT_WIDTH_CAPTURE) + (j + 1);
+					int posicaoEsquerda;
+					int posicaoDireita;
 
-					if (i > 0) {
-						// colocando 1 na linha de cima
-						//setPixel(source, posicaoAcima);
+					if(KINECT_WIDTH_CAPTURE - j >  ADJUSTMENT_LEFT){
+						posicaoEsquerda = j + ADJUSTMENT_LEFT;
+					}else{
+						posicaoEsquerda = KINECT_WIDTH_CAPTURE - 1;
 					}
 
-					if (i < KINECT_HEIGHT_CAPTURE) {
-						// colocando 1 na linha de cima
-						//setPixel(source, posicaoAbaixo);
+					if(j - ADJUSTMENT_RIGHT <= 0){
+						posicaoDireita = 0;
+					}else{
+						posicaoDireita = j - ADJUSTMENT_RIGHT;
 					}
 
-					if (j > 0) {
-						// colocando 1 na coluna da esquerda
-						setPixel(source, posicaoDireita);
-						setPixel(source, posicaoDireita - 1);
-						setPixel(source, posicaoDireita - 2);
-						setPixel(source, posicaoDireita - 3);
-						setPixel(source, posicaoDireita - 4);
-					}
-
-					if (j < KINECT_WIDTH_CAPTURE) {
-						// colocando 1 na coluna da esquerda
-						setPixel(source, posicaoDireita);
-						setPixel(source, posicaoDireita + 1);
-						setPixel(source, posicaoDireita + 2);
-						setPixel(source, posicaoDireita + 3);
-						setPixel(source, posicaoDireita + 4);
-					}
+					setPixel(source, i * KINECT_WIDTH_CAPTURE + j, i * KINECT_WIDTH_CAPTURE + posicaoEsquerda);
+					setPixel(source, i * KINECT_WIDTH_CAPTURE + posicaoDireita, i * KINECT_WIDTH_CAPTURE + j);
 				}
 			}
 		}
