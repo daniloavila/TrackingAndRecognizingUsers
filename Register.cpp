@@ -687,6 +687,7 @@ void recognizeFromCam(void) {
 					sprintf(cstr, "Eigenfaces/data/%d_%s%d.pgm", nPersons + 1, newPersonName, newPersonFaces + 1);
 					printf("Storing the current face of '%s' into image '%s'.\n", newPersonName, cstr);
 					cvSaveImage(cstr, processedFaceImg, NULL);
+					fprintf(stdin, "t");
 
 					newPersonFaces++;
 				} else if (newPersonFaces == NUMBER_OF_SAVED_FACES) {

@@ -49,10 +49,8 @@ CvMat * projectedTrainFaceMat = 0; // projected training faces
 
 // Function prototypes
 void cleanup(int i);
-void doPCA();
 int loadTrainingData(CvMat ** pTrainPersonNumMat);
 int findNearestNeighbor(float * projectedTestFace, float *pConfidence);
-int loadFaceImgArray(char * filename);
 char* recognizeFromCamImg(IplImage *camImg, CvHaarClassifierCascade* faceCascade, CvMat * trainPersonNumMat, float * projectedTestFace, float * pointerConfidence);
 
 /**
@@ -119,9 +117,10 @@ int main(int argc, char** argv) {
 
 		IplImage* shownImg = cvCloneImage(frame);
 
-		// cvNamedWindow("Input", CV_WINDOW_AUTOSIZE);
-		// cvMoveWindow("Input", 10, 10);
-		// cvShowImage("Input", shownImg);
+		cvNamedWindow("Input", CV_WINDOW_AUTOSIZE);
+		cvMoveWindow("Input", 10, 10);
+		cvShowImage("Input", shownImg);
+		cvWaitKey(10);
 
 		float confidence = 0.0;
 		nome = recognizeFromCamImg(shownImg, faceCascade, trainPersonNumMat, projectedTestFace, &confidence);
@@ -157,41 +156,6 @@ int main(int argc, char** argv) {
 	cvReleaseHaarClassifierCascade(&faceCascade);
 
 	return 0;
-}
-
-// Save all the eigenvectors as images, so that they can be checked.
-void storeEigenfaceImages() {
-	// Store the average image to a file
-	printf("Saving the image of the average face as 'out_averageImage.bmp'.\n");
-	cvSaveImage("Eigenfaces/out_averageImage.bmp", pAvgTrainImg);
-	// Create a large image made of many eigenface images.
-	// Must also convert each eigenface image to a normal 8-bit UCHAR image instead of a 32-bit float image.
-	printf("Saving the %d eigenvector images as 'out_eigenfaces.bmp'\n", nEigens);
-	if (nEigens > 0) {
-		// Put all the eigenfaces next to each other.
-		int COLUMNS = 8; // Put upto 8 images on a row.
-		int nCols = min(nEigens, COLUMNS);
-		int nRows = 1 + (nEigens / COLUMNS); // Put the rest on new rows.
-		int w = eigenVectArr[0]->width;
-		int h = eigenVectArr[0]->height;
-		CvSize size;
-		size = cvSize(nCols * w, nRows * h);
-		IplImage *bigImg = cvCreateImage(size, IPL_DEPTH_8U, 1); // 8-bit Greyscale UCHAR image
-		for (int i = 0; i < nEigens; i++) {
-			// Get the eigenface image.
-			IplImage *byteImg = convertFloatImageToUcharImage(eigenVectArr[i]);
-			// Paste it into the correct position.
-			int x = w * (i % COLUMNS);
-			int y = h * (i / COLUMNS);
-			CvRect ROI = cvRect(x, y, w, h);
-			cvSetImageROI(bigImg, ROI);
-			cvCopyImage(byteImg, bigImg);
-			cvResetImageROI(bigImg);
-			cvReleaseImage(&byteImg);
-		}
-		cvSaveImage("Eigenfaces/out_eigenfaces.bmp", bigImg);
-		cvReleaseImage(&bigImg);
-	}
 }
 
 // Open the training data from the file 'facedata.xml'.
@@ -251,39 +215,6 @@ int loadTrainingData(CvMat ** pTrainPersonNumMat) {
 	return 1;
 }
 
-// Save the training data to the file 'facedata.xml'.
-void storeTrainingData() {
-	CvFileStorage * fileStorage;
-	int i;
-
-	// create a file-storage interface
-	fileStorage = cvOpenFileStorage("Eigenfaces/facedata.xml", 0, CV_STORAGE_WRITE);
-
-	// Store the person names. Added by Shervin.
-	cvWriteInt(fileStorage, "nPersons", nPersons);
-	for (i = 0; i < nPersons; i++) {
-		char varname[200];
-		sprintf(varname, "personName_%d", (i + 1));
-		cvWriteString(fileStorage, varname, personNames[i].c_str(), 0);
-	}
-
-	// store all the data
-	cvWriteInt(fileStorage, "nEigens", nEigens);
-	cvWriteInt(fileStorage, "nTrainFaces", nTrainFaces);
-	cvWrite(fileStorage, "trainPersonNumMat", personNumTruthMat, cvAttrList(0, 0));
-	cvWrite(fileStorage, "eigenValMat", eigenValMat, cvAttrList(0, 0));
-	cvWrite(fileStorage, "projectedTrainFaceMat", projectedTrainFaceMat, cvAttrList(0, 0));
-	cvWrite(fileStorage, "avgTrainImg", pAvgTrainImg, cvAttrList(0, 0));
-	for (i = 0; i < nEigens; i++) {
-		char varname[200];
-		sprintf(varname, "eigenVect_%d", i);
-		cvWrite(fileStorage, varname, eigenVectArr[i], cvAttrList(0, 0));
-	}
-
-	// release the file-storage interface
-	cvReleaseFileStorage(&fileStorage);
-}
-
 // Find the most likely person based on a detection. Returns the index, and stores the confidence value into pConfidence.
 int findNearestNeighbor(float * projectedTestFace, float *pConfidence) {
 	//double leastDistSq = 1e12;
@@ -315,110 +246,6 @@ int findNearestNeighbor(float * projectedTestFace, float *pConfidence) {
 
 	// Return the found index.
 	return iNearest;
-}
-
-// Do the Principal Component Analysis, finding the average image
-// and the eigenfaces that represent any image in the given dataset.
-void doPCA() {
-	int i;
-	CvTermCriteria calcLimit;
-	CvSize faceImgSize;
-
-	// set the number of eigenvalues to use
-	nEigens = nTrainFaces - 1;
-
-	// allocate the eigenvector images
-	faceImgSize.width = faceImgArr[0]->width;
-	faceImgSize.height = faceImgArr[0]->height;
-	eigenVectArr = (IplImage**) cvAlloc(sizeof(IplImage*) * nEigens);
-	for (i = 0; i < nEigens; i++)
-		eigenVectArr[i] = cvCreateImage(faceImgSize, IPL_DEPTH_32F, 1);
-
-	// allocate the eigenvalue array
-	eigenValMat = cvCreateMat(1, nEigens, CV_32FC1);
-
-	// allocate the averaged image
-	pAvgTrainImg = cvCreateImage(faceImgSize, IPL_DEPTH_32F, 1);
-
-	// set the PCA termination criterion
-	calcLimit = cvTermCriteria(CV_TERMCRIT_ITER, nEigens, 1);
-
-	// compute average image, eigenvalues, and eigenvectors
-	cvCalcEigenObjects(nTrainFaces, (void*) faceImgArr, (void*) eigenVectArr, CV_EIGOBJ_NO_CALLBACK, 0, 0, &calcLimit, pAvgTrainImg, eigenValMat->data.fl);
-
-	cvNormalize(eigenValMat, eigenValMat, 1, 0, CV_L1, 0);
-}
-
-// Read the names & image filenames of people from a text file, and load all those images listed.
-int loadFaceImgArray(char * filename) {
-	FILE * imgListFile = 0;
-	char imgFilename[512];
-	int iFace, nFaces = 0;
-	int i;
-
-	// open the input file
-	if (!(imgListFile = fopen(filename, "r"))) {
-		fprintf(stderr, "Can\'t open file %s\n", filename);
-		return 0;
-	}
-
-	// count the number of faces
-	while (fgets(imgFilename, 512, imgListFile))
-		++nFaces;
-	rewind(imgListFile);
-
-	// allocate the face-image array and person number matrix
-	faceImgArr = (IplImage **) cvAlloc(nFaces * sizeof(IplImage *));
-	personNumTruthMat = cvCreateMat(1, nFaces, CV_32SC1);
-
-	personNames.clear(); // Make sure it starts as empty.
-	nPersons = 0;
-
-	// store the face images in an array
-	for (iFace = 0; iFace < nFaces; iFace++) {
-		char personName[256];
-		string sPersonName;
-		int personNumber;
-
-		// read person number (beginning with 1), their name and the image filename.
-		fscanf(imgListFile, "%d %s %s", &personNumber, personName, imgFilename);
-		sPersonName = personName;
-		//printf("Got %d: %d, <%s>, <%s>.\n", iFace, personNumber, personName, imgFilename);
-
-		// Check if a new person is being loaded.
-		if (personNumber > nPersons) {
-			// Allocate memory for the extra person (or possibly multiple), using this new person's name.
-			for (i = nPersons; i < personNumber; i++) {
-				personNames.push_back(sPersonName);
-			}
-			nPersons = personNumber;
-			//printf("Got new person <%s> -> nPersons = %d [%d]\n", sPersonName.c_str(), nPersons, personNames.size());
-		}
-
-		// Keep the data
-		personNumTruthMat->data.i[iFace] = personNumber;
-
-		// load the face image
-		faceImgArr[iFace] = cvLoadImage(imgFilename, CV_LOAD_IMAGE_GRAYSCALE);
-
-		if (!faceImgArr[iFace]) {
-			fprintf(stderr, "Can\'t load image from %s\n", imgFilename);
-			return 0;
-		}
-	}
-
-	fclose(imgListFile);
-
-	printf("Data loaded from '%s': (%d images of %d people).\n", filename, nFaces, nPersons);
-	printf("People: ");
-	if (nPersons > 0)
-		printf("<%s>", personNames[0].c_str());
-	for (i = 1; i < nPersons; i++) {
-		printf(", <%s>", personNames[i].c_str());
-	}
-	printf(".\n");
-
-	return nFaces;
 }
 
 // Continuously recognize the person in the camera.
@@ -505,4 +332,3 @@ void cleanup(int i){
 	exit(1);
 			
 }
-
