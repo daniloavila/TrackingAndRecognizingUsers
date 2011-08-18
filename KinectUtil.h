@@ -24,7 +24,7 @@ IplImage* getKinectFrame();
 
 char* transformToCharAray(const XnRGB24Pixel* source);
 
-void transformAreaVision(short unsigned int* source);
+void transformAreaVision(short unsigned int* source, int id);
 
 char *getSharedMemory(int memory_id, bool create);
 

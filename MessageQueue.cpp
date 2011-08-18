@@ -1,5 +1,8 @@
 #include "MessageQueue.h"
 
+/**
+ * Cria uma fila de mensagem com a key passada como parametro.
+ */
 int createMessageQueue(int key) {
 	int idFila = 0;
 
@@ -11,6 +14,9 @@ int createMessageQueue(int key) {
 	return idFila;
 }
 
+/**
+ * obtem um fila de mensagens com a key passada como parametro.
+ */
 int getMessageQueue(int key) {
 	int idFila = 0;
 
