@@ -12,7 +12,11 @@ int sharedMemoryCount = 0;
  * Calcula a proxima key da memoria compartilhada.
  */
 unsigned int getMemoryKey() {
-	return SHARED_MEMORY + (sharedMemoryCount++ * 4);
+	int key = SHARED_MEMORY + (sharedMemoryCount++ * 4);
+	if(key == MAX_SHARED_MEMORY) {
+		sharedMemoryCount = 0;
+	}
+	return key;
 }
 
 /**

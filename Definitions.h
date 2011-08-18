@@ -45,5 +45,6 @@
 
 // key da memoria compartilhada entre "FaceRec" e "UserTracker". Utilizado para enviar a imagem do novo usuario detectado.
 #define SHARED_MEMORY 0x1230
+#define MAX_SHARED_MEMORY 0x12bc
 
 #endif
