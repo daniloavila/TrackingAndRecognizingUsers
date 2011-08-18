@@ -85,16 +85,16 @@ void getFrameFromUserId(XnUserID nId, char *maskPixels) {
 	// Busca em cima do frame da tela só a area de pixels do usuario
 	unsigned short *scenePixels = (unsigned short int*) (sceneMD.Data());
 
-	for (int i = 0; i < KINECT_HEIGHT_CAPTURE * KINECT_HEIGHT_CAPTURE; i++) {
-		if(scenePixels[i] != nId) scenePixels[i] = 0;
-	}
+	// for (int i = 0; i < KINECT_HEIGHT_CAPTURE * KINECT_HEIGHT_CAPTURE; i++) {
+	// 	if(scenePixels[i] != nId) scenePixels[i] = 0;
+	// }
 
 	transformAreaVision(scenePixels, nId);
 
 	for (int i = 0; i < KINECT_HEIGHT_CAPTURE; i++) {
 		for (int j = 0; j < KINECT_WIDTH_CAPTURE; j++) {
 			int index = (i * KINECT_WIDTH_CAPTURE * KINECT_NUMBER_OF_CHANNELS) + (j * KINECT_NUMBER_OF_CHANNELS);
-			if (scenePixels[(i * KINECT_WIDTH_CAPTURE) + j] == nId || scenePixels[(i * KINECT_WIDTH_CAPTURE) + j] == -1) {
+			if (scenePixels[(i * KINECT_WIDTH_CAPTURE) + j] == nId || scenePixels[(i * KINECT_WIDTH_CAPTURE) + j] == ADJUSTED) {
 				maskPixels[index + 2] = result[index + 2];
 				maskPixels[index + 1] = result[index + 1];
 				maskPixels[index + 0] = result[index + 0];

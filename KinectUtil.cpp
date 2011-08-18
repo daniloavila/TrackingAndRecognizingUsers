@@ -15,6 +15,9 @@ unsigned int getMemoryKey() {
 	return SHARED_MEMORY + (sharedMemoryCount++ * 4);
 }
 
+/**
+ * Obtem ou cria a memoria compartilhada com id passado pelo parametro.
+ */
 char *getSharedMemory(int memory_id, bool create) {
 	int sharedMemoryId;
 
@@ -54,12 +57,18 @@ char* transformToCharAray(const XnRGB24Pixel* source) {
 	return result;
 }
 
+/**
+ * Seta o valor de um pixel, que nao seja um pixel do usuario em questao, no vetor com valor ADJUSTED.
+ */
 void setPixel(unsigned short int *source, int posicaoInicial, int posicaoFinal, int id) {
 	for(int i = posicaoInicial; i <= posicaoFinal; i++){
-		if(source[i] != id) source[i] = -1;
+		if(source[i] != id) source[i] = ADJUSTED;
 	}
 }
 
+/**
+ * Expande a area de pixels do usuario com id passado como parametro.
+ */
 void transformAreaVision(short unsigned int* source, int id) {
 	if (source != NULL) {
 
@@ -70,12 +79,14 @@ void transformAreaVision(short unsigned int* source, int id) {
 					int posicaoEsquerda;
 					int posicaoDireita;
 
+					//verifica se a area que sera expandido nao vai extrapolar os limites da imagem
 					if(KINECT_WIDTH_CAPTURE - j >  ADJUSTMENT_LEFT){
 						posicaoEsquerda = j + ADJUSTMENT_LEFT;
 					}else{
 						posicaoEsquerda = KINECT_WIDTH_CAPTURE - 1;
 					}
 
+					//verifica se a area que sera expandido nao vai extrapolar os limites da imagem
 					if(j - ADJUSTMENT_RIGHT <= 0){
 						posicaoDireita = 0;
 					}else{

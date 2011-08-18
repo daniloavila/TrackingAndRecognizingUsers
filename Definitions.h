@@ -23,6 +23,13 @@
 #define SAMPLE_XML_PATH "Config/SamplesConfig.xml"
 #define SAMPLE_XML_PATH_REGISTER "Config/Register.xml"
 
+//define o numero de ajuste dos pixels do usuario da camera depth para o rgb
+#define ADJUSTMENT_LEFT 40
+#define ADJUSTMENT_RIGHT 20
+
+//valor que o pixel da area expandida do usuario recebe
+#define ADJUSTED 999
+
 #define CHECK_RC(nRetVal, what) \
 	if (nRetVal != XN_STATUS_OK){\
 		printf("%s failed: %s\n", what, xnGetStatusString(nRetVal));\
@@ -38,9 +45,5 @@
 
 // key da memoria compartilhada entre "FaceRec" e "UserTracker". Utilizado para enviar a imagem do novo usuario detectado.
 #define SHARED_MEMORY 0x1230
-
-//define o numero de ajuste dos pixels do usuario da camera depth para o rgb
-#define ADJUSTMENT_LEFT 40
-#define ADJUSTMENT_RIGHT 20
 
 #endif
