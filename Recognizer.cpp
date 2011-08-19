@@ -77,7 +77,7 @@ int main(int argc, char** argv) {
 
 	MessageRequest messageRequest;
 	MessageResponse messageResponse;
-	int sharedMemoryId;
+	int *sharedMemoryId;
 	char* nome;
 
 	char *pshm;
@@ -106,11 +106,13 @@ int main(int argc, char** argv) {
 	idQueueRequest = getMessageQueue(MESSAGE_QUEUE_REQUEST);
 	idQueueResponse = getMessageQueue(MESSAGE_QUEUE_RESPONSE);
 
+	sharedMemoryId = (int *) malloc(sizeof(int));
+
 	while (1) {
 		msgrcv(idQueueRequest, &messageRequest, sizeof(MessageRequest) - sizeof(long), 0, 0);
 		printf("Log - Recognizer diz: Recebi pedido de reconhecimento. user_id = %d e id_memoria = %d\n", messageRequest.user_id, messageRequest.memory_id);
 
-		pshm = getSharedMemory(messageRequest.memory_id, false);
+		pshm = getSharedMemory(messageRequest.memory_id, false, sharedMemoryId);
 
 		IplImage* frame = cvCreateImage(cvSize(KINECT_HEIGHT_CAPTURE, KINECT_WIDTH_CAPTURE), IPL_DEPTH_8U, KINECT_NUMBER_OF_CHANNELS);
 		frame->imageData = pshm;
@@ -134,7 +136,7 @@ int main(int argc, char** argv) {
 
 		// deleta memoria compartilhada
 		shmdt(pshm);
-		shmctl(sharedMemoryId, IPC_RMID, NULL);
+		shmctl(*sharedMemoryId, IPC_RMID, NULL);
 
 		MessageResponse messageResponse;
 		messageResponse.user_id = messageRequest.user_id;

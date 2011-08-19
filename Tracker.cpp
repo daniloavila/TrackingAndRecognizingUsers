@@ -123,7 +123,7 @@ void requestRecognition(int id) {
 	messageRequest.user_id = id;
 	messageRequest.memory_id = getMemoryKey();
 
-	char *maskPixels = getSharedMemory(messageRequest.memory_id, true);
+	char *maskPixels = getSharedMemory(messageRequest.memory_id, true, NULL);
 
 	// Busca a area da imagem onde o usuario está.
 	getFrameFromUserId((XnUserID) id, maskPixels);

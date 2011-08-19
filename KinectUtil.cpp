@@ -22,21 +22,29 @@ unsigned int getMemoryKey() {
 /**
  * Obtem ou cria a memoria compartilhada com id passado pelo parametro.
  */
-char *getSharedMemory(int memory_id, bool create) {
-	int sharedMemoryId;
+char *getSharedMemory(int memory_id, bool create, int *sharedMemoryId) {
+	bool mallocMemory = false;
+
+	if(sharedMemoryId == NULL){
+ 		sharedMemoryId = (int *) malloc(sizeof(int));
+ 		mallocMemory = true;
+ 	}
 
 	unsigned short flag = IPC_CREAT;
 	if (!create) {
 		flag = IPC_EXCL;
 	}
 
-	if ((sharedMemoryId = shmget(memory_id, sizeof(char) * KINECT_WIDTH_CAPTURE * KINECT_HEIGHT_CAPTURE * KINECT_NUMBER_OF_CHANNELS, flag | 0x1ff)) < 0) {
+	if ((*sharedMemoryId = shmget(memory_id, sizeof(char) * KINECT_WIDTH_CAPTURE * KINECT_HEIGHT_CAPTURE * KINECT_NUMBER_OF_CHANNELS, flag | 0x1ff)) < 0) {
 		printf("Log - KinectUtil diz: Erro na criacao da memoria - %s\n", create ? "CREATE" : "EXCL");
 	}
-	char *maskPixels = (char*) ((shmat(sharedMemoryId, (char*) ((0)), 0)));
+	char *maskPixels = (char*) ((shmat(*sharedMemoryId, (char*) ((0)), 0)));
 	if (maskPixels == (char*) ((-1))) {
 		printf("Log - KinectUtil diz: Erro no attach da memoria - %s\n", create ? "CREATE" : "EXCL");
 	}
+
+	if(mallocMemory) free(sharedMemoryId);
+
 	return maskPixels;
 }
 
