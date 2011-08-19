@@ -74,10 +74,16 @@ int main(int argc, char** argv) {
 }
 
 // Save all the eigenvectors as images, so that they can be checked.
-void storeEigenfaceImages() {
+void storeEigenfaceImages(bool profile) {
+
 	// Store the average image to a file
 	printf("Saving the image of the average face as 'out_averageImage.bmp'.\n");
-	cvSaveImage("Eigenfaces/out_averageImage.bmp", pAvgTrainImg);
+	if(profile){
+		cvSaveImage("Eigenfaces-Profile/out_averageImage.bmp", pAvgTrainImg);
+	}else{
+		cvSaveImage("Eigenfaces/out_averageImage.bmp", pAvgTrainImg);			
+	}
+
 	// Create a large image made of many eigenface images.
 	// Must also convert each eigenface image to a normal 8-bit UCHAR image instead of a 32-bit float image.
 	printf("Saving the %d eigenvector images as 'out_eigenfaces.bmp'\n", nEigens);
@@ -103,7 +109,11 @@ void storeEigenfaceImages() {
 			cvResetImageROI(bigImg);
 			cvReleaseImage(&byteImg);
 		}
-		cvSaveImage("Eigenfaces/out_eigenfaces.bmp", bigImg);
+		if(profile){
+			cvSaveImage("Eigenfaces-Profile/out_eigenfaces.bmp", bigImg);
+		}else{
+			cvSaveImage("Eigenfaces/out_eigenfaces.bmp", bigImg);
+		}
 		cvReleaseImage(&bigImg);
 	}
 }
@@ -560,8 +570,8 @@ void recognizeFromCam(void) {
 	mkdir("Eigenfaces/data", 0777);
 
 	// Load the HaarCascade classifier for face detection.
-	// faceCascade = (CvHaarClassifierCascade*) cvLoad(frontalFaceCascadeFilename, 0, 0, 0);
 	faceCascade = (CvHaarClassifierCascade*) cvLoad(frontalFaceCascadeFilename, 0, 0, 0);
+	faceCascade = (CvHaarClassifierCascade*) cvLoad(profileFaceCascadeFilename, 0, 0, 0);
 	if (!faceCascade) {
 		printf("ERROR in recognizeFromCam(): Could not load Haar cascade Face detection classifier in '%s'.\n", frontalFaceCascadeFilename);
 		exit(1);
