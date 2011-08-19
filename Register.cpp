@@ -698,13 +698,15 @@ void recognizeFromCam(void) {
 
 				if (newPersonFaces == NUMBER_OF_SAVED_FACES_FRONTAL) {
 					printf("\a");
-					printf("Movimente a cabeça levemente para a esquerda e espere alguns segundos.");
-					sleep(10);
+					printf("Movimente a cabeça levemente para a esquerda e tecle Enter.\n");
+					flushinp();
+					getchar();
 					printf("\a");
 				} else if (newPersonFaces == NUMBER_OF_SAVED_FACES_FRONTAL + NUMBER_OF_SAVED_FACES_LEFT) {
 					printf("\a");
-					printf("Movimente a cabeça levemente para a direita e espere alguns segundos.");
-					sleep(10);
+					printf("Movimente a cabeça levemente para a direita e tecle Enter.\n");
+					flushinp();
+					getchar();
 					printf("\a");
 				}
 
