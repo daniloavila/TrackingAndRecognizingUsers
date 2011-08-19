@@ -707,23 +707,36 @@ void recognizeFromCam(void) {
 
 				} //endif nEigens
 
-				// Possibly save the processed face to the training set.
-				if (saveNextFaces && newPersonFaces < NUMBER_OF_SAVED_FACES) {
-					// MAYBE GET IT TO ONLY TRAIN SOME IMAGES ?
-					// Use a different filename each time.
+				if (newPersonFaces == NUMBER_OF_SAVED_FACES_FRONTAL) {
+					printf("\a");
+					printf("Movimente a cabeça levemente para a esquerda e tecle Enter.\n");
+					flushinp();
+					getchar();
+					printf("\a");
+				} else if (newPersonFaces == NUMBER_OF_SAVED_FACES_FRONTAL + NUMBER_OF_SAVED_FACES_LEFT) {
+					printf("\a");
+					printf("Movimente a cabeça levemente para a direita e tecle Enter.\n");
+					flushinp();
+					getchar();
+					printf("\a");
+				}
+
+				if (saveNextFaces && newPersonFaces < NUMBER_OF_SAVED_FACES_FRONTAL + NUMBER_OF_SAVED_FACES_LEFT + NUMBER_OF_SAVED_FACES_RIGHT) {
 					sleep(0.5);
 
 					sprintf(cstr, "Eigenfaces/data/%d_%s%d.pgm", nPersons + 1, newPersonName, newPersonFaces + 1);
 					printf("Storing the current face of '%s' into image '%s'.\n", newPersonName, cstr);
 					cvSaveImage(cstr, processedFaceImg, NULL);
-					fprintf(stdin, "t");
+					//fprintf(stdin, "t");
 
 					newPersonFaces++;
-				} else if (newPersonFaces == NUMBER_OF_SAVED_FACES) {
+				} else if (newPersonFaces == NUMBER_OF_SAVED_FACES_FRONTAL + NUMBER_OF_SAVED_FACES_LEFT + NUMBER_OF_SAVED_FACES_RIGHT) {
 
 					newPersonFaces = newPersonFaces + saveRotateImages(nPersons + 1, newPersonName, newPersonFaces);
 					newPersonFaces = newPersonFaces + saveFlipImages(nPersons + 1, newPersonName, newPersonFaces);
 					newPersonFaces = newPersonFaces + saveNoiseImages(nPersons + 1, newPersonName, newPersonFaces);
+					printf("\a\a\a");
+					printf("Pressione 't' para treinar.");
 				}
 
 				// Free the resources used for this frame.
