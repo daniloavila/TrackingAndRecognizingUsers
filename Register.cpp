@@ -560,7 +560,7 @@ void recognizeFromCam(void) {
 	mkdir("Eigenfaces/data", 0777);
 
 	// Load the HaarCascade classifier for face detection.
-	faceCascade = (CvHaarClassifierCascade*) cvLoad(profileFaceCascadeFilename, 0, 0, 0);
+	faceCascade = (CvHaarClassifierCascade*) cvLoad(frontalFaceCascadeFilename, 0, 0, 0);
 	if (!faceCascade) {
 		printf("ERROR in recognizeFromCam(): Could not load Haar cascade Face detection classifier in '%s'.\n", frontalFaceCascadeFilename);
 		exit(1);
