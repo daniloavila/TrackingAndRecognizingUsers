@@ -30,7 +30,8 @@ int idQueueRequest;
 int idQueueResponse;
 
 // Haar Cascade file, used for Face Detection.
-const char *faceCascadeFilename = "Eigenfaces/haarcascade_frontalface_alt.xml";
+const char *frontalFaceCascadeFilename = HAARCASCADE_FRONTALFACE;
+const char *profileFaceCascadeFilename = HAARCASCADE_PROFILEFACE;
 
 // Global variables
 IplImage ** faceImgArr = 0; // array of face images
@@ -73,7 +74,7 @@ int main(int argc, char** argv) {
 	int i;
 	CvMat * trainPersonNumMat; // the person numbers during training
 	float * projectedTestFace;
-	CvHaarClassifierCascade* faceCascade;
+	CvHaarClassifierCascade *frontalFaceCascade, *profileFaceCascade;
 
 	MessageRequest messageRequest;
 	MessageResponse messageResponse;
@@ -97,9 +98,16 @@ int main(int argc, char** argv) {
 	mkdir("Eigenfaces/data", 0777);
 
 	// Load the HaarCascade classifier for face detection.
-	faceCascade = (CvHaarClassifierCascade*) cvLoad(faceCascadeFilename, 0, 0, 0);
-	if (!faceCascade) {
-		printf("ERROR in recognizeFromCam(): Could not load Haar cascade Face detection classifier in '%s'.\n", faceCascadeFilename);
+	frontalFaceCascade = (CvHaarClassifierCascade*) cvLoad(frontalFaceCascadeFilename, 0, 0, 0);
+	if (!frontalFaceCascade) {
+		printf("ERROR in recognizeFromCam(): Could not load Haar cascade Face detection classifier in '%s'.\n", frontalFaceCascadeFilename);
+		exit(1);
+	}
+
+	// Load the HaarCascade classifier for face profile detection.
+	profileFaceCascade = (CvHaarClassifierCascade*) cvLoad(profileFaceCascadeFilename, 0, 0, 0);
+	if (!profileFaceCascade) {
+		printf("ERROR in recognizeFromCam(): Could not load Haar cascade Face detection classifier in '%s'.\n", profileFaceCascadeFilename);
 		exit(1);
 	}
 
@@ -125,7 +133,8 @@ int main(int argc, char** argv) {
 //		cvWaitKey(10);
 
 		float confidence = 0.0;
-		nome = recognizeFromCamImg(shownImg, faceCascade, trainPersonNumMat, projectedTestFace, &confidence);
+		nome = recognizeFromCamImg(shownImg, frontalFaceCascade, trainPersonNumMat, projectedTestFace, &confidence);
+		if (nome == NULL) recognizeFromCamImg(shownImg, profileFaceCascade, trainPersonNumMat, projectedTestFace, &confidence);
 		cvReleaseImage(&shownImg);
 
 
@@ -155,7 +164,8 @@ int main(int argc, char** argv) {
 
 	}
 
-	cvReleaseHaarClassifierCascade(&faceCascade);
+	cvReleaseHaarClassifierCascade(&frontalFaceCascade);
+	cvReleaseHaarClassifierCascade(&profileFaceCascade);
 
 	return 0;
 }
