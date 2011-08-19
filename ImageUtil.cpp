@@ -194,6 +194,9 @@ double uniform() {
  * Adiciona ruido na imagem rotacionada.
  */
 IplImage* generateNoiseImage(IplImage* img, float amount) {
+	if(img == NULL) {
+		return NULL;
+	}
 	CvSize imgSize = cvGetSize(img);
 	IplImage* imgTemp = cvCloneImage(img); 
 
