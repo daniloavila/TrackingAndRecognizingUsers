@@ -47,7 +47,7 @@
 #define SHARED_MEMORY 0x1230
 #define MAX_SHARED_MEMORY 0x12bc
 
-#define HAARCASCADE_PROFILEFACE "Eigenfaces/haarcascade_profileface.xml"
+#define HAARCASCADE_PROFILEFACE "Eigenfaces/haarcascade_profileface_umist2.xml"
 #define HAARCASCADE_FRONTALFACE "Eigenfaces/haarcascade_frontalface_alt.xml"
 
 #endif
