@@ -513,6 +513,10 @@ int saveNoiseImages(int personId, char *newPersonName, int numberOfSavedFaces) {
 		printf("Storing the current face of '%s' into image '%s'.\n", newPersonName, cstrNoise);
 
 		IplImage *noiseFaceImg = generateNoiseImage(processedFaceImg, LEVEL_OF_NOISE_IMAGES);
+		if(noiseFaceImg == NULL) {
+			i--;
+			continue;
+		}
 		cvSaveImage(cstrNoise, noiseFaceImg, NULL);
 	}
 
@@ -700,13 +704,15 @@ void recognizeFromCam(void) {
 				if (newPersonFaces == NUMBER_OF_SAVED_FACES_FRONTAL) {
 					printf("\a");
 					printf("Movimente a cabeça levemente para a esquerda e tecle Enter.\n");
-					flushinp();
+					fflush(stdin);
+					fflush(stdout);
 					getchar();
 					printf("\a");
 				} else if (newPersonFaces == NUMBER_OF_SAVED_FACES_FRONTAL + NUMBER_OF_SAVED_FACES_LEFT) {
 					printf("\a");
 					printf("Movimente a cabeça levemente para a direita e tecle Enter.\n");
-					flushinp();
+					fflush(stdin);
+					fflush(stdout);
 					getchar();
 					printf("\a");
 				}
@@ -726,7 +732,8 @@ void recognizeFromCam(void) {
 					newPersonFaces = newPersonFaces + saveFlipImages(nPersons + 1, newPersonName, newPersonFaces);
 					newPersonFaces = newPersonFaces + saveNoiseImages(nPersons + 1, newPersonName, newPersonFaces);
 					printf("\a\a\a");
-					printf("Pressione 't' para treinar.");
+					printf("Pressione 't' para re-treinar.\n");
+					fflush(stdout);
 				}
 
 				// Free the resources used for this frame.
