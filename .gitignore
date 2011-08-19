@@ -3,4 +3,5 @@ Debug/
 tracker
 recognizer
 register
-Eigenfaces/
+Eigenfaces/data/
+Eigenfaces/backup/
