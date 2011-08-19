@@ -26,7 +26,7 @@ char* transformToCharAray(const XnRGB24Pixel* source);
 
 void transformAreaVision(short unsigned int* source, int id);
 
-char *getSharedMemory(int memory_id, bool create);
+char *getSharedMemory(int memory_id, bool create, int *sharedMemoryId);
 
 unsigned int getMemoryKey();
 
