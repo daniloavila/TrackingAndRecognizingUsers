@@ -3,15 +3,17 @@
 
 // Register parameters
 #define NUMBER_OF_SAVED_FACES_FRONTAL 50
-#define NUMBER_OF_SAVED_FACES_RIGHT 30
-#define NUMBER_OF_SAVED_FACES_LEFT 30
-#define MAX_ANGLE_OF_ROTATE 10
+#define NUMBER_OF_SAVED_FACES_RIGHT 20
+#define NUMBER_OF_SAVED_FACES_LEFT 20
+
 #define NUMBER_OF_ROTATE_IMAGES 20
 #define NUMBER_OF_FLIP_IMAGES 20
 #define NUMBER_OF_NOISE_IMAGES 20
 
+#define MAX_ANGLE_OF_ROTATE 10
+
 // vai de 0 a 255 e quanto menor mais ruído.
-#define LEVEL_OF_NOISE_IMAGES 10
+#define LEVEL_OF_NOISE_IMAGES 50
 
 // Tracker parameters
 #define GL_WIN_SIZE_X 720
