@@ -29,26 +29,25 @@ using namespace std;
 int idQueueRequest;
 int idQueueResponse;
 
-// Haar Cascade file, used for Face Detection.
+// Haar Cascade file, usado para detecao facial
 const char *frontalFaceCascadeFilename = HAARCASCADE_FRONTALFACE;
 const char *profileFaceCascadeFilename = HAARCASCADE_PROFILEFACE;
 
-// Global variables
-IplImage ** faceImgArr = 0; // array of face images
-CvMat * personNumTruthMat = 0; // array of person numbers
+/******************* VARIAVEIS GLOBAIS ************************/
+IplImage ** faceImgArr = 0; // array de imagens facial
+CvMat * personNumTruthMat = 0; // array dos numeros das pessoas
 
-vector<string> personNames; // array of person names (indexed by the person number). Added by Shervin.
-int faceWidth = 120; // Default dimensions for faces in the face recognition database. Added by Shervin.
+vector<string> personNames; // array dos nomes das pessoas (idexado pelo numero da pessoa).
+int faceWidth = 120; // dimensoes default das faces no banco de  faces
 int faceHeight = 90; //	"		"		"		"		"		"		"		"
-int nPersons = 0; // the number of people in the training set. Added by Shervin.
-int nTrainFaces = 0; // the number of training images
-int nEigens = 0; // the number of eigenvalues
-IplImage * pAvgTrainImg = 0; // the average image
+int nPersons = 0; // numero de pessoas no cenario de treino
+int nTrainFaces = 0; // numero de imagens de trienamento
+int nEigens = 0; // numero de eigenvalues
+IplImage * pAvgTrainImg = 0; // a imagem media
 IplImage ** eigenVectArr = 0; // eigenvectors
 CvMat * eigenValMat = 0; // eigenvalues
 CvMat * projectedTrainFaceMat = 0; // projected training faces
 
-// Function prototypes
 void cleanup(int i);
 int loadTrainingData(CvMat ** pTrainPersonNumMat);
 int findNearestNeighbor(float * projectedTestFace, float *pConfidence);
@@ -69,10 +68,9 @@ bool validarNome(char *& nome) {
 	return false;
 }
 
-// Startup routine.
 int main(int argc, char** argv) {
 	int i;
-	CvMat * trainPersonNumMat; // the person numbers during training
+	CvMat * trainPersonNumMat; // o numero das pessoas durante o treinamento
 	float * projectedTestFace;
 	CvHaarClassifierCascade *frontalFaceCascade, *profileFaceCascade;
 
@@ -85,19 +83,18 @@ int main(int argc, char** argv) {
 
 	signal(SIGUSR1, cleanup);
 
-	// Load the previously saved training data
+	// lendo os dados do treinamento
 	if (loadTrainingData(&trainPersonNumMat)) {
 		faceWidth = pAvgTrainImg->width;
 		faceHeight = pAvgTrainImg->height;
 	}
 
-	// Project the test images onto the PCA subspace
+	// projetando as imagens do subespaco PCA
 	projectedTestFace = (float *) cvAlloc(nEigens * sizeof(float));
 
-	// Make sure there is a "data" folder, for storing the new person.
 	mkdir("Eigenfaces/data", 0777);
 
-	// Load the HaarCascade classifier for face detection.
+	// lendo o classificador
 	frontalFaceCascade = (CvHaarClassifierCascade*) cvLoad(frontalFaceCascadeFilename, 0, 0, 0);
 	if (!frontalFaceCascade) {
 		printf("ERROR in recognizeFromCam(): Could not load Haar cascade Face detection classifier in '%s'.\n", frontalFaceCascadeFilename);
@@ -162,26 +159,25 @@ int main(int argc, char** argv) {
 	return 0;
 }
 
-// Open the training data from the file 'facedata.xml'.
+// abrindo os dados do treino do arquivo 'facedata.xml'.
 int loadTrainingData(CvMat ** pTrainPersonNumMat) {
 	CvFileStorage * fileStorage;
 	int i;
 
-	// create a file-storage interface
 	fileStorage = cvOpenFileStorage("Eigenfaces/facedata.xml", 0, CV_STORAGE_READ);
 	if (!fileStorage) {
 		printf("Can't open training database file 'facedata.xml'.\n");
 		return 0;
 	}
 
-	// Load the person names. Added by Shervin.
-	personNames.clear(); // Make sure it starts as empty.
+	// lendo os nomes das pessoas
+	personNames.clear(); // tendo certeza que ele comece vazio
 	nPersons = cvReadIntByName(fileStorage, 0, "nPersons", 0);
 	if (nPersons == 0) {
 		printf("No people found in the training database 'facedata.xml'.\n");
 		return 0;
 	}
-	// Load each person's name.
+	// lendo o nome de cada pessoa
 	for (i = 0; i < nPersons; i++) {
 		string sPersonName;
 		char varname[200];
@@ -190,7 +186,7 @@ int loadTrainingData(CvMat ** pTrainPersonNumMat) {
 		personNames.push_back(sPersonName);
 	}
 
-	// Load the data
+	// lendo os dados
 	nEigens = cvReadIntByName(fileStorage, 0, "nEigens", 0);
 	nTrainFaces = cvReadIntByName(fileStorage, 0, "nTrainFaces", 0);
 	*pTrainPersonNumMat = (CvMat *) cvReadByName(fileStorage, 0, "trainPersonNumMat", 0);
@@ -204,7 +200,6 @@ int loadTrainingData(CvMat ** pTrainPersonNumMat) {
 		eigenVectArr[i] = (IplImage *) cvReadByName(fileStorage, 0, varname, 0);
 	}
 
-	// release the file-storage interface
 	cvReleaseFileStorage(&fileStorage);
 
 	printf("Training data loaded (%d training images of %d people):\n", nTrainFaces, nPersons);
@@ -219,7 +214,7 @@ int loadTrainingData(CvMat ** pTrainPersonNumMat) {
 	return 1;
 }
 
-// Find the most likely person based on a detection. Returns the index, and stores the confidence value into pConfidence.
+// acha a pessoa mais parecida com a detectada. Retorna o indice e armazena o indice de confianca
 int findNearestNeighbor(float * projectedTestFace, float *pConfidence) {
 	//double leastDistSq = 1e12;
 	double leastDistSq = DBL_MAX;
@@ -243,16 +238,15 @@ int findNearestNeighbor(float * projectedTestFace, float *pConfidence) {
 		}
 	}
 
-	// Return the confidence level based on the Euclidean distance,
-	// so that similar images should give a confidence between 0.5 to 1.0,
-	// and very different images should give a confidence between 0.0 to 0.5.
+	//retorna o nivel de confianca baseado na distancia euclidiana para que imagens similares deem confianca entre 0.5 e 1.0
+	// e imagens muito diferentes confianca entre 0.0 e 0.5
 	*pConfidence = 1.0f - sqrt(leastDistSq / (float) (nTrainFaces * nEigens)) / 255.0f;
 
 	// Return the found index.
 	return iNearest;
 }
 
-// Continuously recognize the person in the camera.
+// reocnhece a pessoa na camera
 char* recognizeFromCamImg(IplImage *camImg, CvHaarClassifierCascade* faceCascade, CvMat * trainPersonNumMat, float * projectedTestFace, float * pointerConfidence) {
 	int i;
 	char cstr[256];
@@ -276,20 +270,22 @@ char* recognizeFromCamImg(IplImage *camImg, CvHaarClassifierCascade* faceCascade
 		printf("ERROR in recognizeFromCam(): Bad input image!\n");
 		exit(1);
 	}
-	// Make sure the image is greyscale, since the Eigenfaces is only done on greyscale image.
+
+	// convert a imagem para escala de cinza
 	greyImg = convertImageToGreyscale(camImg);
 
-	// Perform face detection on the input image, using the given Haar cascade classifier.
+	//realiza deteccao facial utilizando um classificador haar
 	faceRect = detectFaceInImage(greyImg, faceCascade);
 
-	// Make sure a valid face was detected.
+	//verifica se alguma face foi detectada
 	if (faceRect.width > 0) {
 
-		faceImg = cropImage(greyImg, faceRect); // Get the detected face image.
-		// Make sure the image is the same dimensions as the training images.
+		faceImg = cropImage(greyImg, faceRect); // obtem a imagem detectada
+		
+		//redimensiona a imagem
 		sizedImg = resizeImage(faceImg, faceWidth, faceHeight);
-		// Give the image a standard brightness and contrast, in case it was too dark or low contrast.
-		equalizedImg = cvCreateImage(cvGetSize(sizedImg), 8, 1); // Create an empty greyscale image
+		// fornece a imagem o padrao de brilho e contraste
+		equalizedImg = cvCreateImage(cvGetSize(sizedImg), 8, 1); // uma uma imagem na escala de cinza limpa
 		cvEqualizeHist(sizedImg, equalizedImg);
 		processedFaceImg = equalizedImg;
 		if (!processedFaceImg) {
@@ -297,11 +293,11 @@ char* recognizeFromCamImg(IplImage *camImg, CvHaarClassifierCascade* faceCascade
 			exit(1);
 		}
 
-		// If the face rec database has been loaded, then try to recognize the person currently detected.
+		// tenta reconhecer as pessoas detectadas
 		if (nEigens > 0) {
-			// project the test image onto the PCA subspace
+			// projeta a imagem de teste no subespaco PCA
 			cvEigenDecomposite(processedFaceImg, nEigens, eigenVectArr, 0, 0, pAvgTrainImg, projectedTestFace);
-			// Check which person it is most likely to be.
+			//verifica qual pessoa eh a mais parecida
 			iNearest = findNearestNeighbor(projectedTestFace, &confidence);
 			nearest = trainPersonNumMat->data.i[iNearest];
 
@@ -312,7 +308,6 @@ char* recognizeFromCamImg(IplImage *camImg, CvHaarClassifierCascade* faceCascade
 			return (char*) personNames[nearest - 1].c_str();
 		}
 
-		// Free the resources used for this frame.
 		cvReleaseImage(&greyImg);
 		cvReleaseImage(&faceImg);
 		cvReleaseImage(&sizedImg);
