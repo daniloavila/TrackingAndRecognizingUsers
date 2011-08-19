@@ -732,6 +732,7 @@ void recognizeFromCam(void) {
 					newPersonFaces = newPersonFaces + saveFlipImages(nPersons + 1, newPersonName, newPersonFaces);
 					newPersonFaces = newPersonFaces + saveNoiseImages(nPersons + 1, newPersonName, newPersonFaces);
 					printf("\a\a\a");
+					printf("\7\7\7");
 					printf("Pressione 't' para re-treinar.\n");
 					fflush(stdout);
 				}
