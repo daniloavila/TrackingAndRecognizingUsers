@@ -74,16 +74,10 @@ int main(int argc, char** argv) {
 }
 
 // Save all the eigenvectors as images, so that they can be checked.
-void storeEigenfaceImages(bool profile) {
-
+void storeEigenfaceImages() {
 	// Store the average image to a file
 	printf("Saving the image of the average face as 'out_averageImage.bmp'.\n");
-	if(profile){
-		cvSaveImage("Eigenfaces-Profile/out_averageImage.bmp", pAvgTrainImg);
-	}else{
-		cvSaveImage("Eigenfaces/out_averageImage.bmp", pAvgTrainImg);			
-	}
-
+	cvSaveImage("Eigenfaces/out_averageImage.bmp", pAvgTrainImg);
 	// Create a large image made of many eigenface images.
 	// Must also convert each eigenface image to a normal 8-bit UCHAR image instead of a 32-bit float image.
 	printf("Saving the %d eigenvector images as 'out_eigenfaces.bmp'\n", nEigens);
@@ -109,11 +103,7 @@ void storeEigenfaceImages(bool profile) {
 			cvResetImageROI(bigImg);
 			cvReleaseImage(&byteImg);
 		}
-		if(profile){
-			cvSaveImage("Eigenfaces-Profile/out_eigenfaces.bmp", bigImg);
-		}else{
-			cvSaveImage("Eigenfaces/out_eigenfaces.bmp", bigImg);
-		}
+		cvSaveImage("Eigenfaces/out_eigenfaces.bmp", bigImg);
 		cvReleaseImage(&bigImg);
 	}
 }
@@ -571,7 +561,6 @@ void recognizeFromCam(void) {
 
 	// Load the HaarCascade classifier for face detection.
 	faceCascade = (CvHaarClassifierCascade*) cvLoad(frontalFaceCascadeFilename, 0, 0, 0);
-	faceCascade = (CvHaarClassifierCascade*) cvLoad(profileFaceCascadeFilename, 0, 0, 0);
 	if (!faceCascade) {
 		printf("ERROR in recognizeFromCam(): Could not load Haar cascade Face detection classifier in '%s'.\n", frontalFaceCascadeFilename);
 		exit(1);
@@ -600,7 +589,7 @@ void recognizeFromCam(void) {
 		}
 		switch (keyPressed) {
 		case 'p':
-			printf("Detect Profile Face\n");
+			printf("Detect Frontal Face\n");
 			faceCascade = (CvHaarClassifierCascade*) cvLoad(profileFaceCascadeFilename, 0, 0, 0);
 			if (!faceCascade) {
 				printf("ERROR in recognizeFromCam(): Could not load Haar cascade Face detection classifier in '%s'.\n", profileFaceCascadeFilename);
@@ -608,7 +597,7 @@ void recognizeFromCam(void) {
 			}
 			break;
 		case 'f':
-			printf("Detect Frontal Face\n");
+			printf("Detect Profile Face\n");
 			faceCascade = (CvHaarClassifierCascade*) cvLoad(frontalFaceCascadeFilename, 0, 0, 0);
 			if (!faceCascade) {
 				printf("ERROR in recognizeFromCam(): Could not load Haar cascade Face detection classifier in '%s'.\n", frontalFaceCascadeFilename);
@@ -707,36 +696,23 @@ void recognizeFromCam(void) {
 
 				} //endif nEigens
 
-				if (newPersonFaces == NUMBER_OF_SAVED_FACES_FRONTAL) {
-					printf("\a");
-					printf("Movimente a cabeça levemente para a esquerda e tecle Enter.\n");
-					flushinp();
-					getchar();
-					printf("\a");
-				} else if (newPersonFaces == NUMBER_OF_SAVED_FACES_FRONTAL + NUMBER_OF_SAVED_FACES_LEFT) {
-					printf("\a");
-					printf("Movimente a cabeça levemente para a direita e tecle Enter.\n");
-					flushinp();
-					getchar();
-					printf("\a");
-				}
-
-				if (saveNextFaces && newPersonFaces < NUMBER_OF_SAVED_FACES_FRONTAL + NUMBER_OF_SAVED_FACES_LEFT + NUMBER_OF_SAVED_FACES_RIGHT) {
+				// Possibly save the processed face to the training set.
+				if (saveNextFaces && newPersonFaces < NUMBER_OF_SAVED_FACES) {
+					// MAYBE GET IT TO ONLY TRAIN SOME IMAGES ?
+					// Use a different filename each time.
 					sleep(0.5);
 
 					sprintf(cstr, "Eigenfaces/data/%d_%s%d.pgm", nPersons + 1, newPersonName, newPersonFaces + 1);
 					printf("Storing the current face of '%s' into image '%s'.\n", newPersonName, cstr);
 					cvSaveImage(cstr, processedFaceImg, NULL);
-					//fprintf(stdin, "t");
+					fprintf(stdin, "t");
 
 					newPersonFaces++;
-				} else if (newPersonFaces == NUMBER_OF_SAVED_FACES_FRONTAL + NUMBER_OF_SAVED_FACES_LEFT + NUMBER_OF_SAVED_FACES_RIGHT) {
+				} else if (newPersonFaces == NUMBER_OF_SAVED_FACES) {
 
 					newPersonFaces = newPersonFaces + saveRotateImages(nPersons + 1, newPersonName, newPersonFaces);
 					newPersonFaces = newPersonFaces + saveFlipImages(nPersons + 1, newPersonName, newPersonFaces);
 					newPersonFaces = newPersonFaces + saveNoiseImages(nPersons + 1, newPersonName, newPersonFaces);
-					printf("\a\a\a");
-					printf("Pressione 't' para treinar.");
 				}
 
 				// Free the resources used for this frame.
