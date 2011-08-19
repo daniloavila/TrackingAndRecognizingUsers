@@ -4,13 +4,16 @@
 #include <sys/stat.h>
 #include <vector>
 #include <string.h>
+#include <cursesapp.h>
 #include <opencv/cv.h>
 #include <opencv/cvaux.h>
 #include <opencv/highgui.h>
 #include <XnCppWrapper.h>
 #include <sys/shm.h>
 
+#include <unistd.h>
 #include <cstdlib>
+#include <csignal>
 
 #if (XN_PLATFORM == XN_PLATFORM_MACOSX)
 #include <GLUT/glut.h>
@@ -702,22 +705,21 @@ void recognizeFromCam(void) {
 				} //endif nEigens
 
 				if (newPersonFaces == NUMBER_OF_SAVED_FACES_FRONTAL) {
-					printf("\a");
 					printf("Movimente a cabeça levemente para a esquerda e tecle Enter.\n");
 					fflush(stdin);
 					fflush(stdout);
 					getchar();
-					printf("\a");
 				} else if (newPersonFaces == NUMBER_OF_SAVED_FACES_FRONTAL + NUMBER_OF_SAVED_FACES_LEFT) {
-					printf("\a");
 					printf("Movimente a cabeça levemente para a direita e tecle Enter.\n");
 					fflush(stdin);
 					fflush(stdout);
 					getchar();
-					printf("\a");
 				}
 
 				if (saveNextFaces && newPersonFaces < NUMBER_OF_SAVED_FACES_FRONTAL + NUMBER_OF_SAVED_FACES_LEFT + NUMBER_OF_SAVED_FACES_RIGHT) {
+					printf("\007");
+					char beep[] = {7, '\0'};
+					printf("%c", beep);
 					sleep(0.5);
 
 					sprintf(cstr, "Eigenfaces/data/%d_%s%d.pgm", nPersons + 1, newPersonName, newPersonFaces + 1);
@@ -731,8 +733,6 @@ void recognizeFromCam(void) {
 					newPersonFaces = newPersonFaces + saveRotateImages(nPersons + 1, newPersonName, newPersonFaces);
 					newPersonFaces = newPersonFaces + saveFlipImages(nPersons + 1, newPersonName, newPersonFaces);
 					newPersonFaces = newPersonFaces + saveNoiseImages(nPersons + 1, newPersonName, newPersonFaces);
-					printf("\a\a\a");
-					printf("\7\7\7");
 					printf("Pressione 't' para re-treinar.\n");
 					fflush(stdout);
 				}
