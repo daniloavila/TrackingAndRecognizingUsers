@@ -26,8 +26,10 @@
 using namespace std;
 
 // Haar Cascade file, used for Face Detection.
-const char *faceCascadeFilename = "Eigenfaces/haarcascade_frontalface_alt.xml";
+const char *frontalFaceCascadeFilename = HAARCASCADE_FRONTALFACE;
+const char *profileFaceCascadeFilename = HAARCASCADE_PROFILEFACE;
 
+//Mudar para 0 se você quer que
 int SAVE_EIGENFACE_IMAGES = 1; // Set to 0 if you dont want images of the Eigenvectors saved to files (for debugging).
 //#define USE_MAHALANOBIS_DISTANCE	// You might get better recognition accuracy if you enable this.
 
@@ -558,7 +560,7 @@ void recognizeFromCam(void) {
 	mkdir("Eigenfaces/data", 0777);
 
 	// Load the HaarCascade classifier for face detection.
-	faceCascade = (CvHaarClassifierCascade*) cvLoad(faceCascadeFilename, 0, 0, 0);
+	faceCascade = (CvHaarClassifierCascade*) cvLoad(frontalFaceCascadeFilename, 0, 0, 0);
 	if (!faceCascade) {
 		printf("ERROR in recognizeFromCam(): Could not load Haar cascade Face detection classifier in '%s'.\n", faceCascadeFilename);
 		exit(1);
@@ -586,6 +588,20 @@ void recognizeFromCam(void) {
 			break; // Stop processing input.
 		}
 		switch (keyPressed) {
+		case 'p':
+			faceCascade = (CvHaarClassifierCascade*) cvLoad(profileFaceCascadeFilename, 0, 0, 0);
+			if (!faceCascade) {
+				printf("ERROR in recognizeFromCam(): Could not load Haar cascade Face detection classifier in '%s'.\n", faceCascadeFilename);
+				exit(1);
+			}
+			break;
+		case 'f':
+			faceCascade = (CvHaarClassifierCascade*) cvLoad(frontalFaceCascadeFilename, 0, 0, 0);
+			if (!faceCascade) {
+				printf("ERROR in recognizeFromCam(): Could not load Haar cascade Face detection classifier in '%s'.\n", faceCascadeFilename);
+				exit(1);
+			}
+			break;
 		case 'n': // Add a new person to the training set.
 			// Train from the following images.
 			printf("Enter your name: ");
@@ -691,7 +707,7 @@ void recognizeFromCam(void) {
 
 					newPersonFaces++;
 				} else if (newPersonFaces == NUMBER_OF_SAVED_FACES) {
-					
+
 					newPersonFaces = newPersonFaces + saveRotateImages(nPersons + 1, newPersonName, newPersonFaces);
 					newPersonFaces = newPersonFaces + saveFlipImages(nPersons + 1, newPersonName, newPersonFaces);
 					newPersonFaces = newPersonFaces + saveNoiseImages(nPersons + 1, newPersonName, newPersonFaces);

@@ -22,7 +22,6 @@
 #include <opencv/highgui.h>
 
 #include "SceneDrawer.h"
-#include "UserUtil.h"
 #include "KinectUtil.h"
 #include "MessageQueue.h"
 #include "StatisticsUtil.h"
@@ -305,8 +304,6 @@ void glutKeyboard(unsigned char key, int x, int y) {
 	case 'p':
 		g_bPause = !g_bPause;
 		break;
-	// case 'c':
-		// printUsersCoM(g_UserGenerator, g_SceneAnalyzer);
 	}
 }
 void glInit(int * pargc, char ** argv) {

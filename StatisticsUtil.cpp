@@ -17,9 +17,6 @@ bool compareNameByConfidence(string first, string second) {
 	double firstDif = abs((*nameConfidence)[first] - statisticConfidence);
 	double secondDif = abs((*nameConfidence)[second] - statisticConfidence);
 
-//	printf("CONFIANCA1 - %s - %f - %f\n", first.c_str(), (*nameConfidence)[first], firstDif);
-//	printf("CONFIANCA2- %s - %f - %f\n\n", second.c_str(), (*nameConfidence)[second], secondDif);
-
 	if (firstDif <= secondDif) {
 		return true;
 	} else {
