@@ -104,13 +104,6 @@ int main(int argc, char** argv) {
 		exit(1);
 	}
 
-	// Load the HaarCascade classifier for face profile detection.
-	profileFaceCascade = (CvHaarClassifierCascade*) cvLoad(profileFaceCascadeFilename, 0, 0, 0);
-	if (!profileFaceCascade) {
-		printf("ERROR in recognizeFromCam(): Could not load Haar cascade Face detection classifier in '%s'.\n", profileFaceCascadeFilename);
-		exit(1);
-	}
-
 	idQueueRequest = getMessageQueue(MESSAGE_QUEUE_REQUEST);
 	idQueueResponse = getMessageQueue(MESSAGE_QUEUE_RESPONSE);
 
@@ -118,7 +111,7 @@ int main(int argc, char** argv) {
 
 	while (1) {
 		msgrcv(idQueueRequest, &messageRequest, sizeof(MessageRequest) - sizeof(long), 0, 0);
-		printf("Log - Recognizer diz: Recebi pedido de reconhecimento. user_id = %d e id_memoria = %d\n", messageRequest.user_id, messageRequest.memory_id);
+		printf("Log - Recognizer diz: Recebi pedido de reconhecimento. user_id = %d e id_memoria = %x\n", messageRequest.user_id, messageRequest.memory_id);
 
 		pshm = getSharedMemory(messageRequest.memory_id, false, sharedMemoryId);
 
@@ -134,7 +127,6 @@ int main(int argc, char** argv) {
 
 		float confidence = 0.0;
 		nome = recognizeFromCamImg(shownImg, frontalFaceCascade, trainPersonNumMat, projectedTestFace, &confidence);
-		if (nome == NULL) recognizeFromCamImg(shownImg, profileFaceCascade, trainPersonNumMat, projectedTestFace, &confidence);
 		cvReleaseImage(&shownImg);
 
 

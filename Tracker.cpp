@@ -130,7 +130,7 @@ void requestRecognition(int id) {
 
 	shmdt(maskPixels);
 
-	printf("Log - Tracker diz: Enviando pedido de reconhecimento. user_id = %d e id_memoria = %d\n", messageRequest.user_id, messageRequest.memory_id);
+	printf("Log - Tracker diz: Enviando pedido de reconhecimento. user_id = %d e id_memoria = %x\n", messageRequest.user_id, messageRequest.memory_id);
 
 	if (msgsnd(idQueueRequest, &messageRequest, sizeof(MessageRequest) - sizeof(long), 0) > 0) {
 		printf("Log - Tracker diz: Erro no envio de mensagem para o usuário %d\n", messageRequest.memory_id);
