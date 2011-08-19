@@ -560,6 +560,7 @@ void recognizeFromCam(void) {
 	mkdir("Eigenfaces/data", 0777);
 
 	// Load the HaarCascade classifier for face detection.
+	// faceCascade = (CvHaarClassifierCascade*) cvLoad(frontalFaceCascadeFilename, 0, 0, 0);
 	faceCascade = (CvHaarClassifierCascade*) cvLoad(frontalFaceCascadeFilename, 0, 0, 0);
 	if (!faceCascade) {
 		printf("ERROR in recognizeFromCam(): Could not load Haar cascade Face detection classifier in '%s'.\n", frontalFaceCascadeFilename);
@@ -589,7 +590,7 @@ void recognizeFromCam(void) {
 		}
 		switch (keyPressed) {
 		case 'p':
-			printf("Detect Frontal Face\n");
+			printf("Detect Profile Face\n");
 			faceCascade = (CvHaarClassifierCascade*) cvLoad(profileFaceCascadeFilename, 0, 0, 0);
 			if (!faceCascade) {
 				printf("ERROR in recognizeFromCam(): Could not load Haar cascade Face detection classifier in '%s'.\n", profileFaceCascadeFilename);
@@ -597,7 +598,7 @@ void recognizeFromCam(void) {
 			}
 			break;
 		case 'f':
-			printf("Detect Profile Face\n");
+			printf("Detect Frontal Face\n");
 			faceCascade = (CvHaarClassifierCascade*) cvLoad(frontalFaceCascadeFilename, 0, 0, 0);
 			if (!faceCascade) {
 				printf("ERROR in recognizeFromCam(): Could not load Haar cascade Face detection classifier in '%s'.\n", frontalFaceCascadeFilename);
