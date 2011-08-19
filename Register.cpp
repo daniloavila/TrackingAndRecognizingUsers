@@ -564,6 +564,7 @@ void recognizeFromCam(void) {
 	mkdir("Eigenfaces/data", 0777);
 
 	// Load the HaarCascade classifier for face detection.
+	// faceCascade = (CvHaarClassifierCascade*) cvLoad(frontalFaceCascadeFilename, 0, 0, 0);
 	faceCascade = (CvHaarClassifierCascade*) cvLoad(frontalFaceCascadeFilename, 0, 0, 0);
 	if (!faceCascade) {
 		printf("ERROR in recognizeFromCam(): Could not load Haar cascade Face detection classifier in '%s'.\n", frontalFaceCascadeFilename);
@@ -593,7 +594,7 @@ void recognizeFromCam(void) {
 		}
 		switch (keyPressed) {
 		case 'p':
-			printf("Detect Frontal Face\n");
+			printf("Detect Profile Face\n");
 			faceCascade = (CvHaarClassifierCascade*) cvLoad(profileFaceCascadeFilename, 0, 0, 0);
 			if (!faceCascade) {
 				printf("ERROR in recognizeFromCam(): Could not load Haar cascade Face detection classifier in '%s'.\n", profileFaceCascadeFilename);
@@ -601,7 +602,7 @@ void recognizeFromCam(void) {
 			}
 			break;
 		case 'f':
-			printf("Detect Profile Face\n");
+			printf("Detect Frontal Face\n");
 			faceCascade = (CvHaarClassifierCascade*) cvLoad(frontalFaceCascadeFilename, 0, 0, 0);
 			if (!faceCascade) {
 				printf("ERROR in recognizeFromCam(): Could not load Haar cascade Face detection classifier in '%s'.\n", frontalFaceCascadeFilename);
@@ -722,10 +723,10 @@ void recognizeFromCam(void) {
 					sprintf(cstr, "Eigenfaces/data/%d_%s%d.pgm", nPersons + 1, newPersonName, newPersonFaces + 1);
 					printf("Storing the current face of '%s' into image '%s'.\n", newPersonName, cstr);
 					cvSaveImage(cstr, processedFaceImg, NULL);
-					fprintf(stdin, "t");
+					//fprintf(stdin, "t");
 
 					newPersonFaces++;
-				} else if (newPersonFaces == NUMBER_OF_SAVED_FACES) {
+				} else if (newPersonFaces == NUMBER_OF_SAVED_FACES_FRONTAL + NUMBER_OF_SAVED_FACES_LEFT + NUMBER_OF_SAVED_FACES_RIGHT) {
 
 					newPersonFaces = newPersonFaces + saveRotateImages(nPersons + 1, newPersonName, newPersonFaces);
 					newPersonFaces = newPersonFaces + saveFlipImages(nPersons + 1, newPersonName, newPersonFaces);
