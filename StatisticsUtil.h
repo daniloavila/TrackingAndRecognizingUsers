@@ -6,6 +6,8 @@
 #include <list>
 #include <string>
 
+#include <time.h>
+
 #include "MessageQueue.h"
 
 using namespace std;
@@ -18,6 +20,8 @@ int getTotalAttempts(int user_id);
 
 void statisticsClear(int user_id);
 
-void printfLogComplete(map<int, char *> *users, map<int, float> *usersConfidence);
+void printfLogComplete(map<int, char *> *users, map<int, float> *usersConfidence, FILE *file);
+
+void printfLogCompleteByUser(int id, map<int, char*> *users, map<int, float> *usersConfidence, FILE *file, int identationLevel = 1);
 
 #endif

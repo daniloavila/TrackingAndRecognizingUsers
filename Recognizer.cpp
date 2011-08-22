@@ -108,7 +108,7 @@ int main(int argc, char** argv) {
 
 	while (1) {
 		msgrcv(idQueueRequest, &messageRequest, sizeof(MessageRequest) - sizeof(long), 0, 0);
-		printf("Log - Recognizer diz: Recebi pedido de reconhecimento. user_id = %d e id_memoria = %x\n", messageRequest.user_id, messageRequest.memory_id);
+		printf("Log - Recognizer diz: Recebi pedido de reconhecimento. user_id = %ld e id_memoria = %x\n", messageRequest.user_id, messageRequest.memory_id);
 
 		pshm = getSharedMemory(messageRequest.memory_id, false, sharedMemoryId);
 
@@ -145,7 +145,7 @@ int main(int argc, char** argv) {
 			messageResponse.user_name[0] = NULL;
 		}
 
-		printf("Log - Recognizer diz: Enviando mensagem de usuario reconhecido. user_id = %d e nome = '%s'\n", messageRequest.user_id, nome);
+		printf("Log - Recognizer diz: Enviando mensagem de usuario reconhecido. user_id = %ld e nome = '%s'\n", messageRequest.user_id, nome);
 
 		if (msgsnd(idQueueResponse, &messageResponse, sizeof(MessageResponse) - sizeof(long), 0) > 0) {
 			printf("Erro no envio de mensagem para o usuario\n");
