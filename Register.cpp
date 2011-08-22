@@ -4,7 +4,6 @@
 #include <sys/stat.h>
 #include <vector>
 #include <string.h>
-#include <cursesapp.h>
 #include <opencv/cv.h>
 #include <opencv/cvaux.h>
 #include <opencv/highgui.h>
