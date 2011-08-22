@@ -709,7 +709,7 @@ void recognizeFromCam(void) {
 				cvReleaseImage(&equalizedImg);
 			}
 
-s			// mostra os dados na tela
+		// mostra os dados na tela
 			shownImg = cvCloneImage(camImg);
 			if (faceRect.width > 0) { // verifica se a face foi detectada
 				// mostra a regiao da face detectada
