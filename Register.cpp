@@ -27,31 +27,31 @@
 
 using namespace std;
 
-// Haar Cascade file, used for Face Detection.
+// Haar Cascade file, usado na deteccao
 const char *frontalFaceCascadeFilename = HAARCASCADE_FRONTALFACE;
 const char *profileFaceCascadeFilename = HAARCASCADE_PROFILEFACE;
 
-//Mudar para 0 se você quer que
-int SAVE_EIGENFACE_IMAGES = 1; // Set to 0 if you dont want images of the Eigenvectors saved to files (for debugging).
-//#define USE_MAHALANOBIS_DISTANCE	// You might get better recognition accuracy if you enable this.
+//Mudar para 0 se voce nao querer que os eigevectors sejam armazenados em arquivos
+int SAVE_EIGENFACE_IMAGES = 1; 
+// #define USE_MAHALANOBIS_DISTANCE	// You might get better recognition accuracy if you enable this.
 
-// Global variables
-IplImage ** faceImgArr = 0; // array of face images
-CvMat * personNumTruthMat = 0; // array of person numbers
-vector<string> personNames; // array of person names (indexed by the person number). Added by Shervin.
-int faceWidth = 120; // Default dimensions for faces in the face recognition database. Added by Shervin.
+
+/******************* VARIAVEIS GLOBAIS ************************/
+IplImage ** faceImgArr = 0; // array de imagens facial
+CvMat * personNumTruthMat = 0; // array dos numeros das pessoas
+vector<string> personNames; // array dos nomes das pessoas (idexado pelo numero da pessoa).
+int faceWidth = 120; // dimensoes default das faces no banco de  faces
 int faceHeight = 90; //	"		"		"		"		"		"		"		"
-int nPersons = 0; // the number of people in the training set. Added by Shervin.
-int nTrainFaces = 0; // the number of training images
-int nEigens = 0; // the number of eigenvalues
-IplImage * pAvgTrainImg = 0; // the average image
+int nPersons = 0; // numero de pessoas no cenario de treino
+int nTrainFaces = 0; // numero de imagens de trienamento
+int nEigens = 0; // numero de eigenvalues
+IplImage * pAvgTrainImg = 0; // a imagem media
 IplImage ** eigenVectArr = 0; // eigenvectors
 CvMat * eigenValMat = 0; // eigenvalues
 CvMat * projectedTrainFaceMat = 0; // projected training faces
 
-CvCapture* camera = 0; // The camera device.
+CvCapture* camera = 0; 
 
-// Function prototypes
 void learn(char *szFileTrain);
 void doPCA();
 void storeTrainingData();
@@ -61,7 +61,6 @@ int loadFaceImgArray(char * filename);
 void recognizeFromCam(void);
 CvMat* retrainOnline(void);
 
-// Startup routine.
 int main(int argc, char** argv) {
 	printf("register\n");
 
@@ -75,28 +74,28 @@ int main(int argc, char** argv) {
 	}
 }
 
-// Save all the eigenvectors as images, so that they can be checked.
+// salva todos os eigenvectors
 void storeEigenfaceImages() {
-	// Store the average image to a file
+	//armazena a imagem media em um arquivo
 	printf("Saving the image of the average face as 'out_averageImage.bmp'.\n");
 	cvSaveImage("Eigenfaces/out_averageImage.bmp", pAvgTrainImg);
-	// Create a large image made of many eigenface images.
-	// Must also convert each eigenface image to a normal 8-bit UCHAR image instead of a 32-bit float image.
+
+	//cria uma nova imagem feita de varias imagens eigenfaces 
 	printf("Saving the %d eigenvector images as 'out_eigenfaces.bmp'\n", nEigens);
 	if (nEigens > 0) {
-		// Put all the eigenfaces next to each other.
-		int COLUMNS = 8; // Put upto 8 images on a row.
+		//coloca todas imagens uma do lado da outra
+		int COLUMNS = 8; // poe 8 imagens em uma linha
 		int nCols = min(nEigens, COLUMNS);
-		int nRows = 1 + (nEigens / COLUMNS); // Put the rest on new rows.
+		int nRows = 1 + (nEigens / COLUMNS); 
 		int w = eigenVectArr[0]->width;
 		int h = eigenVectArr[0]->height;
 		CvSize size;
 		size = cvSize(nCols * w, nRows * h);
 		IplImage *bigImg = cvCreateImage(size, IPL_DEPTH_8U, 1); // 8-bit Greyscale UCHAR image
 		for (int i = 0; i < nEigens; i++) {
-			// Get the eigenface image.
+			// pega a imagem eigenface
 			IplImage *byteImg = convertFloatImageToUcharImage(eigenVectArr[i]);
-			// Paste it into the correct position.
+			// coloca ela na posicao correta
 			int x = w * (i % COLUMNS);
 			int y = h * (i / COLUMNS);
 			CvRect ROI = cvRect(x, y, w, h);
@@ -110,11 +109,11 @@ void storeEigenfaceImages() {
 	}
 }
 
-// Train from the data in the given text file, and store the trained data into the file 'facedata.xml'.
+//armazena os dados treinados em um arquivo facedata.xml
 void learn(char *szFileTrain) {
 	int i, offset;
 
-	// load training data
+	// le os dados de treinamento
 	printf("Loading the training images in '%s'\n", szFileTrain);
 	nTrainFaces = loadFaceImgArray(szFileTrain);
 	printf("Got %d training images.\n", nTrainFaces);
@@ -124,49 +123,47 @@ void learn(char *szFileTrain) {
 		return;
 	}
 
-	// do PCA on the training faces
+	// faz o PCA nas faces de treinamento
 	doPCA();
 
-	// project the training images onto the PCA subspace
+	// projeta as imagens de trienamento no subespaco PCA
 	projectedTrainFaceMat = cvCreateMat(nTrainFaces, nEigens, CV_32FC1);
 	offset = projectedTrainFaceMat->step / sizeof(float);
 	for (i = 0; i < nTrainFaces; i++) {
-		//int offset = i * nEigens;
 		cvEigenDecomposite(faceImgArr[i], nEigens, eigenVectArr, 0, 0, pAvgTrainImg,
-		//projectedTrainFaceMat->data.fl + i*nEigens);
-				projectedTrainFaceMat->data.fl + i * offset);
+		projectedTrainFaceMat->data.fl + i * offset);
 	}
 
-	// store the recognition data as an xml file
+	// armazena os dados de reconhecimento como um arquivo xml
 	storeTrainingData();
 
-	// Save all the eigenvectors as images, so that they can be checked.
+	// salva todos os eigenvectors como imagens, para que eles possam ser utilizados
 	if (SAVE_EIGENFACE_IMAGES) {
 		storeEigenfaceImages();
 	}
 
 }
 
-// Open the training data from the file 'facedata.xml'.
+// le os dados de treinamento do arquivo facedata.xml
 int loadTrainingData(CvMat ** pTrainPersonNumMat) {
 	CvFileStorage * fileStorage;
 	int i;
 
-	// create a file-storage interface
+	// cria uma interface arqivo - armazenamento
 	fileStorage = cvOpenFileStorage("Eigenfaces/facedata.xml", 0, CV_STORAGE_READ);
 	if (!fileStorage) {
 		printf("Can't open training database file 'facedata.xml'.\n");
 		return 0;
 	}
 
-	// Load the person names. Added by Shervin.
-	personNames.clear(); // Make sure it starts as empty.
+	// le os nomes das pessoas
+	personNames.clear(); // faz com q comece vazio
 	nPersons = cvReadIntByName(fileStorage, 0, "nPersons", 0);
 	if (nPersons == 0) {
 		printf("No people found in the training database 'facedata.xml'.\n");
 		return 0;
 	}
-	// Load each person's name.
+	// le o nome de cada pessoa
 	for (i = 0; i < nPersons; i++) {
 		string sPersonName;
 		char varname[200];
@@ -175,7 +172,7 @@ int loadTrainingData(CvMat ** pTrainPersonNumMat) {
 		personNames.push_back(sPersonName);
 	}
 
-	// Load the data
+	// le os dados
 	nEigens = cvReadIntByName(fileStorage, 0, "nEigens", 0);
 	nTrainFaces = cvReadIntByName(fileStorage, 0, "nTrainFaces", 0);
 	*pTrainPersonNumMat = (CvMat *) cvReadByName(fileStorage, 0, "trainPersonNumMat", 0);
@@ -189,7 +186,6 @@ int loadTrainingData(CvMat ** pTrainPersonNumMat) {
 		eigenVectArr[i] = (IplImage *) cvReadByName(fileStorage, 0, varname, 0);
 	}
 
-	// release the file-storage interface
 	cvReleaseFileStorage(&fileStorage);
 
 	printf("Training data loaded (%d training images of %d people):\n", nTrainFaces, nPersons);
@@ -204,15 +200,15 @@ int loadTrainingData(CvMat ** pTrainPersonNumMat) {
 	return 1;
 }
 
-// Save the training data to the file 'facedata.xml'.
+// armazena os dados de treinamento no arquivo facedata.xml
 void storeTrainingData() {
 	CvFileStorage * fileStorage;
 	int i;
 
-	// create a file-storage interface
+	// cria a interface arquivo-armazenamento
 	fileStorage = cvOpenFileStorage("Eigenfaces/facedata.xml", 0, CV_STORAGE_WRITE);
 
-	// Store the person names. Added by Shervin.
+	// armazena os nomes das pessoas
 	cvWriteInt(fileStorage, "nPersons", nPersons);
 	for (i = 0; i < nPersons; i++) {
 		char varname[200];
@@ -220,7 +216,7 @@ void storeTrainingData() {
 		cvWriteString(fileStorage, varname, personNames[i].c_str(), 0);
 	}
 
-	// store all the data
+	// armazena todos os dados
 	cvWriteInt(fileStorage, "nEigens", nEigens);
 	cvWriteInt(fileStorage, "nTrainFaces", nTrainFaces);
 	cvWrite(fileStorage, "trainPersonNumMat", personNumTruthMat, cvAttrList(0, 0));
@@ -233,13 +229,11 @@ void storeTrainingData() {
 		cvWrite(fileStorage, varname, eigenVectArr[i], cvAttrList(0, 0));
 	}
 
-	// release the file-storage interface
 	cvReleaseFileStorage(&fileStorage);
 }
 
-// Find the most likely person based on a detection. Returns the index, and stores the confidence value into pConfidence.
+// acha a pessoa mais parecia baseado com a deteccao. Retorna o index e armazena o indice de confianca em pConfidence
 int findNearestNeighbor(float * projectedTestFace, float *pConfidence) {
-	//double leastDistSq = 1e12;
 	double leastDistSq = DBL_MAX;
 	int i, iTrain, iNearest = 0;
 
@@ -249,7 +243,7 @@ int findNearestNeighbor(float * projectedTestFace, float *pConfidence) {
 		for (i = 0; i < nEigens; i++) {
 			float d_i = projectedTestFace[i] - projectedTrainFaceMat->data.fl[iTrain * nEigens + i];
 #ifdef USE_MAHALANOBIS_DISTANCE
-			distSq += d_i*d_i / eigenValMat->data.fl[i]; // Mahalanobis distance (might give better results than Eucalidean distance)
+			distSq += d_i*d_i / eigenValMat->data.fl[i]; // Mahalanobis distance 
 #else
 			distSq += d_i * d_i; // Euclidean distance.
 #endif
@@ -261,97 +255,94 @@ int findNearestNeighbor(float * projectedTestFace, float *pConfidence) {
 		}
 	}
 
-	// Return the confidence level based on the Euclidean distance,
-	// so that similar images should give a confidence between 0.5 to 1.0,
-	// and very different images should give a confidence between 0.0 to 0.5.
+	// retornar o nivel de confianca baseado na distancia euclidiana,
+	// para que imagens similares deem indice de confianca entre 0.5 - 1.0
+	// e imagens muitos diferentes deem indice de confianca entre 0.0 - 0.5
 	*pConfidence = 1.0f - sqrt(leastDistSq / (float) (nTrainFaces * nEigens)) / 255.0f;
 
-	// Return the found index.
+	// Retorna o index
 	return iNearest;
 }
 
-// Do the Principal Component Analysis, finding the average image
-// and the eigenfaces that represent any image in the given dataset.
+// faz a analize das componentes principais, achando a imagem media
+// e os eigenfaces que representa qualquer imagem no ambiente de dados
 void doPCA() {
 	int i;
 	CvTermCriteria calcLimit;
 	CvSize faceImgSize;
 
-	// set the number of eigenvalues to use
+	// seta o numero de eigenvalues para usar
 	nEigens = nTrainFaces - 1;
 
-	// allocate the eigenvector images
+	// armazena as imagens eigenvector
 	faceImgSize.width = faceImgArr[0]->width;
 	faceImgSize.height = faceImgArr[0]->height;
 	eigenVectArr = (IplImage**) cvAlloc(sizeof(IplImage*) * nEigens);
 	for (i = 0; i < nEigens; i++)
 		eigenVectArr[i] = cvCreateImage(faceImgSize, IPL_DEPTH_32F, 1);
 
-	// allocate the eigenvalue array
+	// armazena o array de eigenvalue
 	eigenValMat = cvCreateMat(1, nEigens, CV_32FC1);
 
-	// allocate the averaged image
+	// armazena a imagem media
 	pAvgTrainImg = cvCreateImage(faceImgSize, IPL_DEPTH_32F, 1);
 
-	// set the PCA termination criterion
+	// seta o criterio de termino do PCA
 	calcLimit = cvTermCriteria(CV_TERMCRIT_ITER, nEigens, 1);
 
-	// compute average image, eigenvalues, and eigenvectors
+	// computa a imagem media, eigenvalues e os eigenvectors
 	cvCalcEigenObjects(nTrainFaces, (void*) faceImgArr, (void*) eigenVectArr, CV_EIGOBJ_NO_CALLBACK, 0, 0, &calcLimit, pAvgTrainImg, eigenValMat->data.fl);
 
 	cvNormalize(eigenValMat, eigenValMat, 1, 0, CV_L1, 0);
 }
 
-// Read the names & image filenames of people from a text file, and load all those images listed.
+// le os nomes e as imagens das pessoas de um arquivo txt, e le todas as imagens listadas
 int loadFaceImgArray(char * filename) {
 	FILE * imgListFile = 0;
 	char imgFilename[512];
 	int iFace, nFaces = 0;
 	int i;
 
-	// open the input file
+	// abre o arquivo de input
 	if (!(imgListFile = fopen(filename, "r"))) {
 		fprintf(stderr, "Can\'t open file %s\n", filename);
 		return 0;
 	}
 
-	// count the number of faces
+	// conta o numero de faces
 	while (fgets(imgFilename, 512, imgListFile))
 		++nFaces;
 	rewind(imgListFile);
 
-	// allocate the face-image array and person number matrix
+	// alloca o array face-imagem 
 	faceImgArr = (IplImage **) cvAlloc(nFaces * sizeof(IplImage *));
 	personNumTruthMat = cvCreateMat(1, nFaces, CV_32SC1);
 
-	personNames.clear(); // Make sure it starts as empty.
+	personNames.clear(); 
 	nPersons = 0;
 
-	// store the face images in an array
+	// armazena as imagens de faces em um array
 	for (iFace = 0; iFace < nFaces; iFace++) {
 		char personName[256];
 		string sPersonName;
 		int personNumber;
 
-		// read person number (beginning with 1), their name and the image filename.
+		// le o numero da pessoa, seu nome e o nome da imagem
 		fscanf(imgListFile, "%d %s %s", &personNumber, personName, imgFilename);
 		sPersonName = personName;
-		//printf("Got %d: %d, <%s>, <%s>.\n", iFace, personNumber, personName, imgFilename);
 
-		// Check if a new person is being loaded.
+		// verifica se um nova pessoa esta sendo lida
 		if (personNumber > nPersons) {
-			// Allocate memory for the extra person (or possibly multiple), using this new person's name.
+			// alloca memoria para a pessoa extra
 			for (i = nPersons; i < personNumber; i++) {
 				personNames.push_back(sPersonName);
 			}
 			nPersons = personNumber;
-			//printf("Got new person <%s> -> nPersons = %d [%d]\n", sPersonName.c_str(), nPersons, personNames.size());
 		}
 
-		// Keep the data
 		personNumTruthMat->data.i[iFace] = personNumber;
 
-		// load the face image
+		// le a imagem da face
 		faceImgArr[iFace] = cvLoadImage(imgFilename, CV_LOAD_IMAGE_GRAYSCALE);
 
 		if (!faceImgArr[iFace]) {
@@ -374,27 +365,26 @@ int loadFaceImgArray(char * filename) {
 	return nFaces;
 }
 
-// Re-train the new face rec database without shutting down.
-// Depending on the number of images in the training set and number of people, it might take 30 seconds or so.
+// retreina o novo database de faces sem para a execucao
 CvMat* retrainOnline(void) {
 	CvMat *trainPersonNumMat;
 	int i;
 
-	// Free & Re-initialize the global variables.
+	// libera e reinicializa as variaveis globais
 	if (faceImgArr) {
 		for (i = 0; i < nTrainFaces; i++) {
 			if (faceImgArr[i])
 				cvReleaseImage(&faceImgArr[i]);
 		}
 	}cvFree( &faceImgArr);
-	// array of face images
+	// array de imagens de face
 	cvFree( &personNumTruthMat);
-	// array of person numbers
-	personNames.clear(); // array of person names (indexed by the person number). Added by Shervin.
-	nPersons = 0; // the number of people in the training set. Added by Shervin.
-	nTrainFaces = 0; // the number of training images
-	nEigens = 0; // the number of eigenvalues
-	cvReleaseImage(&pAvgTrainImg); // the average image
+	// array de numeros das pessoas
+	personNames.clear(); // array dos nomes das pessoas indextada pelo numero
+	nPersons = 0; // o numero das pessoas no cenario de treino
+	nTrainFaces = 0; // o numero de imagens de treinamento
+	nEigens = 0; // o numero de eigenvalues
+	cvReleaseImage(&pAvgTrainImg); // a imagem media
 	for (i = 0; i < nTrainFaces; i++) {
 		if (eigenVectArr[i])
 			cvReleaseImage(&eigenVectArr[i]);
@@ -403,14 +393,11 @@ CvMat* retrainOnline(void) {
 	cvFree( &eigenValMat);
 	// eigenvalues
 	cvFree( &projectedTrainFaceMat);
-	// projected training faces
 
-	// Retrain from the data in the files
 	printf("Retraining with the new person ...\n");
 	learn("Eigenfaces/train.txt");
 	printf("Done retraining.\n");
 
-	// Load the previously saved training data
 	if (!loadTrainingData(&trainPersonNumMat)) {
 		printf("ERROR in recognizeFromCam(): Couldn't load the training data!\n");
 		exit(1);
@@ -419,13 +406,12 @@ CvMat* retrainOnline(void) {
 	return trainPersonNumMat;
 }
 
-// Grab the next camera frame. Waits until the next frame is ready,
-// and provides direct access to it, so do NOT modify the returned image or free it!
-// Will automatically initialize the camera on the first frame.
+// pega a proxima frame da camera. Espera ate que a proxima frame esteja pronta,
+// e prove o acesso direta a mesma, entao nao modifique o retorno da imagem ou o libere.
 IplImage* getCameraFrame(void) {
 	IplImage *frame;
 
-	// If the camera hasn't been initialized, then open it.
+	// se a camera não inicializou, entao inicializa
 	if (!camera) {
 		printf("Acessing the camera ...\n");
 		camera = cvCaptureFromCAM(0);
@@ -433,12 +419,12 @@ IplImage* getCameraFrame(void) {
 			printf("ERROR in getCameraFrame(): Couldn't access the camera.\n");
 			exit(1);
 		}
-		// Try to set the camera resolution
+		//seta a resolucao da camera
 		cvSetCaptureProperty(camera, CV_CAP_PROP_FRAME_WIDTH, 640);
 		cvSetCaptureProperty(camera, CV_CAP_PROP_FRAME_HEIGHT, 480);
-		// Wait a little, so that the camera can auto-adjust itself
-		sleep(10); // (in milliseconds)
-		frame = cvQueryFrame(camera); // get the first frame, to make sure the camera is initialized.
+		// espera um tempo, para que a camera se auto-ajuste
+		sleep(10);
+		frame = cvQueryFrame(camera); // pega a primeira frame para ter crtz que a camera foi inicializada
 		if (frame) {
 			printf("Got a camera using a resolution of %dx%d.\n", (int) cvGetCaptureProperty(camera, CV_CAP_PROP_FRAME_WIDTH),
 					(int) cvGetCaptureProperty(camera, CV_CAP_PROP_FRAME_HEIGHT));
@@ -525,10 +511,10 @@ int saveNoiseImages(int personId, char *newPersonName, int numberOfSavedFaces) {
 	return NUMBER_OF_NOISE_IMAGES;
 }
 
-// Continuously recognize the person in the camera.
+// reconhece a pessoa na camera continuamente
 void recognizeFromCam(void) {
 	int i;
-	CvMat * trainPersonNumMat; // the person numbers during training
+	CvMat * trainPersonNumMat; // numeros da pessoa durante o trienmento
 	float * projectedTestFace;
 	double timeFaceRecognizeStart;
 	double tallyFaceRecognizeTime;
@@ -539,14 +525,14 @@ void recognizeFromCam(void) {
 	int newPersonFaces;
 	int kinectFail = 0;
 
-	trainPersonNumMat = 0; // the person numbers during training
+	trainPersonNumMat = 0; 
 	projectedTestFace = 0;
 	saveNextFaces = FALSE;
 	newPersonFaces = 0;
 
 	printf("Recognizing person in the camera ...\n");
 
-	// Load the previously saved training data
+	// le os ultimos dados de treinamento salvos 
 	if (loadTrainingData(&trainPersonNumMat)) {
 		faceWidth = pAvgTrainImg->width;
 		faceHeight = pAvgTrainImg->height;
@@ -555,18 +541,16 @@ void recognizeFromCam(void) {
 		//exit(1);
 	}
 
-	// Project the test images onto the PCA subspace
+	// projeta as imagnes de teste no subespaco PCA
 	projectedTestFace = (float *) cvAlloc(nEigens * sizeof(float));
 
-	// Create a GUI window for the user to see the camera image.
+	// cria uma janela par ao usuario ver a imagem da camera
 	cvNamedWindow("Input", CV_WINDOW_AUTOSIZE);
 	cvMoveWindow("Input", 10, 10);
 
-	// Make sure there is a "data" folder, for storing the new person.
 	mkdir("Eigenfaces/data", 0777);
 
-	// Load the HaarCascade classifier for face detection.
-	// faceCascade = (CvHaarClassifierCascade*) cvLoad(frontalFaceCascadeFilename, 0, 0, 0);
+	// le o classificador utilizado para detecao
 	faceCascade = (CvHaarClassifierCascade*) cvLoad(frontalFaceCascadeFilename, 0, 0, 0);
 	if (!faceCascade) {
 		printf("ERROR in recognizeFromCam(): Could not load Haar cascade Face detection classifier in '%s'.\n", frontalFaceCascadeFilename);
@@ -587,12 +571,12 @@ void recognizeFromCam(void) {
 		FILE *trainFile;
 		float confidence;
 
-		// Handle keyboard input in the console.
+		// cuida o keyborad input no console
 		if (kbhit())
 			keyPressed = getchar();
 
-		if (keyPressed == VK_ESCAPE) { // Check if the user hit the 'Escape' key
-			break; // Stop processing input.
+		if (keyPressed == VK_ESCAPE) { // veririfica se o usario entrou com ESC
+			break; 
 		}
 		switch (keyPressed) {
 		case 'p':
@@ -611,20 +595,19 @@ void recognizeFromCam(void) {
 				exit(1);
 			}
 			break;
-		case 'n': // Add a new person to the training set.
-			// Train from the following images.
+		case 'n': // adiciona uma nova pessoa no cenario de treino
 			printf("Enter your name: ");
 			strcpy(newPersonName, "newPerson");
 			gets(newPersonName);
 			printf("Collecting all images until you hit 't', to start Training the images as '%s' ...\n", newPersonName);
-			newPersonFaces = 0; // restart training a new person
+			newPersonFaces = 0; 
 			saveNextFaces = TRUE;
 			break;
-		case 't': // Start training
-			saveNextFaces = FALSE; // stop saving next faces.
-			// Store the saved data into the training file.
+		case 't': // comeca a treinar
+			saveNextFaces = FALSE; // para de salvar novas faces
+			// amarzena os novos dados nos arquivo de treinamento
 			printf("Storing the training data for new person '%s'.\n", newPersonName);
-			// Append the new person to the end of the training data.
+			// concate a nova pessoa no final dos dados de treino
 			trainFile = fopen("Eigenfaces/train.txt", "a");
 			for (i = 0; i < newPersonFaces; i++) {
 				sprintf(cstr, "Eigenfaces/data/%d_%s%d.pgm", nPersons + 1, newPersonName, i + 1);
@@ -632,25 +615,17 @@ void recognizeFromCam(void) {
 			}
 			fclose(trainFile);
 
-			// Now there is one more person in the database, ready for retraining.
-			//nPersons++;
-
-			//break;
-			//case 'r':
-
-			// Re-initialize the local data.
+			// reinicializa os dados locais
 			projectedTestFace = 0;
 			saveNextFaces = FALSE;
 			newPersonFaces = 0;
 
-			// Retrain from the new database without shutting down.
-			// Depending on the number of images in the training set and number of people, it might take 30 seconds or so.
+			// retreina do novo banco de dados sem parar a execucao
 			cvFree( &trainPersonNumMat);
-			// Free the previous data before getting new data
+			// libera os dados antigos antes de obter os novos
 			trainPersonNumMat = retrainOnline();
-			// Project the test images onto the PCA subspace
+			// projeta as iamgens de teste no subespaco PCA
 			cvFree(&projectedTestFace);
-			// Free the previous data before getting new data
 			projectedTestFace = (float *) cvAlloc(nEigens * sizeof(float));
 
 			printf("Recognizing person in the camera ...\n");
@@ -658,7 +633,7 @@ void recognizeFromCam(void) {
 			break;
 		}
 
-		// Get the camera frame
+		//pega a frame da camera
 		if (!kinectFail) {
 			camImg = getKinectFrame();
 		}
@@ -671,18 +646,18 @@ void recognizeFromCam(void) {
 		if (!camImg) {
 			printf("ERROR in recognizeFromCam(): Bad input image!\n");
 		} else {
-			// Make sure the image is greyscale, since the Eigenfaces is only done on greyscale image.
+			// transforma a imagem em escala de cinza
 			greyImg = convertImageToGreyscale(camImg);
 
-			// Perform face detection on the input image, using the given Haar cascade classifier.
+			// realiza deteccao facial na imagem de entrada, usando o classificador
 			faceRect = detectFaceInImage(greyImg, faceCascade);
-			// Make sure a valid face was detected.
+			// veririfica se uma faxe foi detectada
 			if (faceRect.width > 0) {
-				faceImg = cropImage(greyImg, faceRect); // Get the detected face image.
-				// Make sure the image is the same dimensions as the training images.
+				faceImg = cropImage(greyImg, faceRect); // pega a face detectada
+				// redimensiona a imagem
 				sizedImg = resizeImage(faceImg, faceWidth, faceHeight);
-				// Give the image a standard brightness and contrast, in case it was too dark or low contrast.
-				equalizedImg = cvCreateImage(cvGetSize(sizedImg), 8, 1); // Create an empty greyscale image
+				// da a imagem o brilho e contraste padrao
+				equalizedImg = cvCreateImage(cvGetSize(sizedImg), 8, 1); // cria uma imagem vazia em escala de cinza
 				cvEqualizeHist(sizedImg, equalizedImg);
 				processedFaceImg = equalizedImg;
 				if (!processedFaceImg) {
@@ -690,18 +665,15 @@ void recognizeFromCam(void) {
 					exit(1);
 				}
 
-				// If the face rec database has been loaded, then try to recognize the person currently detected.
+				// tenta reconhecer a face detectada
 				if (nEigens > 0) {
-					// project the test image onto the PCA subspace
+					// projeta a imagem de teste do subespaco PCA
 					cvEigenDecomposite(processedFaceImg, nEigens, eigenVectArr, 0, 0, pAvgTrainImg, projectedTestFace);
 
-					// Check which person it is most likely to be.
+					// verifica qual a pessoa mais parecida com a face
 					iNearest = findNearestNeighbor(projectedTestFace, &confidence);
 					nearest = trainPersonNumMat->data.i[iNearest];
-
-					// printf("Most likely person in camera: '%s' (confidence=%f.\n", personNames[nearest-1].c_str(), confidence);
-
-				} //endif nEigens
+				} 
 
 				if (newPersonFaces == NUMBER_OF_SAVED_FACES_FRONTAL) {
 					printf("Movimente a cabeça levemente para a esquerda e tecle Enter.\n");
@@ -724,7 +696,6 @@ void recognizeFromCam(void) {
 					sprintf(cstr, "Eigenfaces/data/%d_%s%d.pgm", nPersons + 1, newPersonName, newPersonFaces + 1);
 					printf("Storing the current face of '%s' into image '%s'.\n", newPersonName, cstr);
 					cvSaveImage(cstr, processedFaceImg, NULL);
-					//fprintf(stdin, "t");
 
 					newPersonFaces++;
 				} else if (newPersonFaces == NUMBER_OF_SAVED_FACES_FRONTAL + NUMBER_OF_SAVED_FACES_LEFT + NUMBER_OF_SAVED_FACES_RIGHT) {
@@ -736,49 +707,46 @@ void recognizeFromCam(void) {
 					fflush(stdout);
 				}
 
-				// Free the resources used for this frame.
+				// libera os recursos
 				cvReleaseImage(&greyImg);
 				cvReleaseImage(&faceImg);
 				cvReleaseImage(&sizedImg);
 				cvReleaseImage(&equalizedImg);
 			}
 
-			// Show the data on the screen.
+s			// mostra os dados na tela
 			shownImg = cvCloneImage(camImg);
-			if (faceRect.width > 0) { // Check if a face was detected.
-				// Show the detected face region.
+			if (faceRect.width > 0) { // verifica se a face foi detectada
+				// mostra a regiao da face detectada
 				cvRectangle(shownImg, cvPoint(faceRect.x, faceRect.y), cvPoint(faceRect.x + faceRect.width - 1, faceRect.y + faceRect.height - 1), CV_RGB(0,255,0), 1, 8, 0);
-				if (nEigens > 0) { // Check if the face recognition database is loaded and a person was recognized.
-					// Show the name of the recognized person, overlayed on the image below their face.
+				if (nEigens > 0) { // 
+					// mostra o nome da pessoa reconhecida
 					CvFont font;
 					cvInitFont(&font, CV_FONT_HERSHEY_PLAIN, 1.0, 1.0, 0, 1, CV_AA);
-					CvScalar textColor = CV_RGB(0,255,255); // light blue text
+					CvScalar textColor = CV_RGB(0,255,255); // texto azul claro
 					char text[256];
-					//				sprintf_s(text, sizeof(text)-1, "Name: '%s'", personNames[nearest-1].c_str());
 
 					snprintf(text, sizeof(text) - 1, "Name: '%s'", personNames[nearest - 1].c_str());
 
 					cvPutText(shownImg, text, cvPoint(faceRect.x, faceRect.y + faceRect.height + 15), &font, textColor);
-					//				sprintf_s(text, sizeof(text)-1, "Confidence: %f", confidence);
 					snprintf(text, sizeof(text) - 1, "Confidence: %f", confidence);
 					cvPutText(shownImg, text, cvPoint(faceRect.x, faceRect.y + faceRect.height + 30), &font, textColor);
 				}
 			}
 
-			// Display the image.
+			// mostra a imagem
 			cvShowImage("Input", shownImg);
 
-			// Give some time for OpenCV to draw the GUI and check if the user has pressed something in the GUI window.
+			// da um tempo para o openCV desenhar a imagem e veriricar se alguma key foi pressionada
 			keyPressed = cvWaitKey(10);
-			if (keyPressed == VK_ESCAPE) { // Check if the user hit the 'Escape' key in the GUI window.
-				break; // Stop processing input.
+			if (keyPressed == VK_ESCAPE) { // verifica se o ESC foi pressionado
+				break; 
 			}
 
 			cvReleaseImage(&shownImg);
 		}
 	}
 
-	// Free the camera and memory resources used.
 	cvReleaseCapture(&camera);
 	cvReleaseHaarClassifierCascade(&faceCascade);
 }
