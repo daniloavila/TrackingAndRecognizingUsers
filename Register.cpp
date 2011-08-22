@@ -74,11 +74,11 @@ int main(int argc, char** argv) {
 // salva todos os eigenvectors
 void storeEigenfaceImages() {
 	//armazena a imagem media em um arquivo
-	printf("Saving the image of the average face as 'out_averageImage.bmp'.\n");
+	printf("Salvando a imagem da face media como 'out_averageImage.bmp'.\n");
 	cvSaveImage("Eigenfaces/out_averageImage.bmp", pAvgTrainImg);
 
 	//cria uma nova imagem feita de varias imagens eigenfaces 
-	printf("Saving the %d eigenvector images as 'out_eigenfaces.bmp'\n", nEigens);
+	printf("Salvando o eigenvector %d como 'out_eigenfaces.bmp'\n", nEigens);
 	if (nEigens > 0) {
 		//coloca todas imagens uma do lado da outra
 		int COLUMNS = 8; // poe 8 imagens em uma linha
@@ -111,12 +111,12 @@ void learn(char *szFileTrain) {
 	int i, offset;
 
 	// le os dados de treinamento
-	printf("Loading the training images in '%s'\n", szFileTrain);
+	printf("Lendo imagens de treinamento em '%s'\n", szFileTrain);
 	nTrainFaces = loadFaceImgArray(szFileTrain);
-	printf("Got %d training images.\n", nTrainFaces);
+	printf("%d imagens de treino obtidas.\n", nTrainFaces);
 	if (nTrainFaces < 2) {
-		fprintf(stderr, "Need 2 or more training faces\n"
-				"Input file contains only %d\n", nTrainFaces);
+		fprintf(stderr, "Necessario 2 ou mais faces de trieno\n"
+				"Arquivo de entrada contem somente %d\n", nTrainFaces);
 		return;
 	}
 
@@ -149,7 +149,7 @@ int loadTrainingData(CvMat ** pTrainPersonNumMat) {
 	// cria uma interface arqivo - armazenamento
 	fileStorage = cvOpenFileStorage("Eigenfaces/facedata.xml", 0, CV_STORAGE_READ);
 	if (!fileStorage) {
-		printf("Can't open training database file 'facedata.xml'.\n");
+		printf("Arquivo 'facedata.xml' nao pode ser aberto.\n");
 		return 0;
 	}
 
@@ -157,7 +157,7 @@ int loadTrainingData(CvMat ** pTrainPersonNumMat) {
 	personNames.clear(); // faz com q comece vazio
 	nPersons = cvReadIntByName(fileStorage, 0, "nPersons", 0);
 	if (nPersons == 0) {
-		printf("No people found in the training database 'facedata.xml'.\n");
+		printf("Nenhuma pessoa encontrada em 'facedata.xml'.\n");
 		return 0;
 	}
 	// le o nome de cada pessoa
@@ -185,8 +185,8 @@ int loadTrainingData(CvMat ** pTrainPersonNumMat) {
 
 	cvReleaseFileStorage(&fileStorage);
 
-	printf("Training data loaded (%d training images of %d people):\n", nTrainFaces, nPersons);
-	printf("People: ");
+	printf("Lendo dados de treino (%d imagens de treino de %d pessoas):\n", nTrainFaces, nPersons);
+	printf("Pessoas: ");
 	if (nPersons > 0)
 		printf("<%s>", personNames[0].c_str());
 	for (i = 1; i < nPersons; i++) {
@@ -302,7 +302,7 @@ int loadFaceImgArray(char * filename) {
 
 	// abre o arquivo de input
 	if (!(imgListFile = fopen(filename, "r"))) {
-		fprintf(stderr, "Can\'t open file %s\n", filename);
+		fprintf(stderr, "Arquivo %s nao pode ser aberto\n", filename);
 		return 0;
 	}
 
@@ -343,15 +343,15 @@ int loadFaceImgArray(char * filename) {
 		faceImgArr[iFace] = cvLoadImage(imgFilename, CV_LOAD_IMAGE_GRAYSCALE);
 
 		if (!faceImgArr[iFace]) {
-			fprintf(stderr, "Can\'t load image from %s\n", imgFilename);
+			fprintf(stderr, "Imagem nao pode ser lida de %s\n", imgFilename);
 			return 0;
 		}
 	}
 
 	fclose(imgListFile);
 
-	printf("Data loaded from '%s': (%d images of %d people).\n", filename, nFaces, nPersons);
-	printf("People: ");
+	printf("Data lido de '%s': (%d imagens de %d pessoas).\n", filename, nFaces, nPersons);
+	printf("Pessoas: ");
 	if (nPersons > 0)
 		printf("<%s>", personNames[0].c_str());
 	for (i = 1; i < nPersons; i++) {
@@ -391,12 +391,12 @@ CvMat* retrainOnline(void) {
 	// eigenvalues
 	cvFree( &projectedTrainFaceMat);
 
-	printf("Retraining with the new person ...\n");
+	printf("Retreino com a nova pessoa ...\n");
 	learn("Eigenfaces/train.txt");
-	printf("Done retraining.\n");
+	printf("Retrinamento completo.\n");
 
 	if (!loadTrainingData(&trainPersonNumMat)) {
-		printf("ERROR in recognizeFromCam(): Couldn't load the training data!\n");
+		printf("ERROR em recognizeFromCam(): Dados de treino nao puderam ser lidos!\n");
 		exit(1);
 	}
 
@@ -410,10 +410,10 @@ IplImage* getCameraFrame(void) {
 
 	// se a camera não inicializou, entao inicializa
 	if (!camera) {
-		printf("Acessing the camera ...\n");
+		printf("Acessando a camera ...\n");
 		camera = cvCaptureFromCAM(0);
 		if (!camera) {
-			printf("ERROR in getCameraFrame(): Couldn't access the camera.\n");
+			printf("ERROR em getCameraFrame(): A camera nao pode ser acessada.\n");
 			exit(1);
 		}
 		//seta a resolucao da camera
@@ -423,14 +423,14 @@ IplImage* getCameraFrame(void) {
 		sleep(10);
 		frame = cvQueryFrame(camera); // pega a primeira frame para ter crtz que a camera foi inicializada
 		if (frame) {
-			printf("Got a camera using a resolution of %dx%d.\n", (int) cvGetCaptureProperty(camera, CV_CAP_PROP_FRAME_WIDTH),
+			printf("Um camera com a resolucao %dx%d foi obtida.\n", (int) cvGetCaptureProperty(camera, CV_CAP_PROP_FRAME_WIDTH),
 					(int) cvGetCaptureProperty(camera, CV_CAP_PROP_FRAME_HEIGHT));
 		}
 	}
 
 	frame = cvQueryFrame(camera);
 	if (!frame) {
-		fprintf(stderr, "ERROR in recognizeFromCam(): Could not access the camera or video file.\n");
+		fprintf(stderr, "ERROR em recognizeFromCam(): Camera ou arquivo de video nao pode ser acessado.\n");
 		exit(1);
 		//return NULL;
 	}
@@ -438,7 +438,7 @@ IplImage* getCameraFrame(void) {
 }
 
 int saveRotateImages(int personId, char *newPersonName, int numberOfSavedFaces) {
-	printf("Rotate images...\n");
+	printf("Imagens Rotacionadas...\n");
 	for (int i = 1; i <= NUMBER_OF_ROTATE_IMAGES; i++) {
 		char cstrRotate[256], cstr[256];
 		IplImage *processedFaceImg;
@@ -454,7 +454,7 @@ int saveRotateImages(int personId, char *newPersonName, int numberOfSavedFaces) 
 		}
 		IplImage rotateFaceImg = rotateImage(processedFaceImg, (double) angle);
 		sprintf(cstrRotate, "Eigenfaces/data/%d_%s%d.pgm", personId, newPersonName, numberOfSavedFaces + i);
-		printf("Storing the current face of '%s' into image '%s'.\n", newPersonName, cstrRotate);
+		printf("Armazecando a face corrente de '%s' na imagem '%s'.\n", newPersonName, cstrRotate);
 		cvSaveImage(cstrRotate, &rotateFaceImg, NULL);
 	}
 
@@ -462,7 +462,7 @@ int saveRotateImages(int personId, char *newPersonName, int numberOfSavedFaces) 
 }
 
 int saveFlipImages(int personId, char *newPersonName, int numberOfSavedFaces) {
-	printf("Flip images...\n");
+	printf("Imagens espelhadas...\n");
 	for (int i = 1; i <= NUMBER_OF_FLIP_IMAGES; i++) {
 		char cstrFlip[256], cstr[256];
 		IplImage *processedFaceImg;
@@ -473,7 +473,7 @@ int saveFlipImages(int personId, char *newPersonName, int numberOfSavedFaces) {
 		processedFaceImg = cvLoadImage(cstr);
 
 		sprintf(cstrFlip, "Eigenfaces/data/%d_%s%d.pgm", personId, newPersonName, numberOfSavedFaces + i);
-		printf("Storing the current face of '%s' into image '%s'.\n", newPersonName, cstrFlip);
+		printf("Armazecando a face corrente de '%s' na imagem '%s'.\n", newPersonName, cstrFlip);
 
 		Mat source(processedFaceImg, false);
 		flip(source, source, 1);
@@ -485,7 +485,7 @@ int saveFlipImages(int personId, char *newPersonName, int numberOfSavedFaces) {
 }
 
 int saveNoiseImages(int personId, char *newPersonName, int numberOfSavedFaces) {
-	printf("Noise images...\n");
+	printf("Imagens com ruido...\n");
 	for (int i = 1; i <= NUMBER_OF_NOISE_IMAGES; i++) {
 		char cstrNoise[256], cstr[256];
 		IplImage *processedFaceImg;
@@ -495,7 +495,7 @@ int saveNoiseImages(int personId, char *newPersonName, int numberOfSavedFaces) {
 		processedFaceImg = cvLoadImage(cstr);
 
 		sprintf(cstrNoise, "Eigenfaces/data/%d_%s%d.pgm", personId, newPersonName, numberOfSavedFaces + i);
-		printf("Storing the current face of '%s' into image '%s'.\n", newPersonName, cstrNoise);
+		printf("Armazecando a face corrente de '%s' na imagem '%s'.\n", newPersonName, cstrNoise);
 
 		IplImage *noiseFaceImg = generateNoiseImage(processedFaceImg, LEVEL_OF_NOISE_IMAGES);
 		if(noiseFaceImg == NULL) {
@@ -527,7 +527,7 @@ void recognizeFromCam(void) {
 	saveNextFaces = FALSE;
 	newPersonFaces = 0;
 
-	printf("Recognizing person in the camera ...\n");
+	printf("Reconhecendo a pessoa na camera ...\n");
 
 	// le os ultimos dados de treinamento salvos 
 	if (loadTrainingData(&trainPersonNumMat)) {
@@ -550,7 +550,7 @@ void recognizeFromCam(void) {
 	// le o classificador utilizado para detecao
 	faceCascade = (CvHaarClassifierCascade*) cvLoad(frontalFaceCascadeFilename, 0, 0, 0);
 	if (!faceCascade) {
-		printf("ERROR in recognizeFromCam(): Could not load Haar cascade Face detection classifier in '%s'.\n", frontalFaceCascadeFilename);
+		printf("ERROR em recognizeFromCam(): Classificador '%s' nao pode ser lido.\n", frontalFaceCascadeFilename);
 		exit(1);
 	}
 
@@ -577,10 +577,10 @@ void recognizeFromCam(void) {
 		}
 		switch (keyPressed) {
 		case 'p':
-			printf("Detect Profile Face\n");
+			printf("Detectando face de perfil\n");
 			faceCascade = (CvHaarClassifierCascade*) cvLoad(profileFaceCascadeFilename, 0, 0, 0);
 			if (!faceCascade) {
-				printf("ERROR in recognizeFromCam(): Could not load Haar cascade Face detection classifier in '%s'.\n", profileFaceCascadeFilename);
+				printf("ERROR em recognizeFromCam(): Classificador '%s' nao pode ser lido.\n", profileFaceCascadeFilename);
 				exit(1);
 			}
 			break;
@@ -588,22 +588,22 @@ void recognizeFromCam(void) {
 			printf("Detect Frontal Face\n");
 			faceCascade = (CvHaarClassifierCascade*) cvLoad(frontalFaceCascadeFilename, 0, 0, 0);
 			if (!faceCascade) {
-				printf("ERROR in recognizeFromCam(): Could not load Haar cascade Face detection classifier in '%s'.\n", frontalFaceCascadeFilename);
+				printf("ERROR em recognizeFromCam(): Classificador '%s' nao pode ser lido.\n", frontalFaceCascadeFilename);
 				exit(1);
 			}
 			break;
 		case 'n': // adiciona uma nova pessoa no cenario de treino
-			printf("Enter your name: ");
+			printf("Entre com o seu nome: ");
 			strcpy(newPersonName, "newPerson");
 			gets(newPersonName);
-			printf("Collecting all images until you hit 't', to start Training the images as '%s' ...\n", newPersonName);
+			printf("Coletando todas as imagens ate que o suaurio entre com 't' para comecar o treinamento como '%s' ...\n", newPersonName);
 			newPersonFaces = 0; 
 			saveNextFaces = TRUE;
 			break;
 		case 't': // comeca a treinar
 			saveNextFaces = FALSE; // para de salvar novas faces
 			// amarzena os novos dados nos arquivo de treinamento
-			printf("Storing the training data for new person '%s'.\n", newPersonName);
+			printf("Armazenando os dados de treinamento para nova pessoa '%s'.\n", newPersonName);
 			// concate a nova pessoa no final dos dados de treino
 			trainFile = fopen("Eigenfaces/train.txt", "a");
 			for (i = 0; i < newPersonFaces; i++) {
@@ -625,7 +625,7 @@ void recognizeFromCam(void) {
 			cvFree(&projectedTestFace);
 			projectedTestFace = (float *) cvAlloc(nEigens * sizeof(float));
 
-			printf("Recognizing person in the camera ...\n");
+			printf("Reconhecendo a pessoa na camera ...\n");
 			continue; // Begin with the next frame.
 			break;
 		}
@@ -641,7 +641,7 @@ void recognizeFromCam(void) {
 		}
 
 		if (!camImg) {
-			printf("ERROR in recognizeFromCam(): Bad input image!\n");
+			printf("ERROR em recognizeFromCam(): Imagem de entrada ruim!\n");
 		} else {
 			// transforma a imagem em escala de cinza
 			greyImg = convertImageToGreyscale(camImg);
@@ -658,7 +658,7 @@ void recognizeFromCam(void) {
 				cvEqualizeHist(sizedImg, equalizedImg);
 				processedFaceImg = equalizedImg;
 				if (!processedFaceImg) {
-					printf("ERROR in recognizeFromCam(): Don't have input image!\n");
+					printf("ERROR em recognizeFromCam(): Sem imagem de entrada!\n");
 					exit(1);
 				}
 
@@ -689,7 +689,7 @@ void recognizeFromCam(void) {
 					sleep(0.5);
 
 					sprintf(cstr, "Eigenfaces/data/%d_%s%d.pgm", nPersons + 1, newPersonName, newPersonFaces + 1);
-					printf("Storing the current face of '%s' into image '%s'.\n", newPersonName, cstr);
+					printf("Armazenando a face corrente de '%s' na imagem '%s'.\n", newPersonName, cstr);
 					cvSaveImage(cstr, processedFaceImg, NULL);
 
 					newPersonFaces++;
