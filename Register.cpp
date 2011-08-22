@@ -67,10 +67,7 @@ int main(int argc, char** argv) {
 	printf("register\n");
 
 	if (argc >= 2 && strcmp(argv[1], "train") == 0) {
-		char *szFileTrain;
-		szFileTrain = "Eigenfaces/train.txt";
-		learn(szFileTrain);
-
+		learn("Eigenfaces/train.txt");
 	} else {
 		recognizeFromCam();
 	}
@@ -718,8 +715,6 @@ void recognizeFromCam(void) {
 
 				if (saveNextFaces && newPersonFaces < NUMBER_OF_SAVED_FACES_FRONTAL + NUMBER_OF_SAVED_FACES_LEFT + NUMBER_OF_SAVED_FACES_RIGHT) {
 					printf("\007");
-					char beep[] = {7, '\0'};
-					printf("%c", beep);
 					sleep(0.5);
 
 					sprintf(cstr, "Eigenfaces/data/%d_%s%d.pgm", nPersons + 1, newPersonName, newPersonFaces + 1);

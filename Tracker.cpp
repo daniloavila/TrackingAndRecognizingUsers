@@ -12,6 +12,7 @@
 #include <sys/stat.h>
 
 #include <signal.h>
+#include <time.h>
 
 #include <iostream>
 #include <map>
@@ -55,9 +56,9 @@ int idQueueResponse;
 int faceRecId;
 
 #if (XN_PLATFORM == XN_PLATFORM_MACOSX)
-	#include <GLUT/glut.h>
+#include <GLUT/glut.h>
 #else
-	#include <GL/glut.h>
+#include <GL/glut.h>
 #endif
 
 XnBool g_bPause = false;
@@ -67,6 +68,10 @@ XnBool g_bQuit = false;
 // Usados para salvar o que será mostrado na tela
 map<int, char *> users;
 map<int, float> usersConfidence;
+
+FILE *trackerLogFile;
+char trackerLogFileName[255];
+char trackerLogFolderFrames[255];
 
 /**
  * Busca o frame do usuario isolando os seus pixels
@@ -78,7 +83,7 @@ void getFrameFromUserId(XnUserID nId, char *maskPixels) {
 	g_UserGenerator.GetUserPixels(nId, sceneMD);
 
 	// Busca um frame da tela
-	const XnRGB24Pixel *source = g_ImageGenerator.GetRGB24ImageMap();	
+	const XnRGB24Pixel *source = g_ImageGenerator.GetRGB24ImageMap();
 	char *result = transformToCharAray(source);
 
 	// Busca em cima do frame da tela só a area de pixels do usuario
@@ -130,7 +135,7 @@ void requestRecognition(int id) {
 
 	shmdt(maskPixels);
 
-	printf("Log - Tracker diz: Enviando pedido de reconhecimento. user_id = %d e id_memoria = %x\n", messageRequest.user_id, messageRequest.memory_id);
+	printf("Log - Tracker diz: Enviando pedido de reconhecimento. user_id = %ld e id_memoria = %x\n", messageRequest.user_id, messageRequest.memory_id);
 
 	if (msgsnd(idQueueRequest, &messageRequest, sizeof(MessageRequest) - sizeof(long), 0) > 0) {
 		printf("Log - Tracker diz: Erro no envio de mensagem para o usuário %d\n", messageRequest.memory_id);
@@ -149,7 +154,7 @@ void treatQueueResponse(int i) {
 
 		printf("---------------------------------------------\n");
 
-		printf("Log - Tracker diz: Recebi mensagem de usuario reconhecido. user => %d - '%s' - %f\n", messageResponse.user_id, messageResponse.user_name,
+		printf("Log - Tracker diz: Recebi mensagem de usuario reconhecido. user => %ld - '%s' - %f\n", messageResponse.user_id, messageResponse.user_name,
 				messageResponse.confidence);
 
 		// verifica se o usuário ainda está sendo trackeado.
@@ -175,7 +180,7 @@ void treatQueueResponse(int i) {
 
 		// Calcula o total de vezes que o usuario foi reconhecido. Independentemente da resposta.
 		int total = getTotalAttempts(messageResponse.user_id);
-		printf("Log - Tracker diz: Total de tentativas de reconhecimento do usuario %d => %d\n", messageResponse.user_id, total);
+		printf("Log - Tracker diz: Total de tentativas de reconhecimento do usuario %ld => %d\n", messageResponse.user_id, total);
 
 		if (total < ATTEMPTS_INICIAL_RECOGNITION) {
 			requestRecognition(messageResponse.user_id);
@@ -196,7 +201,7 @@ void recheckUsers(int i) {
 	printf("Log - Tracker diz: - RECHECK - \n");
 
 	for (it = users.begin(); it != users.end(); it++) {
-		if(getTotalAttempts((*it).first) >= ATTEMPTS_INICIAL_RECOGNITION) {
+		if (getTotalAttempts((*it).first) >= ATTEMPTS_INICIAL_RECOGNITION) {
 			requestRecognition((*it).first);
 		}
 	}
@@ -211,10 +216,51 @@ void cleanupQueueAndExit() {
 	msgctl(idQueueResponse, IPC_RMID, NULL);
 	kill(faceRecId, SIGUSR1);
 
-	printfLogComplete(&users, &usersConfidence);
+	printfLogComplete(&users, &usersConfidence, stdout);
+	fprintf(trackerLogFile, "\n\n");
+	printfLogComplete(&users, &usersConfidence, trackerLogFile);
+
+	printf("\n###################################\n");
+	printf("### Nome do arquivo de log: %s\n", trackerLogFileName);
+	printf("### Nome da pasta com as frames dos usuários: %s\n", trackerLogFolderFrames);
+	printf("### Acompanhe o log para mais detalhes.\n");
+	printf("###################################\n");
+
+	fflush(stdout);
+	fflush(trackerLogFile);
+
+	fclose(trackerLogFile);
 
 	exit(1);
 }
+
+
+/**
+ * Salva um log de usuário detectado.
+ */
+void saveLogNewUser(XnUserID nId) {
+	char cstr[255];
+
+	struct tm *local;
+	time_t t;
+	t = time(NULL);
+	local = localtime(&t);
+    fprintf(trackerLogFile, "%s \tUsuário %d DETECTADO\n", asctime(local), nId);
+    char *maskPixels = (char *) malloc(sizeof(char) * KINECT_WIDTH_CAPTURE * KINECT_HEIGHT_CAPTURE * KINECT_NUMBER_OF_CHANNELS);
+    // Busca a area da imagem onde o usuario está.
+    getFrameFromUserId((XnUserID)(nId), maskPixels);
+
+	IplImage* frame = cvCreateImage(cvSize(KINECT_HEIGHT_CAPTURE, KINECT_WIDTH_CAPTURE), IPL_DEPTH_8U, KINECT_NUMBER_OF_CHANNELS);
+	frame->imageData = maskPixels;
+
+	sprintf(cstr, "%suser%d_%02d-%02d-%04d_%02d:%02d.pgm", trackerLogFolderFrames, (int) nId, local->tm_mday, local->tm_mon + 1, local->tm_year + 1900, local->tm_hour, local->tm_min);
+	cvSaveImage(cstr, frame);
+
+	fprintf(trackerLogFile, "\tFrame do usuário: ");
+	fprintf(trackerLogFile, "%s", cstr);
+	fprintf(trackerLogFile, "\n");
+}
+
 
 /**
  * Registra a entrada de um novo usuário e pede para o mesmo ser reconhecido.
@@ -225,6 +271,20 @@ void XN_CALLBACK_TYPE registerNewUser(xn::UserGenerator& generator, XnUserID nId
 	printf("Log - Tracker diz: Novo usuário detectado %d\n", id);
 	users[id] = "";
 	requestRecognition(id);
+	saveLogNewUser(nId);
+}
+
+/**
+ * Salva um log de usuário perdido.
+ */
+void saveLogUserLost(XnUserID nId) {
+	struct tm *local;
+	time_t t;
+	t = time(NULL);
+	local = localtime(&t);
+	fprintf(trackerLogFile, "%s \tUsuário %d PERDIDO\n", asctime(local), nId);
+
+	printfLogCompleteByUser((int) nId, &users, &usersConfidence, trackerLogFile, 2);
 }
 
 /**
@@ -232,6 +292,8 @@ void XN_CALLBACK_TYPE registerNewUser(xn::UserGenerator& generator, XnUserID nId
  */
 void XN_CALLBACK_TYPE registerLostUser(xn::UserGenerator& generator, XnUserID nId, void* pCookie) {
 	printf("Log - Tracker diz: Usuário %d perdido\n", nId);
+
+	saveLogUserLost(nId);
 
 	// TODO : Verificar se ao apagar e apos disso receber a mensagem não cria um usuário fantasma.
 	users.erase((int) nId);
@@ -375,6 +437,25 @@ int main(int argc, char **argv) {
 	}
 
 	nRetVal = g_SceneAnalyzer.Create(g_Context);
+
+	mkdir(LOG_FOLDER, 0777);
+
+	struct tm *local;
+	time_t t;
+	t = time(NULL);
+	local = localtime(&t);
+
+	sprintf(trackerLogFileName, "%s%s_%02d-%02d-%04d_%02d:%02d.log", LOG_FOLDER, NAME_OF_LOG_FILE, local->tm_mday, local->tm_mon + 1, local->tm_year + 1900, local->tm_hour, local->tm_min);
+
+	sprintf(trackerLogFolderFrames, "%s%s_%02d-%02d-%04d_%02d:%02dFrames/", LOG_FOLDER, NAME_OF_LOG_FILE, local->tm_mday, local->tm_mon + 1, local->tm_year + 1900, local->tm_hour, local->tm_min);
+	mkdir(trackerLogFolderFrames, 0777);
+
+	trackerLogFile = fopen(trackerLogFileName, "w+");
+
+	fprintf(trackerLogFile, "Iniciado em: %s\n", asctime(local));
+	printf("Iniciado em: %s\n", asctime(local));
+	printf("Nome do arquivo de log: %s\n", trackerLogFileName);
+	printf("Nome da pasta com as frames dos usuários: %s\n", trackerLogFolderFrames);
 
 	//procura por um node Depth nas configuracoes
 	nRetVal = g_Context.FindExistingNode(XN_NODE_TYPE_DEPTH, g_DepthGenerator);

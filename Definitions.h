@@ -54,4 +54,8 @@
 #define HAARCASCADE_PROFILEFACE "Eigenfaces/haarcascade_profileface_umist2.xml"
 #define HAARCASCADE_FRONTALFACE "Eigenfaces/haarcascade_frontalface_alt.xml"
 
+#define NAME_OF_LOG_FILE "trackerLog"
+
+#define LOG_FOLDER "LOG/"
+
 #endif
