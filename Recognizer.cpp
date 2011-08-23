@@ -73,12 +73,10 @@ int main(int argc, char** argv) {
 	CvMat * trainPersonNumMat; // o numero das pessoas durante o treinamento
 	float * projectedTestFace;
 	CvHaarClassifierCascade *frontalFaceCascade, *profileFaceCascade;
-
 	MessageRequest messageRequest;
 	MessageResponse messageResponse;
 	int *sharedMemoryId;
 	char* nome;
-
 	char *pshm;
 
 	signal(SIGUSR1, cleanup);
@@ -125,6 +123,7 @@ int main(int argc, char** argv) {
 		float confidence = 0.0;
 		nome = recognizeFromCamImg(shownImg, frontalFaceCascade, trainPersonNumMat, projectedTestFace, &confidence);
 		cvReleaseImage(&shownImg);
+		cvReleaseImage(&frame);
 
 
 		// Verificando se nome é valido
@@ -150,6 +149,7 @@ int main(int argc, char** argv) {
 		if (msgsnd(idQueueResponse, &messageResponse, sizeof(MessageResponse) - sizeof(long), 0) > 0) {
 			printf("Erro no envio de mensagem para o usuario\n");
 		}
+
 
 	}
 
@@ -262,7 +262,6 @@ char* recognizeFromCamImg(IplImage *camImg, CvHaarClassifierCascade* faceCascade
 	IplImage *equalizedImg;
 	IplImage *processedFaceImg;
 	CvRect faceRect;
-	IplImage *shownImg;
 	int keyPressed = 0;
 	FILE *trainFile;
 	float confidence;
