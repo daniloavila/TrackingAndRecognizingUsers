@@ -31,7 +31,6 @@ int idQueueResponse;
 
 // Haar Cascade file, usado para detecao facial
 const char *frontalFaceCascadeFilename = HAARCASCADE_FRONTALFACE;
-const char *profileFaceCascadeFilename = HAARCASCADE_PROFILEFACE;
 
 /******************* VARIAVEIS GLOBAIS ************************/
 IplImage ** faceImgArr = 0; // array de imagens facial
@@ -72,7 +71,7 @@ int main(int argc, char** argv) {
 	int i;
 	CvMat * trainPersonNumMat; // o numero das pessoas durante o treinamento
 	float * projectedTestFace;
-	CvHaarClassifierCascade *frontalFaceCascade, *profileFaceCascade;
+	CvHaarClassifierCascade *frontalFaceCascade;
 	MessageRequest messageRequest;
 	MessageResponse messageResponse;
 	int *sharedMemoryId;
@@ -154,7 +153,6 @@ int main(int argc, char** argv) {
 	}
 
 	cvReleaseHaarClassifierCascade(&frontalFaceCascade);
-	cvReleaseHaarClassifierCascade(&profileFaceCascade);
 
 	return 0;
 }

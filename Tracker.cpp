@@ -89,10 +89,6 @@ void getFrameFromUserId(XnUserID nId, char *maskPixels) {
 	// Busca em cima do frame da tela só a area de pixels do usuario
 	unsigned short *scenePixels = (unsigned short int*) (sceneMD.Data());
 
-	// for (int i = 0; i < KINECT_HEIGHT_CAPTURE * KINECT_HEIGHT_CAPTURE; i++) {
-	// 	if(scenePixels[i] != nId) scenePixels[i] = 0;
-	// }
-
 	transformAreaVision(scenePixels, nId);
 
 	for (int i = 0; i < KINECT_HEIGHT_CAPTURE; i++) {
@@ -110,13 +106,8 @@ void getFrameFromUserId(XnUserID nId, char *maskPixels) {
 		}
 	}
 
-	// IplImage* frame = cvCreateImage(cvSize(KINECT_HEIGHT_CAPTURE, KINECT_WIDTH_CAPTURE), IPL_DEPTH_8U, KINECT_NUMBER_OF_CHANNELS);
-	// frame->imageData = maskPixels;
-
-	// IplImage* shownImg = cvCloneImage(frame);
-	// cvNamedWindow("Input", CV_WINDOW_AUTOSIZE);
-	// cvMoveWindow("Input", 10, 10);
-	// cvShowImage("Input", shownImg);
+	sceneMD.~OutputMetaData();
+	free(result);
 }
 
 /**
@@ -255,6 +246,7 @@ void saveLogNewUser(XnUserID nId) {
 
 	sprintf(cstr, "%suser%d_%02d-%02d-%04d_%02d:%02d.pgm", trackerLogFolderFrames, (int) nId, local->tm_mday, local->tm_mon + 1, local->tm_year + 1900, local->tm_hour, local->tm_min);
 	cvSaveImage(cstr, frame);
+	cvReleaseImage(&frame);
 
 	fprintf(trackerLogFile, "\tFrame do usuário: ");
 	fprintf(trackerLogFile, "%s", cstr);
