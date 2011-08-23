@@ -56,7 +56,7 @@ char* recognizeFromCamImg(IplImage *camImg, CvHaarClassifierCascade* faceCascade
 /**
  * Verifica se o nome é algum dos conhecidos.
  */
-bool validarNome(char *& nome) {
+bool validarNome(char *nome) {
 	vector<string>::iterator it;
 	for (it = personNames.begin(); it < personNames.end(); it++) {
 		if ((*it).compare(nome) == 0) {
@@ -113,18 +113,9 @@ int main(int argc, char** argv) {
 		IplImage* frame = cvCreateImage(cvSize(KINECT_HEIGHT_CAPTURE, KINECT_WIDTH_CAPTURE), IPL_DEPTH_8U, KINECT_NUMBER_OF_CHANNELS);
 		frame->imageData = pshm;
 
-		IplImage* shownImg = cvCloneImage(frame);
-
-//		cvNamedWindow("Input", CV_WINDOW_AUTOSIZE);
-//		cvMoveWindow("Input", 10, 10);
-//		cvShowImage("Input", shownImg);
-//		cvWaitKey(10);
-
 		float confidence = 0.0;
-		nome = recognizeFromCamImg(shownImg, frontalFaceCascade, trainPersonNumMat, projectedTestFace, &confidence);
-		cvReleaseImage(&shownImg);
+		nome = recognizeFromCamImg(frame, frontalFaceCascade, trainPersonNumMat, projectedTestFace, &confidence);
 		cvReleaseImage(&frame);
-
 
 		// Verificando se nome é valido
 		if(nome != NULL && !validarNome(nome)) {
