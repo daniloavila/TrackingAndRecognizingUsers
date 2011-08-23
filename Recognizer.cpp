@@ -73,12 +73,10 @@ int main(int argc, char** argv) {
 	CvMat * trainPersonNumMat; // o numero das pessoas durante o treinamento
 	float * projectedTestFace;
 	CvHaarClassifierCascade *frontalFaceCascade, *profileFaceCascade;
-
 	MessageRequest messageRequest;
 	MessageResponse messageResponse;
 	int *sharedMemoryId;
 	char* nome;
-
 	char *pshm;
 
 	signal(SIGUSR1, cleanup);
@@ -97,7 +95,7 @@ int main(int argc, char** argv) {
 	// lendo o classificador
 	frontalFaceCascade = (CvHaarClassifierCascade*) cvLoad(frontalFaceCascadeFilename, 0, 0, 0);
 	if (!frontalFaceCascade) {
-		printf("ERROR in recognizeFromCam(): Could not load Haar cascade Face detection classifier in '%s'.\n", frontalFaceCascadeFilename);
+		printf("ERROR em recognizeFromCam(): O classificador de face em cascata nao pode ser lido em '%s'.\n", frontalFaceCascadeFilename);
 		exit(1);
 	}
 
@@ -125,6 +123,7 @@ int main(int argc, char** argv) {
 		float confidence = 0.0;
 		nome = recognizeFromCamImg(shownImg, frontalFaceCascade, trainPersonNumMat, projectedTestFace, &confidence);
 		cvReleaseImage(&shownImg);
+		cvReleaseImage(&frame);
 
 
 		// Verificando se nome é valido
@@ -151,6 +150,7 @@ int main(int argc, char** argv) {
 			printf("Erro no envio de mensagem para o usuario\n");
 		}
 
+
 	}
 
 	cvReleaseHaarClassifierCascade(&frontalFaceCascade);
@@ -166,7 +166,7 @@ int loadTrainingData(CvMat ** pTrainPersonNumMat) {
 
 	fileStorage = cvOpenFileStorage("Eigenfaces/facedata.xml", 0, CV_STORAGE_READ);
 	if (!fileStorage) {
-		printf("Can't open training database file 'facedata.xml'.\n");
+		printf("O arquivo de dados para treino facedata.xml nao pode ser aberto.\n");
 		return 0;
 	}
 
@@ -174,7 +174,7 @@ int loadTrainingData(CvMat ** pTrainPersonNumMat) {
 	personNames.clear(); // tendo certeza que ele comece vazio
 	nPersons = cvReadIntByName(fileStorage, 0, "nPersons", 0);
 	if (nPersons == 0) {
-		printf("No people found in the training database 'facedata.xml'.\n");
+		printf("Nenhuma pessoa encontrada nos dados de treinamento do facedata.xml.\n");
 		return 0;
 	}
 	// lendo o nome de cada pessoa
@@ -203,7 +203,8 @@ int loadTrainingData(CvMat ** pTrainPersonNumMat) {
 	cvReleaseFileStorage(&fileStorage);
 
 	printf("Training data loaded (%d training images of %d people):\n", nTrainFaces, nPersons);
-	printf("People: ");
+	printf("Dados de treino lidos (%d imagens de treinamento de %d pessoas):\n", nTrainFaces, nPersons);
+	printf("Pessoas: ");
 	if (nPersons > 0)
 		printf("<%s>", personNames[0].c_str());
 	for (i = 1; i < nPersons; i++) {
@@ -261,13 +262,12 @@ char* recognizeFromCamImg(IplImage *camImg, CvHaarClassifierCascade* faceCascade
 	IplImage *equalizedImg;
 	IplImage *processedFaceImg;
 	CvRect faceRect;
-	IplImage *shownImg;
 	int keyPressed = 0;
 	FILE *trainFile;
 	float confidence;
 
 	if (!camImg) {
-		printf("ERROR in recognizeFromCam(): Bad input image!\n");
+		printf("ERROR em recognizeFromCam(): Imagem de entrada ruim!\n");
 		exit(1);
 	}
 
@@ -289,7 +289,7 @@ char* recognizeFromCamImg(IplImage *camImg, CvHaarClassifierCascade* faceCascade
 		cvEqualizeHist(sizedImg, equalizedImg);
 		processedFaceImg = equalizedImg;
 		if (!processedFaceImg) {
-			printf("ERROR in recognizeFromCam(): Don't have input image!\n");
+			printf("ERROR em recognizeFromCam(): Nao ha imagem de entrada!\n");
 			exit(1);
 		}
 

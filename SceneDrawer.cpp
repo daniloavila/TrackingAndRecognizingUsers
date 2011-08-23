@@ -52,7 +52,6 @@ void DrawRectangle(float topLeftX, float topLeftY, float bottomRightX, float bot
 	glVertexPointer(2, GL_FLOAT, 0, verts);
 	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 
-	//TODO: Maybe glFinish needed here instead - if there's some bad graphics crap
 	glFlush();
 }
 void DrawTexture(float topLeftX, float topLeftY, float bottomRightX, float bottomRightY) {
@@ -116,10 +115,8 @@ void DrawDepthMap(const xn::DepthMetaData& dmd, const xn::SceneMetaData& smd, ma
 		texWidth = getClosestPowerOfTwo(dmd.XRes());
 		texHeight = getClosestPowerOfTwo(dmd.YRes());
 
-//		printf("Initializing depth texture: width = %d, height = %d\n", texWidth, texHeight);
 		depthTexID = initTexture((void**) &pDepthTexBuf, texWidth, texHeight);
 
-//		printf("Initialized depth texture: width = %d, height = %d\n", texWidth, texHeight);
 		bInitialized = true;
 
 		topLeftX = dmd.XRes();
@@ -147,7 +144,6 @@ void DrawDepthMap(const xn::DepthMetaData& dmd, const xn::SceneMetaData& smd, ma
 	const XnDepthPixel* pDepth = dmd.Data();
 	const XnLabel* pLabels = smd.Data();
 
-	// Calculate the accumulative histogram
 	memset(g_pDepthHist, 0, MAX_DEPTH * sizeof(float));
 	for (nY = 0; nY < g_nYRes; nY++) {
 		for (nX = 0; nX < g_nXRes; nX++) {
@@ -174,7 +170,7 @@ void DrawDepthMap(const xn::DepthMetaData& dmd, const xn::SceneMetaData& smd, ma
 	pDepth = dmd.Data();
 	if (g_bDrawPixels) {
 		XnUInt32 nIndex = 0;
-		// Prepare the texture map
+		// prepara o mapa de textura
 		for (nY = 0; nY < g_nYRes; nY++) {
 			for (nX = 0; nX < g_nXRes; nX++, nIndex++) {
 
@@ -212,7 +208,7 @@ void DrawDepthMap(const xn::DepthMetaData& dmd, const xn::SceneMetaData& smd, ma
 	glBindTexture(GL_TEXTURE_2D, depthTexID);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, texWidth, texHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, pDepthTexBuf);
 
-	// Display the OpenGL texture map
+	// mostra o mapa de textura OpenGL
 	glColor4f(0.75, 0.75, 0.75, 1);
 
 	glEnable(GL_TEXTURE_2D);
@@ -234,10 +230,10 @@ void DrawDepthMap(const xn::DepthMetaData& dmd, const xn::SceneMetaData& smd, ma
 
 			xnOSMemSet(strLabel, 0, sizeof(strLabel));
 			if (!g_bPrintState) {
-				// Tracking
+				// Rastreando
 					sprintf(strLabel, "%d", aUsers[i]);	
 			} else {
-				// Nothing
+				// Nada
 				if(strlen((users)[aUsers[i]]) == 0) {
 					long long int timeseconds = time(NULL);
 					if(timeseconds % 3 == 0) {

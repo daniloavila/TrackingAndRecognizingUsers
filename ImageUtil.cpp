@@ -30,7 +30,7 @@ IplImage* resizeImage(const IplImage *origImg, int newWidth, int newHeight) {
 		origHeight = origImg->height;
 	}
 	if (newWidth <= 0 || newHeight <= 0 || origImg == 0 || origWidth <= 0 || origHeight <= 0) {
-		printf("ERROR in resizeImage: Bad desired image size of %dx%d\n.", newWidth, newHeight);
+		printf("ERROR em resizeImage: Tamanho %dx%d desejado para imagem inválido\n.", newWidth, newHeight);
 		exit(1);
 	}
 
@@ -60,7 +60,7 @@ IplImage* cropImage(const IplImage *img, const CvRect region) {
 	size.width = img->width;
 
 	if (img->depth != IPL_DEPTH_8U) {
-		printf("ERROR in cropImage: Unknown image depth of %d given in cropImage() instead of 8 bits per pixel.\n", img->depth);
+		printf("ERROR em cropImage: Imagem depth de %d desconhecido ao inves de 8 bits por pixel passado a cropImage().\n", img->depth);
 		exit(1);
 	}
 

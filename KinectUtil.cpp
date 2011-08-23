@@ -164,7 +164,7 @@ IplImage* getKinectFrame() {
 	// Wait for new data to be available
 	nRetVal = context.WaitOneUpdateAll(image);
 	if (nRetVal != XN_STATUS_OK) {
-		printf("Failed updating data: %s\n", xnGetStatusString(nRetVal));
+		printf("Falha ao atualizar os dados: %s\n", xnGetStatusString(nRetVal));
 		return NULL;
 	}
 	IplImage* frame = cvCreateImage(cvSize(KINECT_HEIGHT_CAPTURE, KINECT_WIDTH_CAPTURE), IPL_DEPTH_8U, KINECT_NUMBER_OF_CHANNELS);
