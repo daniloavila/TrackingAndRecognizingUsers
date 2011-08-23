@@ -139,16 +139,16 @@ void statisticsClear(int user_id) {
 void printfLogCompleteByUser(int id, map<int, char*> *users, map<int, float> *usersConfidence, FILE *file, int identationLevel) {
 	map<string, int>::iterator itAttempts;
 	map<string, float> *nameConfidence = &usersNameConfidence[id];
-	for (int i = 0; i < identationLevel-1; ++i) {
+	for (int i = 0; i < identationLevel - 1; ++i) {
 		fprintf(file, "\t");
 	}
-	fprintf(file, "Usuário %d: (%s - %f)\n", id, (*users)[id], (*usersConfidence)[id]);
+	fprintf(file, " Usuário %d: (%s - %f)\n", id, (*users)[id], (*usersConfidence)[id]);
 	map<string, int> *second = &(usersNameAttempts[id]);
 	for (itAttempts = (*second).begin(); itAttempts != (*second).end(); itAttempts++) {
 		for (int i = 0; i < identationLevel; ++i) {
-				fprintf(file, "\t");
-			}
-		fprintf(file, "%s => %d - %f\n", (*itAttempts).first.c_str(), (*itAttempts).second, (*nameConfidence)[(*itAttempts).first]);
+			fprintf(file, "\t");
+		}
+		fprintf(file, " %s => %d - %f\n", (*itAttempts).first.c_str(), (*itAttempts).second, (*nameConfidence)[(*itAttempts).first]);
 	}
 }
 
@@ -161,7 +161,7 @@ void printfLogComplete(map<int, char *> *users, map<int, float> *usersConfidence
 	fprintf(file, "###  %s", asctime(local));
 	fprintf(file, "####### LOG USERS TRACKING ########\n");
 	map<int, map<string, int> >::iterator it;
-	if(usersNameAttempts.begin() != usersNameAttempts.end()) {
+	if (usersNameAttempts.begin() != usersNameAttempts.end()) {
 		for (it = usersNameAttempts.begin(); it != usersNameAttempts.end(); it++) {
 			printfLogCompleteByUser(it->first, users, usersConfidence, file);
 		}
