@@ -20,9 +20,13 @@ compile.sh
 
 Execução
 -------
-Para registrar:
+**Para registrar:**
+
 	./register
-Para rastrear:
+
+
+**Para rastrear:**
+
 	./tracker
 
 
