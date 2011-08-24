@@ -43,7 +43,7 @@ Links Utéis
 
 * [Apresentação do trabalho](https://github.com/talesporto/Seminario-TG1) -- Slides com a apresentação do projeto.
 
-* [Implementação do trabalho](https://github.com/daniloavila/RealTimeFaceRec) -- Repositorio com os codigos fontes que implementão o projeto.
+* [Implementação do trabalho](https://github.com/daniloavila/TrackingAndRecognizingUsers) -- Repositorio com os codigos fontes que implementão o projeto.
 
 * [Dropbox](https://www.dropbox.com/home#:::47090485) -- DropBox contendo todos os artigos usados para redigir o projeto.
 
