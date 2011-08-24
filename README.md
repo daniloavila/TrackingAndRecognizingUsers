@@ -1,22 +1,26 @@
 Reconhecedor e localizador de usuários em tempo real dentro de um SmartSpace.
 =============
 
-Autores: Danilo Ávila e Tales Porto
+**Autores: Danilo Ávila e Tales Porto**
+
 
 Funcionalidade
 -------
 
 O Objetivo desse código é realizar reconhecimento facial em imagens 2d, utilizando eigenfaces. O sistema está integrado com Kinect.
 
+
 Base
 -------
 
 Esse código é baseado no código do Shervin Emami (www.shervinemami.co.cc), e no exemplo de UserTracker da bliblioteca OpenNi.
 
+
 Compilação
 -------
 
-compile.sh
+	./compile.sh
+
 
 Execução
 -------
