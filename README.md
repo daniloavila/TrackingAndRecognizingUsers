@@ -29,6 +29,8 @@ Para rastrear:
 Links Utéis
 -------
 
+* [Wiki](https://github.com/daniloavila/TrackingAndRecognizingUsers/wiki) -- Explicação detalhada do projeto.
+
 * [Projeto final](https://github.com/talesporto/Projeto-Final) -- Repositorio da monografia.
 
 * [Apresentação do trabalho](https://github.com/talesporto/Seminario-TG1) -- Slides com a apresentação do projeto.
