@@ -68,6 +68,7 @@ XnBool g_bQuit = false;
 // Usados para salvar o que será mostrado na tela
 map<int, char *> users;
 map<int, float> usersConfidence;
+map<int, DeslocationStatus> usersDeslocation;
 
 FILE *trackerLogFile;
 char trackerLogFileName[255];
@@ -114,6 +115,8 @@ void getFrameFromUserId(XnUserID nId, char *maskPixels) {
  * Pede para o processo de reconhecimento reconhecer o usuario com esse id passado.
  */
 void requestRecognition(int id) {
+	// TODO: Testar se o usuário tem permissão para continuar sendo reconhecido
+
 	MessageRequest messageRequest;
 
 	messageRequest.user_id = id;
@@ -183,6 +186,47 @@ void treatQueueResponse(int i) {
 	glutTimerFunc(INTERVAL_IN_MILISECONDS_TREAT_RESPONSE, treatQueueResponse, 0);
 }
 
+// TODO: salvar a posição atual como ultima e essa posição como posição atual
+// TODO: calcular a diferença e se a mesma estiver abaixo de MIN_DESLOCATION adicionar mais um ao contador caso contrario zerar o contador.
+// TODO: salvar em outro contador o numero de vezes que o contador foi zerado.
+// TODO: se o contador for maior que o MAX_ATTEMPTS_OF_NO_DESLOCATION * <numero de vezes que o contador foi zerado> e o objeto não contem face parar de reconhecer o objeto.
+
+// TODO: fazer com que essa rotina relatada acima também aconteça nos X primeiros reconhecimentos.
+void verifyDeslocationObject(int userId) {
+	XnPoint3D com;
+	g_UserGenerator.GetCoM(userId, com);
+	DeslocationStatus deslocationStatus = usersDeslocation[userId];
+	if (deslocationStatus.lastPosition.X == NULL) {
+		deslocationStatus.lastPosition = com;
+	} else {
+		XnFloat variacaoX, variacaoY, variacaoZ;
+
+		variacaoX = deslocationStatus.lastPosition.X - com.X;
+		variacaoY = deslocationStatus.lastPosition.Y - com.Y;
+		variacaoZ = deslocationStatus.lastPosition.Z - com.Z;
+
+		if (variacaoX < MIN_OBJECT_DESLOCATION || variacaoY < MIN_OBJECT_DESLOCATION || variacaoZ < MIN_OBJECT_DESLOCATION) {
+			deslocationStatus.numberTimesNotMoved = deslocationStatus.numberTimesNotMoved + 1;
+		} else {
+			deslocationStatus.numberTimesNotMoved = 0;
+			deslocationStatus.numberTimesMoved = deslocationStatus.numberTimesMoved + 1;
+		}
+
+		if (deslocationStatus.numberTimesNotMoved < MAX_TIMES_OF_OBJECT_NO_DESLOCATION * deslocationStatus.numberTimesMoved && users[userId] == NULL) {
+			deslocationStatus.recognize = false;
+			printf("Log - Tracker diz: - Usuário %d não é um usuário reconhecivel.\n", userId);
+
+			struct tm *local;
+			time_t t;
+			t = time(NULL);
+			local = localtime(&t);
+			fprintf(trackerLogFile, "%s \t Usuário %d não é um usuário reconhecivel.\n", asctime(local), userId);
+		}
+
+		deslocationStatus.lastPosition = com;
+	}
+}
+
 /**
  * Pede para reconhecer todos os usuários.
  */
@@ -194,6 +238,7 @@ void recheckUsers(int i) {
 	for (it = users.begin(); it != users.end(); it++) {
 		if (getTotalAttempts((*it).first) >= ATTEMPTS_INICIAL_RECOGNITION) {
 			requestRecognition((*it).first);
+			verifyDeslocationObject((*it).first);
 		}
 	}
 
@@ -225,7 +270,6 @@ void cleanupQueueAndExit() {
 	exit(1);
 }
 
-
 /**
  * Salva um log de usuário detectado.
  */
@@ -236,15 +280,16 @@ void saveLogNewUser(XnUserID nId) {
 	time_t t;
 	t = time(NULL);
 	local = localtime(&t);
-    fprintf(trackerLogFile, "%s \tUsuário %d DETECTADO\n", asctime(local), nId);
-    char *maskPixels = (char *) malloc(sizeof(char) * KINECT_WIDTH_CAPTURE * KINECT_HEIGHT_CAPTURE * KINECT_NUMBER_OF_CHANNELS);
-    // Busca a area da imagem onde o usuario está.
-    getFrameFromUserId((XnUserID)(nId), maskPixels);
+	fprintf(trackerLogFile, "%s \tUsuário %d DETECTADO\n", asctime(local), nId);
+	char *maskPixels = (char *) malloc(sizeof(char) * KINECT_WIDTH_CAPTURE * KINECT_HEIGHT_CAPTURE * KINECT_NUMBER_OF_CHANNELS);
+	// Busca a area da imagem onde o usuario está.
+	getFrameFromUserId((XnUserID) nId, maskPixels);
 
 	IplImage* frame = cvCreateImage(cvSize(KINECT_HEIGHT_CAPTURE, KINECT_WIDTH_CAPTURE), IPL_DEPTH_8U, KINECT_NUMBER_OF_CHANNELS);
 	frame->imageData = maskPixels;
 
-	sprintf(cstr, "%suser%d_%02d-%02d-%04d_%02d:%02d.pgm", trackerLogFolderFrames, (int) nId, local->tm_mday, local->tm_mon + 1, local->tm_year + 1900, local->tm_hour, local->tm_min);
+	sprintf(cstr, "%suser%d_%02d-%02d-%04d_%02d:%02d.pgm", trackerLogFolderFrames, (int) nId, local->tm_mday, local->tm_mon + 1, local->tm_year + 1900, local->tm_hour,
+			local->tm_min);
 	cvSaveImage(cstr, frame);
 	cvReleaseImage(&frame);
 
@@ -253,12 +298,11 @@ void saveLogNewUser(XnUserID nId) {
 	fprintf(trackerLogFile, "\n");
 }
 
-
 /**
  * Registra a entrada de um novo usuário e pede para o mesmo ser reconhecido.
  */
 void XN_CALLBACK_TYPE registerNewUser(xn::UserGenerator& generator, XnUserID nId, void* pCookie) {
-	int id = (int) ((nId));
+	int id = (int) nId;
 
 	printf("Log - Tracker diz: Novo usuário detectado %d\n", id);
 	users[id] = "";
@@ -305,12 +349,6 @@ void glutDisplay(void) {
 
 	xn::SceneMetaData sceneMD;
 	xn::DepthMetaData depthMD;
-	// xn::ImageMetaData imageMD;
-
-	g_DepthGenerator.GetMetaData(depthMD);
-	glOrtho(0, depthMD.XRes(), depthMD.YRes(), 0, -1.0, 1.0);
-
-	glDisable(GL_TEXTURE_2D);
 
 	if (!g_bPause) {
 		// Read next available data
@@ -319,9 +357,15 @@ void glutDisplay(void) {
 
 	// Process the data
 	g_DepthGenerator.GetMetaData(depthMD);
-	// g_ImageGenerator.GetMetaData(imageMD);
+	glOrtho(0, depthMD.XRes(), depthMD.YRes(), 0, -1.0, 1.0);
+
+	glDisable(GL_TEXTURE_2D);
+
 	g_UserGenerator.GetUserPixels(0, sceneMD);
 	DrawDepthMap(depthMD, sceneMD, users, usersConfidence);
+
+	sceneMD.~OutputMetaData();
+	depthMD.~OutputMetaData();
 
 	glutSwapBuffers();
 }
@@ -411,10 +455,15 @@ int main(int argc, char **argv) {
 			printf("Open failed: %s\n", xnGetStatusString(nRetVal));
 			return (nRetVal);
 		}
+		errors.~EnumerationErrors();
 	}
 
 	idQueueRequest = createMessageQueue(MESSAGE_QUEUE_REQUEST);
 	idQueueResponse = createMessageQueue(MESSAGE_QUEUE_RESPONSE);
+
+	users.clear();
+	usersConfidence.clear();
+	usersDeslocation.clear();
 
 	//criando um processo filho. Este processo sera transformado do deamon utilizando o execl
 	faceRecId = fork();
@@ -437,9 +486,11 @@ int main(int argc, char **argv) {
 	t = time(NULL);
 	local = localtime(&t);
 
-	sprintf(trackerLogFileName, "%s%s_%02d-%02d-%04d_%02d:%02d.log", LOG_FOLDER, NAME_OF_LOG_FILE, local->tm_mday, local->tm_mon + 1, local->tm_year + 1900, local->tm_hour, local->tm_min);
+	sprintf(trackerLogFileName, "%s%s_%02d-%02d-%04d_%02d:%02d.log", LOG_FOLDER, NAME_OF_LOG_FILE, local->tm_mday, local->tm_mon + 1, local->tm_year + 1900, local->tm_hour,
+			local->tm_min);
 
-	sprintf(trackerLogFolderFrames, "%s%s_%02d-%02d-%04d_%02d:%02dFrames/", LOG_FOLDER, NAME_OF_LOG_FILE, local->tm_mday, local->tm_mon + 1, local->tm_year + 1900, local->tm_hour, local->tm_min);
+	sprintf(trackerLogFolderFrames, "%s%s_%02d-%02d-%04d_%02d:%02dFrames/", LOG_FOLDER, NAME_OF_LOG_FILE, local->tm_mday, local->tm_mon + 1, local->tm_year + 1900, local->tm_hour,
+			local->tm_min);
 	mkdir(trackerLogFolderFrames, 0777);
 
 	trackerLogFile = fopen(trackerLogFileName, "w+");

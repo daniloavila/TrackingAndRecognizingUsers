@@ -285,14 +285,13 @@ char* recognizeFromCamImg(IplImage *camImg, CvHaarClassifierCascade* faceCascade
 		// tenta reconhecer as pessoas detectadas
 		if (nEigens > 0) {
 			// projeta a imagem de teste no subespaco PCA
-			cvEigenDecomposite(processedFaceImg, nEigens, eigenVectArr, 0, 0, pAvgTrainImg, projectedTestFace);
-			//verifica qual pessoa eh a mais parecida
+			// FIXME : Essa função aumenta o uso da memória e não libera depois.
+			cvEigenDecomposite(processedFaceImg, nEigens, eigenVectArr, CV_EIGOBJ_BOTH_CALLBACK, 0, pAvgTrainImg, projectedTestFace);
+			// verifica qual pessoa eh a mais parecida
 			iNearest = findNearestNeighbor(projectedTestFace, &confidence);
 			nearest = trainPersonNumMat->data.i[iNearest];
 
 			*pointerConfidence = confidence;
-
-			//printf("Most likely person in camera: '%s' (confidence=%f).\n", personNames[nearest - 1].c_str(), confidence);
 
 			return (char*) personNames[nearest - 1].c_str();
 		}
