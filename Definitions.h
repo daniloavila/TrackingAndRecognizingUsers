@@ -24,8 +24,8 @@
 
 #define ATTEMPTS_INICIAL_RECOGNITION 10
 
-#define MIN_OBJECT_DESLOCATION 10
-#define MAX_TIMES_OF_OBJECT_NO_DESLOCATION 10
+#define MIN_OBJECT_DESLOCATION 30.0
+#define MAX_TIMES_OF_OBJECT_NO_DESLOCATION 5
 
 #define SAMPLE_XML_PATH "Config/SamplesConfig.xml"
 #define SAMPLE_XML_PATH_REGISTER "Config/Register.xml"
@@ -63,10 +63,16 @@
 
 typedef struct DeslocationStatus {
 	XnPoint3D lastPosition;
-	//XnPoint3D actualPosition;
 	int numberTimesNotMoved; // numero de vezes que não se movimentou
 	int numberTimesMoved; // numero de vezes que se movimentou
-	bool recognize;
 } DeslocationStatus;
+
+typedef struct UserStatus {
+	char *name;
+	float confidence;
+	bool canRecognize; // Pode reconhecer o usuário
+	// bool canShow; // Pode mostrar a sua label. TODO: Será usado posteriomente
+	DeslocationStatus deslocationStatus;
+} UserStatus;
 
 #endif

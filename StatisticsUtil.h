@@ -10,18 +10,22 @@
 
 #include "MessageQueue.h"
 
+#include "Definitions.h"
+
 using namespace std;
 
 void calculateNewStatistics(MessageResponse *messageResponse);
 
-void choiceNewLabelToUser(MessageResponse *messageResponse, map<int, char *> *users, map<int, float> *usersConfidence);
+void choiceNewLabelToUser(MessageResponse *messageResponse, map<int, UserStatus> *users);
 
 int getTotalAttempts(int user_id);
 
 void statisticsClear(int user_id);
 
-void printfLogComplete(map<int, char *> *users, map<int, float> *usersConfidence, FILE *file);
+void statisticsClearAll();
 
-void printfLogCompleteByUser(int id, map<int, char*> *users, map<int, float> *usersConfidence, FILE *file, int identationLevel = 1);
+void printfLogComplete(map<int, UserStatus> *users, FILE *file);
+
+void printfLogCompleteByUser(int id, map<int, UserStatus> *users, FILE *file, int identationLevel = 1);
 
 #endif

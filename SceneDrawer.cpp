@@ -97,7 +97,7 @@ void DrawLimb(XnUserID player, XnSkeletonJoint eJoint1, XnSkeletonJoint eJoint2)
 	glVertex3i(pt[1].X, pt[1].Y, 0);
 }
 
-void DrawDepthMap(const xn::DepthMetaData& dmd, const xn::SceneMetaData& smd, map<int, char*> users, map<int, float> usersConfidence) {
+void DrawDepthMap(const xn::DepthMetaData& dmd, const xn::SceneMetaData& smd, map<int, UserStatus> *users) {
 	static bool bInitialized = false;
 	static GLuint depthTexID;
 	static unsigned char* pDepthTexBuf;
@@ -234,7 +234,7 @@ void DrawDepthMap(const xn::DepthMetaData& dmd, const xn::SceneMetaData& smd, ma
 					sprintf(strLabel, "%d", aUsers[i]);	
 			} else {
 				// Nada
-				if(strlen((users)[aUsers[i]]) == 0) {
+				if(strlen((*users)[aUsers[i]].name) == 0) {
 					long long int timeseconds = time(NULL);
 					if(timeseconds % 3 == 0) {
 						sprintf(strLabel, "%d - Recognizing.", aUsers[i]);
@@ -245,9 +245,9 @@ void DrawDepthMap(const xn::DepthMetaData& dmd, const xn::SceneMetaData& smd, ma
 					}
 				} else {
 						if(&com != NULL){
-							sprintf(strLabel, "%d - %s\n%f - (%.2lf, %.2lf, %.2lf)", aUsers[i], (users)[aUsers[i]], (usersConfidence)[aUsers[i]], comPosition.X, comPosition.Y, comPosition.Z);	
+							sprintf(strLabel, "%d - %s\n%f - (%.2lf, %.2lf, %.2lf)", aUsers[i], (*users)[aUsers[i]].name, (*users)[aUsers[i]].confidence, comPosition.X, comPosition.Y, comPosition.Z);
 						}else{
-							sprintf(strLabel, "%d - %s\n%f", aUsers[i], (users)[aUsers[i]], (usersConfidence)[aUsers[i]]);
+							sprintf(strLabel, "%d - %s\n%f", aUsers[i], (*users)[aUsers[i]].name, (*users)[aUsers[i]].confidence);
 						}
 				}
 			}

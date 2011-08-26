@@ -65,76 +65,17 @@ XnBool g_bPause = false;
 XnBool g_bRecord = false;
 XnBool g_bQuit = false;
 
-// Usados para salvar o que será mostrado na tela
-map<int, char *> users;
-map<int, float> usersConfidence;
-map<int, DeslocationStatus> usersDeslocation;
+map<int, UserStatus> users;
 
 FILE *trackerLogFile;
 char trackerLogFileName[255];
 char trackerLogFolderFrames[255];
 
-/**
- * Busca o frame do usuario isolando os seus pixels
- */
-void getFrameFromUserId(XnUserID nId, char *maskPixels) {
-
-	// Busca a area da imagem onde o usuario está.
-	xn::SceneMetaData sceneMD;
-	g_UserGenerator.GetUserPixels(nId, sceneMD);
-
-	// Busca um frame da tela
-	const XnRGB24Pixel *source = g_ImageGenerator.GetRGB24ImageMap();
-	char *result = transformToCharAray(source);
-
-	// Busca em cima do frame da tela só a area de pixels do usuario
-	unsigned short *scenePixels = (unsigned short int*) (sceneMD.Data());
-
-	transformAreaVision(scenePixels, nId);
-
-	for (int i = 0; i < KINECT_HEIGHT_CAPTURE; i++) {
-		for (int j = 0; j < KINECT_WIDTH_CAPTURE; j++) {
-			int index = (i * KINECT_WIDTH_CAPTURE * KINECT_NUMBER_OF_CHANNELS) + (j * KINECT_NUMBER_OF_CHANNELS);
-			if (scenePixels[(i * KINECT_WIDTH_CAPTURE) + j] == nId || scenePixels[(i * KINECT_WIDTH_CAPTURE) + j] == ADJUSTED) {
-				maskPixels[index + 2] = result[index + 2];
-				maskPixels[index + 1] = result[index + 1];
-				maskPixels[index + 0] = result[index + 0];
-			} else {
-				maskPixels[index + 2] = 0;
-				maskPixels[index + 1] = 0;
-				maskPixels[index + 0] = 0;
-			}
-		}
-	}
-
-	sceneMD.~OutputMetaData();
-	free(result);
-}
-
-/**
- * Pede para o processo de reconhecimento reconhecer o usuario com esse id passado.
- */
-void requestRecognition(int id) {
-	// TODO: Testar se o usuário tem permissão para continuar sendo reconhecido
-
-	MessageRequest messageRequest;
-
-	messageRequest.user_id = id;
-	messageRequest.memory_id = getMemoryKey();
-
-	char *maskPixels = getSharedMemory(messageRequest.memory_id, true, NULL);
-
-	// Busca a area da imagem onde o usuario está.
-	getFrameFromUserId((XnUserID) id, maskPixels);
-
-	shmdt(maskPixels);
-
-	printf("Log - Tracker diz: Enviando pedido de reconhecimento. user_id = %ld e id_memoria = %x\n", messageRequest.user_id, messageRequest.memory_id);
-
-	if (msgsnd(idQueueRequest, &messageRequest, sizeof(MessageRequest) - sizeof(long), 0) > 0) {
-		printf("Log - Tracker diz: Erro no envio de mensagem para o usuário %d\n", messageRequest.memory_id);
-	}
-}
+void verifyDeslocationObject(int userId);
+void requestRecognition(int id);
+void saveLogNewUser(XnUserID nId);
+void saveLogUserLost(XnUserID nId);
+void glInit(int * pargc, char ** argv);
 
 /**
  * Recebe as mensagens da fila de resposta e reenvia as frames dos usuarios não reconhecidos.
@@ -142,98 +83,58 @@ void requestRecognition(int id) {
 void treatQueueResponse(int i) {
 	MessageResponse messageResponse;
 
-	printf("Log - Tracker diz: . TREAT QUEUE RESPONSE . \n");
+//	printf("Log - Tracker diz: . TREAT QUEUE RESPONSE . \n");
 
 	while (msgrcv(idQueueResponse, &messageResponse, sizeof(MessageResponse) - sizeof(long), 0, IPC_NOWAIT) >= 0) {
 
-		printf("---------------------------------------------\n");
+//		printf("---------------------------------------------\n");
 
-		printf("Log - Tracker diz: Recebi mensagem de usuario reconhecido. user => %ld - '%s' - %f\n", messageResponse.user_id, messageResponse.user_name,
-				messageResponse.confidence);
+//		printf("Log - Tracker diz: Recebi mensagem de usuario reconhecido. user => %ld - '%s' - %f\n", messageResponse.user_id, messageResponse.user_name,
+//				messageResponse.confidence);
 
 		// verifica se o usuário ainda está sendo trackeado.
 		if (users.find(messageResponse.user_id) == users.end()) {
-			printf("Log - Tracker diz: Usuário não está mais sendo rastreado\n");
+//			printf("Log - Tracker diz: Usuário não está mais sendo rastreado\n");
 			continue;
 		}
 
 		// verifica se é uma label válida
 		if (messageResponse.user_name == NULL || strlen(messageResponse.user_name) == 0) {
-			printf("Log - Tracker diz: Nome está vazio\n");
-			// TODO : adicionado pois superlotava a fila de mensagens
+//			printf("Log - Tracker diz: Nome está vazio\n");
+			//  adicionado pois superlotava a fila de mensagens
 			int total = getTotalAttempts(messageResponse.user_id);
 			if (total < ATTEMPTS_INICIAL_RECOGNITION) {
 				requestRecognition(messageResponse.user_id);
+				verifyDeslocationObject(messageResponse.user_id);
 			}
 			continue;
 		}
 
 		calculateNewStatistics(&messageResponse);
 
-		choiceNewLabelToUser(&messageResponse, &users, &usersConfidence);
+		choiceNewLabelToUser(&messageResponse, &users);
 
 		// Calcula o total de vezes que o usuario foi reconhecido. Independentemente da resposta.
 		int total = getTotalAttempts(messageResponse.user_id);
-		printf("Log - Tracker diz: Total de tentativas de reconhecimento do usuario %ld => %d\n", messageResponse.user_id, total);
+//		printf("Log - Tracker diz: Total de tentativas de reconhecimento do usuario %ld => %d\n", messageResponse.user_id, total);
 
 		if (total < ATTEMPTS_INICIAL_RECOGNITION) {
 			requestRecognition(messageResponse.user_id);
 		}
 	}
 
-	printf("---------------------------------------------\n");
+//	printf("---------------------------------------------\n");
 
 	glutTimerFunc(INTERVAL_IN_MILISECONDS_TREAT_RESPONSE, treatQueueResponse, 0);
-}
-
-// TODO: salvar a posição atual como ultima e essa posição como posição atual
-// TODO: calcular a diferença e se a mesma estiver abaixo de MIN_DESLOCATION adicionar mais um ao contador caso contrario zerar o contador.
-// TODO: salvar em outro contador o numero de vezes que o contador foi zerado.
-// TODO: se o contador for maior que o MAX_ATTEMPTS_OF_NO_DESLOCATION * <numero de vezes que o contador foi zerado> e o objeto não contem face parar de reconhecer o objeto.
-
-// TODO: fazer com que essa rotina relatada acima também aconteça nos X primeiros reconhecimentos.
-void verifyDeslocationObject(int userId) {
-	XnPoint3D com;
-	g_UserGenerator.GetCoM(userId, com);
-	DeslocationStatus deslocationStatus = usersDeslocation[userId];
-	if (deslocationStatus.lastPosition.X == NULL) {
-		deslocationStatus.lastPosition = com;
-	} else {
-		XnFloat variacaoX, variacaoY, variacaoZ;
-
-		variacaoX = deslocationStatus.lastPosition.X - com.X;
-		variacaoY = deslocationStatus.lastPosition.Y - com.Y;
-		variacaoZ = deslocationStatus.lastPosition.Z - com.Z;
-
-		if (variacaoX < MIN_OBJECT_DESLOCATION || variacaoY < MIN_OBJECT_DESLOCATION || variacaoZ < MIN_OBJECT_DESLOCATION) {
-			deslocationStatus.numberTimesNotMoved = deslocationStatus.numberTimesNotMoved + 1;
-		} else {
-			deslocationStatus.numberTimesNotMoved = 0;
-			deslocationStatus.numberTimesMoved = deslocationStatus.numberTimesMoved + 1;
-		}
-
-		if (deslocationStatus.numberTimesNotMoved < MAX_TIMES_OF_OBJECT_NO_DESLOCATION * deslocationStatus.numberTimesMoved && users[userId] == NULL) {
-			deslocationStatus.recognize = false;
-			printf("Log - Tracker diz: - Usuário %d não é um usuário reconhecivel.\n", userId);
-
-			struct tm *local;
-			time_t t;
-			t = time(NULL);
-			local = localtime(&t);
-			fprintf(trackerLogFile, "%s \t Usuário %d não é um usuário reconhecivel.\n", asctime(local), userId);
-		}
-
-		deslocationStatus.lastPosition = com;
-	}
 }
 
 /**
  * Pede para reconhecer todos os usuários.
  */
 void recheckUsers(int i) {
-	map<int, char *>::iterator it;
+	map<int, UserStatus>::iterator it;
 
-	printf("Log - Tracker diz: - RECHECK - \n");
+//	printf("Log - Tracker diz: - RECHECK - \n");
 
 	for (it = users.begin(); it != users.end(); it++) {
 		if (getTotalAttempts((*it).first) >= ATTEMPTS_INICIAL_RECOGNITION) {
@@ -245,6 +146,32 @@ void recheckUsers(int i) {
 	glutTimerFunc(INTERVAL_IN_MILISECONDS_RECHECK, recheckUsers, 0);
 }
 
+/**
+ * Registra a entrada de um novo usuário e pede para o mesmo ser reconhecido.
+ */
+void XN_CALLBACK_TYPE registerNewUser(xn::UserGenerator& generator, XnUserID nId, void* pCookie) {
+	int id = (int) nId;
+
+	printf("Log - Tracker diz: Novo usuário detectado %d\n", id);
+	users[id].name = "";
+	users[id].canRecognize = true;
+	requestRecognition(id);
+	verifyDeslocationObject(id);
+	saveLogNewUser(nId);
+}
+
+/**
+ * Apaga a entrada do novo usuário.
+ */
+void XN_CALLBACK_TYPE registerLostUser(xn::UserGenerator& generator, XnUserID nId, void* pCookie) {
+	printf("Log - Tracker diz: Usuário %d perdido\n", nId);
+
+	saveLogUserLost(nId);
+
+	users.erase((int) nId);
+	statisticsClear((int) nId);
+}
+
 void cleanupQueueAndExit() {
 	g_Context.Shutdown();
 
@@ -252,9 +179,9 @@ void cleanupQueueAndExit() {
 	msgctl(idQueueResponse, IPC_RMID, NULL);
 	kill(faceRecId, SIGUSR1);
 
-	printfLogComplete(&users, &usersConfidence, stdout);
+	printfLogComplete(&users, stdout);
 	fprintf(trackerLogFile, "\n\n");
-	printfLogComplete(&users, &usersConfidence, trackerLogFile);
+	printfLogComplete(&users, trackerLogFile);
 
 	printf("\n###################################\n");
 	printf("### Nome do arquivo de log: %s\n", trackerLogFileName);
@@ -268,162 +195,6 @@ void cleanupQueueAndExit() {
 	fclose(trackerLogFile);
 
 	exit(1);
-}
-
-/**
- * Salva um log de usuário detectado.
- */
-void saveLogNewUser(XnUserID nId) {
-	char cstr[255];
-
-	struct tm *local;
-	time_t t;
-	t = time(NULL);
-	local = localtime(&t);
-	fprintf(trackerLogFile, "%s \tUsuário %d DETECTADO\n", asctime(local), nId);
-	char *maskPixels = (char *) malloc(sizeof(char) * KINECT_WIDTH_CAPTURE * KINECT_HEIGHT_CAPTURE * KINECT_NUMBER_OF_CHANNELS);
-	// Busca a area da imagem onde o usuario está.
-	getFrameFromUserId((XnUserID) nId, maskPixels);
-
-	IplImage* frame = cvCreateImage(cvSize(KINECT_HEIGHT_CAPTURE, KINECT_WIDTH_CAPTURE), IPL_DEPTH_8U, KINECT_NUMBER_OF_CHANNELS);
-	frame->imageData = maskPixels;
-
-	sprintf(cstr, "%suser%d_%02d-%02d-%04d_%02d:%02d.pgm", trackerLogFolderFrames, (int) nId, local->tm_mday, local->tm_mon + 1, local->tm_year + 1900, local->tm_hour,
-			local->tm_min);
-	cvSaveImage(cstr, frame);
-	cvReleaseImage(&frame);
-
-	fprintf(trackerLogFile, "\tFrame do usuário: ");
-	fprintf(trackerLogFile, "%s", cstr);
-	fprintf(trackerLogFile, "\n");
-}
-
-/**
- * Registra a entrada de um novo usuário e pede para o mesmo ser reconhecido.
- */
-void XN_CALLBACK_TYPE registerNewUser(xn::UserGenerator& generator, XnUserID nId, void* pCookie) {
-	int id = (int) nId;
-
-	printf("Log - Tracker diz: Novo usuário detectado %d\n", id);
-	users[id] = "";
-	requestRecognition(id);
-	saveLogNewUser(nId);
-}
-
-/**
- * Salva um log de usuário perdido.
- */
-void saveLogUserLost(XnUserID nId) {
-	struct tm *local;
-	time_t t;
-	t = time(NULL);
-	local = localtime(&t);
-	fprintf(trackerLogFile, "%s \tUsuário %d PERDIDO\n", asctime(local), nId);
-
-	printfLogCompleteByUser((int) nId, &users, &usersConfidence, trackerLogFile, 2);
-}
-
-/**
- * Apaga a entrada do novo usuário.
- */
-void XN_CALLBACK_TYPE registerLostUser(xn::UserGenerator& generator, XnUserID nId, void* pCookie) {
-	printf("Log - Tracker diz: Usuário %d perdido\n", nId);
-
-	saveLogUserLost(nId);
-
-	// TODO : Verificar se ao apagar e apos disso receber a mensagem não cria um usuário fantasma.
-	users.erase((int) nId);
-	usersConfidence.erase((int) nId);
-	statisticsClear((int) nId);
-}
-
-// this function is called each frame
-void glutDisplay(void) {
-
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-	// Setup the OpenGL viewpoint
-	glMatrixMode(GL_PROJECTION);
-	glPushMatrix();
-	glLoadIdentity();
-
-	xn::SceneMetaData sceneMD;
-	xn::DepthMetaData depthMD;
-
-	if (!g_bPause) {
-		// Read next available data
-		g_Context.WaitAndUpdateAll();
-	}
-
-	// Process the data
-	g_DepthGenerator.GetMetaData(depthMD);
-	glOrtho(0, depthMD.XRes(), depthMD.YRes(), 0, -1.0, 1.0);
-
-	glDisable(GL_TEXTURE_2D);
-
-	g_UserGenerator.GetUserPixels(0, sceneMD);
-	DrawDepthMap(depthMD, sceneMD, users, usersConfidence);
-
-	sceneMD.~OutputMetaData();
-	depthMD.~OutputMetaData();
-
-	glutSwapBuffers();
-}
-
-void glutIdle(void) {
-	if (g_bQuit) {
-		cleanupQueueAndExit();
-	}
-
-	// Display the frame
-	glutPostRedisplay();
-}
-
-void glutKeyboard(unsigned char key, int x, int y) {
-	switch (key) {
-	case 27:
-		cleanupQueueAndExit();
-	case 'b':
-		// Draw background?
-		g_bDrawBackground = !g_bDrawBackground;
-		break;
-	case 'x':
-		// Draw pixels at all?
-		g_bDrawPixels = !g_bDrawPixels;
-		break;
-	case 'i':
-		// Print label?
-		g_bPrintID = !g_bPrintID;
-		break;
-	case 'l':
-		// Print ID & state as label, or only ID?
-		g_bPrintState = !g_bPrintState;
-		break;
-	case 'p':
-		g_bPause = !g_bPause;
-		break;
-	}
-}
-void glInit(int * pargc, char ** argv) {
-	glutInit(pargc, argv);
-	glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
-	glutInitWindowSize(GL_WIN_SIZE_X, GL_WIN_SIZE_Y);
-	glutCreateWindow("User Localization in a Smart Space");
-	//glutFullScreen();
-	//glutSetCursor(GLUT_CURSOR_NONE);
-
-	glutKeyboardFunc(glutKeyboard); //define acoes para determinandas teclas
-	glutDisplayFunc(glutDisplay);
-	glutIdleFunc(glutIdle);
-
-	glutTimerFunc(INTERVAL_IN_MILISECONDS_TREAT_RESPONSE, treatQueueResponse, 0);
-	glutTimerFunc(INTERVAL_IN_MILISECONDS_RECHECK, recheckUsers, 0);
-
-	glDisable(GL_DEPTH_TEST);
-	glEnable(GL_TEXTURE_2D);
-
-	glEnableClientState(GL_VERTEX_ARRAY);
-	glDisableClientState(GL_COLOR_ARRAY);
 }
 
 int main(int argc, char **argv) {
@@ -462,8 +233,7 @@ int main(int argc, char **argv) {
 	idQueueResponse = createMessageQueue(MESSAGE_QUEUE_RESPONSE);
 
 	users.clear();
-	usersConfidence.clear();
-	usersDeslocation.clear();
+	statisticsClearAll();
 
 	//criando um processo filho. Este processo sera transformado do deamon utilizando o execl
 	faceRecId = fork();
@@ -527,4 +297,257 @@ int main(int argc, char **argv) {
 	glInit(&argc, argv);
 	glutMainLoop();
 
+}
+
+
+
+// ##########################################################
+// ##########################################################
+// ####                       Util                       ####
+// ##########################################################
+// ##########################################################
+
+
+
+/**
+ * Busca o frame do usuario isolando os seus pixels
+ */
+void getFrameFromUserId(XnUserID nId, char *maskPixels) {
+
+	// Busca a area da imagem onde o usuario está.
+	xn::SceneMetaData sceneMD;
+	g_UserGenerator.GetUserPixels(nId, sceneMD);
+
+	// Busca um frame da tela
+	const XnRGB24Pixel *source = g_ImageGenerator.GetRGB24ImageMap();
+	char *result = transformToCharAray(source);
+
+	// Busca em cima do frame da tela só a area de pixels do usuario
+	unsigned short *scenePixels = (unsigned short int*) (sceneMD.Data());
+
+	transformAreaVision(scenePixels, nId);
+
+	for (int i = 0; i < KINECT_HEIGHT_CAPTURE; i++) {
+		for (int j = 0; j < KINECT_WIDTH_CAPTURE; j++) {
+			int index = (i * KINECT_WIDTH_CAPTURE * KINECT_NUMBER_OF_CHANNELS) + (j * KINECT_NUMBER_OF_CHANNELS);
+			if (scenePixels[(i * KINECT_WIDTH_CAPTURE) + j] == nId || scenePixels[(i * KINECT_WIDTH_CAPTURE) + j] == ADJUSTED) {
+				maskPixels[index + 2] = result[index + 2];
+				maskPixels[index + 1] = result[index + 1];
+				maskPixels[index + 0] = result[index + 0];
+			} else {
+				maskPixels[index + 2] = 0;
+				maskPixels[index + 1] = 0;
+				maskPixels[index + 0] = 0;
+			}
+		}
+	}
+
+	sceneMD.~OutputMetaData();
+	free(result);
+}
+
+/**
+ * Pede para o processo de reconhecimento reconhecer o usuario com esse id passado.
+ */
+void requestRecognition(int id) {
+	// Testa se o usuário tem permissão para continuar sendo reconhecido
+	if(!users[id].canRecognize) {
+		return;
+	}
+
+	MessageRequest messageRequest;
+
+	messageRequest.user_id = id;
+	messageRequest.memory_id = getMemoryKey();
+
+	char *maskPixels = getSharedMemory(messageRequest.memory_id, true, NULL);
+
+	// Busca a area da imagem onde o usuario está.
+	getFrameFromUserId((XnUserID) id, maskPixels);
+
+	shmdt(maskPixels);
+
+	printf("Log - Tracker diz: Enviando pedido de reconhecimento. user_id = %ld e id_memoria = %x\n", messageRequest.user_id, messageRequest.memory_id);
+
+	if (msgsnd(idQueueRequest, &messageRequest, sizeof(MessageRequest) - sizeof(long), 0) > 0) {
+		printf("Log - Tracker diz: Erro no envio de mensagem para o usuário %d\n", messageRequest.memory_id);
+	}
+}
+
+/**
+ * Verifica se o objeto deslocou ou não da ultima vez que foi chamado e caso perceba que o usuário não está se deslocando e não está sendo reconhecido retira a sua permissão para deslocar.
+ */
+void verifyDeslocationObject(int userId) {
+	XnPoint3D com;
+	g_UserGenerator.GetCoM(userId, com);
+	DeslocationStatus *deslocationStatus = &(users[userId].deslocationStatus);
+	if ((*deslocationStatus).lastPosition.X == 0 && (*deslocationStatus).lastPosition.Y && (*deslocationStatus).lastPosition.Z) {
+		(*deslocationStatus).lastPosition = com;
+	} else {
+		XnFloat variacaoX, variacaoY, variacaoZ;
+
+		variacaoX = fabs((*deslocationStatus).lastPosition.X - com.X);
+		variacaoY = fabs((*deslocationStatus).lastPosition.Y - com.Y);
+		variacaoZ = fabs((*deslocationStatus).lastPosition.Z - com.Z);
+
+		printf("Log - Tracker diz: - #######################\n");
+		printf("Log - Tracker diz: - Usuário %d.\n", userId);
+		printf("Log - Tracker diz: - Variação: X = %f - Y = %f - Z = %f.", variacaoX, variacaoY, variacaoX);
+
+		if (variacaoX < MIN_OBJECT_DESLOCATION || variacaoY < MIN_OBJECT_DESLOCATION || variacaoZ < MIN_OBJECT_DESLOCATION) {
+			printf("IF\n");
+			(*deslocationStatus).numberTimesNotMoved = (*deslocationStatus).numberTimesNotMoved + 1;
+		} else {
+			printf("ELSE\n");
+			(*deslocationStatus).numberTimesNotMoved = 0;
+			(*deslocationStatus).numberTimesMoved = (*deslocationStatus).numberTimesMoved + 1;
+		}
+
+		printf("Log - Tracker diz: - Numero de vezes sem locomover: %d.\n", (*deslocationStatus).numberTimesNotMoved);
+		printf("Log - Tracker diz: - Numero de vezes que se locomoveu: %d.\n", (*deslocationStatus).numberTimesMoved);
+
+		if ((*deslocationStatus).numberTimesNotMoved < MAX_TIMES_OF_OBJECT_NO_DESLOCATION * (*deslocationStatus).numberTimesMoved && users[userId].name == NULL) {
+			users[userId].canRecognize = false;
+			printf("Log - Tracker diz: - Usuário %d não é um usuário reconhecivel ###.\n", userId);
+
+			struct tm *local;
+			time_t t;
+			t = time(NULL);
+			local = localtime(&t);
+			fprintf(trackerLogFile, "%s \t Usuário %d não é um usuário reconhecível.\n", asctime(local), userId);
+		}
+
+		(*deslocationStatus).lastPosition = com;
+	}
+	printf("Log - Tracker diz: - #######################\n");
+}
+
+/**
+ * Salva um log de usuário perdido.
+ */
+void saveLogUserLost(XnUserID nId) {
+	struct tm *local;
+	time_t t;
+	t = time(NULL);
+	local = localtime(&t);
+	fprintf(trackerLogFile, "%s \tUsuário %d PERDIDO\n", asctime(local), nId);
+
+	printfLogCompleteByUser((int) nId, &users, trackerLogFile, 2);
+}
+
+/**
+ * Salva um log de usuário detectado.
+ */
+void saveLogNewUser(XnUserID nId) {
+	char cstr[255];
+
+	struct tm *local;
+	time_t t;
+	t = time(NULL);
+	local = localtime(&t);
+	fprintf(trackerLogFile, "%s \tUsuário %d DETECTADO\n", asctime(local), nId);
+	char *maskPixels = (char *) malloc(sizeof(char) * KINECT_WIDTH_CAPTURE * KINECT_HEIGHT_CAPTURE * KINECT_NUMBER_OF_CHANNELS);
+	// Busca a area da imagem onde o usuario está.
+	getFrameFromUserId((XnUserID) nId, maskPixels);
+
+	IplImage* frame = cvCreateImage(cvSize(KINECT_HEIGHT_CAPTURE, KINECT_WIDTH_CAPTURE), IPL_DEPTH_8U, KINECT_NUMBER_OF_CHANNELS);
+	frame->imageData = maskPixels;
+
+	sprintf(cstr, "%suser%d_%02d-%02d-%04d_%02d:%02d.pgm", trackerLogFolderFrames, (int) nId, local->tm_mday, local->tm_mon + 1, local->tm_year + 1900, local->tm_hour,
+			local->tm_min);
+	cvSaveImage(cstr, frame);
+	cvReleaseImage(&frame);
+
+	fprintf(trackerLogFile, "\tFrame do usuário: ");
+	fprintf(trackerLogFile, "%s", cstr);
+	fprintf(trackerLogFile, "\n");
+}
+
+// this function is called each frame
+void glutDisplay(void) {
+
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	// Setup the OpenGL viewpoint
+	glMatrixMode(GL_PROJECTION);
+	glPushMatrix();
+	glLoadIdentity();
+
+	xn::SceneMetaData sceneMD;
+	xn::DepthMetaData depthMD;
+
+	if (!g_bPause) {
+		// Read next available data
+		g_Context.WaitAndUpdateAll();
+	}
+
+	// Process the data
+	g_DepthGenerator.GetMetaData(depthMD);
+	glOrtho(0, depthMD.XRes(), depthMD.YRes(), 0, -1.0, 1.0);
+
+	glDisable(GL_TEXTURE_2D);
+
+	g_UserGenerator.GetUserPixels(0, sceneMD);
+	DrawDepthMap(depthMD, sceneMD, &users);
+
+	sceneMD.~OutputMetaData();
+	depthMD.~OutputMetaData();
+
+	glutSwapBuffers();
+}
+
+void glutIdle(void) {
+	if (g_bQuit) {
+		cleanupQueueAndExit();
+	}
+
+	// Display the frame
+	glutPostRedisplay();
+}
+
+void glutKeyboard(unsigned char key, int x, int y) {
+	switch (key) {
+	case 27:
+		cleanupQueueAndExit();
+	case 'b':
+		// Draw background?
+		g_bDrawBackground = !g_bDrawBackground;
+		break;
+	case 'x':
+		// Draw pixels at all?
+		g_bDrawPixels = !g_bDrawPixels;
+		break;
+	case 'i':
+		// Print label?
+		g_bPrintID = !g_bPrintID;
+		break;
+	case 'l':
+		// Print ID & state as label, or only ID?
+		g_bPrintState = !g_bPrintState;
+		break;
+	case 'p':
+		g_bPause = !g_bPause;
+		break;
+	}
+}
+void glInit(int * pargc, char ** argv) {
+	glutInit(pargc, argv);
+	glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
+	glutInitWindowSize(GL_WIN_SIZE_X, GL_WIN_SIZE_Y);
+	glutCreateWindow("User Localization in a Smart Space");
+	//glutFullScreen();
+	//glutSetCursor(GLUT_CURSOR_NONE);
+
+	glutKeyboardFunc(glutKeyboard); //define acoes para determinandas teclas
+	glutDisplayFunc(glutDisplay);
+	glutIdleFunc(glutIdle);
+
+	glutTimerFunc(INTERVAL_IN_MILISECONDS_TREAT_RESPONSE, treatQueueResponse, 0);
+	glutTimerFunc(INTERVAL_IN_MILISECONDS_RECHECK, recheckUsers, 0);
+
+	glDisable(GL_DEPTH_TEST);
+	glEnable(GL_TEXTURE_2D);
+
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glDisableClientState(GL_COLOR_ARRAY);
 }
