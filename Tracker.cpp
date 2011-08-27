@@ -118,16 +118,12 @@ void requestRecognition(int id) {
 
 	messageRequest.user_id = id;
 	messageRequest.memory_id = getMemoryKey();
-
 	char *maskPixels = getSharedMemory(messageRequest.memory_id, true, NULL);
 
 	// Busca a area da imagem onde o usuario está.
 	getFrameFromUserId((XnUserID) id, maskPixels);
-
 	shmdt(maskPixels);
-
 	printf("Log - Tracker diz: Enviando pedido de reconhecimento. user_id = %ld e id_memoria = %x\n", messageRequest.user_id, messageRequest.memory_id);
-
 	if (msgsnd(idQueueRequest, &messageRequest, sizeof(MessageRequest) - sizeof(long), 0) > 0) {
 		printf("Log - Tracker diz: Erro no envio de mensagem para o usuário %d\n", messageRequest.memory_id);
 	}
@@ -172,7 +168,6 @@ void treatQueueResponse(int i) {
 		// Calcula o total de vezes que o usuario foi reconhecido. Independentemente da resposta.
 		int total = getTotalAttempts(messageResponse.user_id);
 		printf("Log - Tracker diz: Total de tentativas de reconhecimento do usuario %ld => %d\n", messageResponse.user_id, total);
-
 		if (total < ATTEMPTS_INICIAL_RECOGNITION) {
 			requestRecognition(messageResponse.user_id);
 		}
@@ -236,10 +231,10 @@ void saveLogNewUser(XnUserID nId) {
 	time_t t;
 	t = time(NULL);
 	local = localtime(&t);
-    fprintf(trackerLogFile, "%s \tUsuário %d DETECTADO\n", asctime(local), nId);
-    char *maskPixels = (char *) malloc(sizeof(char) * KINECT_WIDTH_CAPTURE * KINECT_HEIGHT_CAPTURE * KINECT_NUMBER_OF_CHANNELS);
-    // Busca a area da imagem onde o usuario está.
-    getFrameFromUserId((XnUserID)(nId), maskPixels);
+  fprintf(trackerLogFile, "%s \tUsuário %d DETECTADO\n", asctime(local), nId);
+  char *maskPixels = (char *) malloc(sizeof(char) * KINECT_WIDTH_CAPTURE * KINECT_HEIGHT_CAPTURE * KINECT_NUMBER_OF_CHANNELS);
+  // Busca a area da imagem onde o usuario está.
+  getFrameFromUserId((XnUserID)(nId), maskPixels);
 
 	IplImage* frame = cvCreateImage(cvSize(KINECT_HEIGHT_CAPTURE, KINECT_WIDTH_CAPTURE), IPL_DEPTH_8U, KINECT_NUMBER_OF_CHANNELS);
 	frame->imageData = maskPixels;
@@ -321,6 +316,12 @@ void glutDisplay(void) {
 	g_DepthGenerator.GetMetaData(depthMD);
 	// g_ImageGenerator.GetMetaData(imageMD);
 	g_UserGenerator.GetUserPixels(0, sceneMD);
+
+	if(depthMD == NULL) printf("\t\tTRACKER - DMD\n");
+	if(sceneMD == NULL) printf("\t\tTRACKER - SMD\n");
+	if(users == NULL) printf("\t\tTRACKER - users\n");
+	if(usersConfidence == NULL) printf("\t\tTRACKER - usersConfidence\n");
+
 	DrawDepthMap(depthMD, sceneMD, users, usersConfidence);
 
 	glutSwapBuffers();
