@@ -29,12 +29,16 @@ bool compareNameByConfidence(string first, string second) {
  */
 bool compareNameByAttempts(string first, string second) {
 	map<string, int> *nameAttempts = &usersNameAttempts[idUserInTime];
+	map<string, float> *nameConfidence = &usersNameConfidence[idUserInTime];
 
-	if ((*nameAttempts)[first] <= (*nameAttempts)[second]) {
+	if ((*nameAttempts)[first] == (*nameAttempts)[second]) {
+		/*if ((*nameConfidence)[first] > (*nameConfidence)[second]) {
+			return true;
+		}*/
+	} else if ((*nameAttempts)[first] > (*nameAttempts)[second]) {
 		return true;
-	} else {
-		return false;
 	}
+	return false;
 }
 
 /**
@@ -92,7 +96,6 @@ void choiceNewLabelToUser(MessageResponse *messageResponse, map<int, UserStatus>
 		listNameOrdered.push_back(itAttempts->first);
 	}
 
-
 	statisticConfidence = 0.0;
 	int totalAttempts = 0;
 
@@ -104,7 +107,7 @@ void choiceNewLabelToUser(MessageResponse *messageResponse, map<int, UserStatus>
 	statisticConfidence = statisticConfidence / totalAttempts;
 
 #ifdef USE_MAHALANOBIS_DISTANCE
-	//listNameOrdered.sort(compareNameByAttempts);
+//	listNameOrdered.sort(compareNameByAttempts);
 	listNameOrdered.sort(compareNameByConfidence);
 #else
 	listNameOrdered.sort(compareNameByConfidence);
@@ -128,7 +131,8 @@ void choiceNewLabelToUser(MessageResponse *messageResponse, map<int, UserStatus>
 		strcpy((*users)[messageResponse->user_id].name, name.c_str());
 		(*users)[messageResponse->user_id].confidence = confidence;
 	} else {
-		if ((*users)[messageResponse->user_id].name != NULL)
+		if ((*users)[messageResponse->user_id].name != NULL
+		)
 			free((*users)[messageResponse->user_id].name);
 		(*users)[messageResponse->user_id].name = NULL;
 		(*users)[messageResponse->user_id].confidence = confidence;

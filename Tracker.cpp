@@ -385,9 +385,6 @@ void requestRecognition(int id) {
  * Verifica se o objeto deslocou ou não da ultima vez que foi chamado e caso perceba que o usuário não está se deslocando e não está sendo reconhecido retira a sua permissão para deslocar.
  */
 void verifyDeslocationObject(int userId) {
-	// TODO : remover
-	return;
-
 	XnPoint3D com;
 	g_UserGenerator.GetCoM(userId, com);
 	DeslocationStatus *deslocationStatus = &(users[userId].deslocationStatus);

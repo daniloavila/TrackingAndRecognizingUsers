@@ -61,7 +61,7 @@
 
 #define LOG_FOLDER "LOG/"
 
-//#define USE_MAHALANOBIS_DISTANCE // You might get better recognition accuracy if you enable this.
+#define USE_MAHALANOBIS_DISTANCE // You might get better recognition accuracy if you enable this.
 
 typedef struct DeslocationStatus {
 	XnPoint3D lastPosition;
