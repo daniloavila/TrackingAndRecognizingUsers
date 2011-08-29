@@ -33,8 +33,6 @@ const char *profileFaceCascadeFilename = HAARCASCADE_PROFILEFACE;
 
 //Mudar para 0 se voce nao querer que os eigevectors sejam armazenados em arquivos
 int SAVE_EIGENFACE_IMAGES = 1; 
-// #define USE_MAHALANOBIS_DISTANCE	// You might get better recognition accuracy if you enable this.
-
 
 /******************* VARIAVEIS GLOBAIS ************************/
 IplImage ** faceImgArr = 0; // array de imagens facial

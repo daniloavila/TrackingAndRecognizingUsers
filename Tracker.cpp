@@ -83,24 +83,25 @@ void glInit(int * pargc, char ** argv);
 void treatQueueResponse(int i) {
 	MessageResponse messageResponse;
 
-//	printf("Log - Tracker diz: . TREAT QUEUE RESPONSE . \n");
+	printf("Log - Tracker diz: . TREAT QUEUE RESPONSE . \n");
+	fflush(stdout);
 
 	while (msgrcv(idQueueResponse, &messageResponse, sizeof(MessageResponse) - sizeof(long), 0, IPC_NOWAIT) >= 0) {
 
-//		printf("---------------------------------------------\n");
+		printf("---------------------------------------------\n");
 
-//		printf("Log - Tracker diz: Recebi mensagem de usuario reconhecido. user => %ld - '%s' - %f\n", messageResponse.user_id, messageResponse.user_name,
-//				messageResponse.confidence);
+		printf("Log - Tracker diz: Recebi mensagem de usuario reconhecido. user => %ld - '%s' - %f\n", messageResponse.user_id, messageResponse.user_name,
+				messageResponse.confidence);
 
 		// verifica se o usuário ainda está sendo trackeado.
 		if (users.find(messageResponse.user_id) == users.end()) {
-//			printf("Log - Tracker diz: Usuário não está mais sendo rastreado\n");
+			printf("Log - Tracker diz: Usuário não está mais sendo rastreado\n");
 			continue;
 		}
 
 		// verifica se é uma label válida
 		if (messageResponse.user_name == NULL || strlen(messageResponse.user_name) == 0) {
-//			printf("Log - Tracker diz: Nome está vazio\n");
+			printf("Log - Tracker diz: Nome está vazio\n");
 			//  adicionado pois superlotava a fila de mensagens
 			int total = getTotalAttempts(messageResponse.user_id);
 			if (total < ATTEMPTS_INICIAL_RECOGNITION) {
@@ -116,14 +117,15 @@ void treatQueueResponse(int i) {
 
 		// Calcula o total de vezes que o usuario foi reconhecido. Independentemente da resposta.
 		int total = getTotalAttempts(messageResponse.user_id);
-//		printf("Log - Tracker diz: Total de tentativas de reconhecimento do usuario %ld => %d\n", messageResponse.user_id, total);
+		printf("Log - Tracker diz: Total de tentativas de reconhecimento do usuario %ld => %d\n", messageResponse.user_id, total);
 
 		if (total < ATTEMPTS_INICIAL_RECOGNITION) {
 			requestRecognition(messageResponse.user_id);
 		}
 	}
 
-//	printf("---------------------------------------------\n");
+	printf("---------------------------------------------\n");
+	fflush(stdout);
 
 	glutTimerFunc(INTERVAL_IN_MILISECONDS_TREAT_RESPONSE, treatQueueResponse, 0);
 }
@@ -134,7 +136,8 @@ void treatQueueResponse(int i) {
 void recheckUsers(int i) {
 	map<int, UserStatus>::iterator it;
 
-//	printf("Log - Tracker diz: - RECHECK - \n");
+	printf("Log - Tracker diz: - RECHECK - \n");
+	fflush(stdout);
 
 	for (it = users.begin(); it != users.end(); it++) {
 		if (getTotalAttempts((*it).first) >= ATTEMPTS_INICIAL_RECOGNITION) {
@@ -270,6 +273,9 @@ int main(int argc, char **argv) {
 	printf("Nome do arquivo de log: %s\n", trackerLogFileName);
 	printf("Nome da pasta com as frames dos usuários: %s\n", trackerLogFolderFrames);
 
+	fclose(trackerLogFile);
+	trackerLogFile = fopen(trackerLogFileName, "a+");
+
 	//procura por um node Depth nas configuracoes
 	nRetVal = g_Context.FindExistingNode(XN_NODE_TYPE_DEPTH, g_DepthGenerator);
 	CHECK_RC(nRetVal, "Find depth generator");
@@ -378,6 +384,9 @@ void requestRecognition(int id) {
  * Verifica se o objeto deslocou ou não da ultima vez que foi chamado e caso perceba que o usuário não está se deslocando e não está sendo reconhecido retira a sua permissão para deslocar.
  */
 void verifyDeslocationObject(int userId) {
+	// TODO : remover
+	return;
+
 	XnPoint3D com;
 	g_UserGenerator.GetCoM(userId, com);
 	DeslocationStatus *deslocationStatus = &(users[userId].deslocationStatus);
@@ -406,7 +415,7 @@ void verifyDeslocationObject(int userId) {
 		printf("Log - Tracker diz: - Numero de vezes sem locomover: %d.\n", (*deslocationStatus).numberTimesNotMoved);
 		printf("Log - Tracker diz: - Numero de vezes que se locomoveu: %d.\n", (*deslocationStatus).numberTimesMoved);
 
-		if ((*deslocationStatus).numberTimesNotMoved < MAX_TIMES_OF_OBJECT_NO_DESLOCATION * (*deslocationStatus).numberTimesMoved && users[userId].name == NULL) {
+		if ((*deslocationStatus).numberTimesNotMoved < MAX_TIMES_OF_OBJECT_NO_DESLOCATION + (*deslocationStatus).numberTimesMoved && users[userId].name == NULL) {
 			users[userId].canRecognize = false;
 			printf("Log - Tracker diz: - Usuário %d não é um usuário reconhecivel ###.\n", userId);
 

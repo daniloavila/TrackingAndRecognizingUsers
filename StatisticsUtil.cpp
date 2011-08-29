@@ -25,6 +25,19 @@ bool compareNameByConfidence(string first, string second) {
 }
 
 /**
+ * Função que compara uma label com outra apartir da quantidade de vezes que a mesma executou.
+ */
+bool compareNameByAttempts(string first, string second) {
+	map<string, int> *nameAttempts = &usersNameAttempts[idUserInTime];
+
+	if ((*nameAttempts)[first] <= (*nameAttempts)[second]) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
+/**
  * Recalcula as estatisticas de confianca e tentativas a partir da mensagem de resposta.
  */
 void calculateNewStatistics(MessageResponse *messageResponse) {
@@ -70,11 +83,18 @@ void choiceNewLabelToUser(MessageResponse *messageResponse, map<int, UserStatus>
 	idUserInTime = messageResponse->user_id;
 
 	string name;
-	float confidence;
+	float confidence = 0.0;
+
+	map<string, int>::iterator itAttempts;
+
+	list<string> listNameOrdered;
+	for (itAttempts = nameAttempts->begin(); itAttempts != nameAttempts->end(); itAttempts++) {
+		listNameOrdered.push_back(itAttempts->first);
+	}
+
 
 	statisticConfidence = 0.0;
 	int totalAttempts = 0;
-	map<string, int>::iterator itAttempts;
 
 	for (itAttempts = nameAttempts->begin(); itAttempts != nameAttempts->end(); itAttempts++) {
 		statisticConfidence += itAttempts->second * (*nameConfidence)[itAttempts->first];
@@ -82,14 +102,13 @@ void choiceNewLabelToUser(MessageResponse *messageResponse, map<int, UserStatus>
 	}
 
 	statisticConfidence = statisticConfidence / totalAttempts;
-//	printf("CONFIANCA PONDERADA - %f\n", statisticConfidence);
 
-	list<string> listNameOrdered;
-	for (itAttempts = nameAttempts->begin(); itAttempts != nameAttempts->end(); itAttempts++) {
-		listNameOrdered.push_back(itAttempts->first);
-	}
-
+#ifdef USE_MAHALANOBIS_DISTANCE
+	//listNameOrdered.sort(compareNameByAttempts);
 	listNameOrdered.sort(compareNameByConfidence);
+#else
+	listNameOrdered.sort(compareNameByConfidence);
+#endif
 
 	while (listNameOrdered.size() > 0) {
 		name = listNameOrdered.front();
@@ -107,9 +126,12 @@ void choiceNewLabelToUser(MessageResponse *messageResponse, map<int, UserStatus>
 	if (name.length() > 0) {
 		(*users)[messageResponse->user_id].name = (char*) (malloc(sizeof(char) * name.size()));
 		strcpy((*users)[messageResponse->user_id].name, name.c_str());
-		// TODO: Verificar qual das duas confianças usar.
 		(*users)[messageResponse->user_id].confidence = confidence;
-//		(*usersConfidence)[messageResponse->user_id] = statisticConfidence;
+	} else {
+		if ((*users)[messageResponse->user_id].name != NULL)
+			free((*users)[messageResponse->user_id].name);
+		(*users)[messageResponse->user_id].name = NULL;
+		(*users)[messageResponse->user_id].confidence = confidence;
 	}
 
 	printf("Log - StatisticsUtil diz: Nome => '%s' - Tentativas => %d - Confiança => %f\n", messageResponse->user_name, (*nameAttempts)[messageResponse->user_name],
