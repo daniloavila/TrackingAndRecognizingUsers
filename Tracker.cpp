@@ -479,9 +479,9 @@ void glutDisplay(void) {
 
 	if (!g_bPause) {
 		// Read next available data
-		printf("\t\t\tVAI DA PAU\n");
+		// printf("\t\t\tVAI DA PAU\n");
 		g_Context.WaitAndUpdateAll();
-		printf("\t\t\tNAO DEU PAU\n");
+		// printf("\t\t\tNAO DEU PAU\n");
 	}
 
 	// Process the data
