@@ -25,6 +25,8 @@
 #include "KinectUtil.h"
 #include "MessageQueue.h"
 
+#define USE_MAHALANOBIS_DISTANCE
+
 using namespace std;
 
 int idQueueRequest;
@@ -287,7 +289,8 @@ char* recognizeFromCamImg(IplImage *camImg, CvHaarClassifierCascade* faceCascade
 		if (nEigens > 0) {
 			// projeta a imagem de teste no subespaco PCA
 			// FIXME : Essa função aumenta o uso da memória e não libera depois.
-			cvEigenDecomposite(processedFaceImg, nEigens, eigenVectArr, CV_EIGOBJ_BOTH_CALLBACK, 0, pAvgTrainImg, projectedTestFace);
+			// cvEigenDecomposite(processedFaceImg, nEigens, eigenVectArr, CV_EIGOBJ_BOTH_CALLBACK, 0, pAvgTrainImg, projectedTestFace);
+			cvEigenDecomposite(processedFaceImg, nEigens, eigenVectArr, 0, 0, pAvgTrainImg, projectedTestFace);
 			// verifica qual pessoa eh a mais parecida
 			iNearest = findNearestNeighbor(projectedTestFace, &confidence);
 			nearest = trainPersonNumMat->data.i[iNearest];

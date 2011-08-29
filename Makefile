@@ -16,7 +16,7 @@ RELEASE_DIR = Release/
 
 ifeq ("$(OSTYPE)","Darwin")
 	CCFLAGS += -arch x86_64
-	LDFLAGS += -framework OpenGL -framework GLUT -framework OpenCV `pkg-config --cflags opencv` `pkg-config --libs opencv`
+	LDFLAGS += -framework OpenGL -framework GLUT `pkg-config --cflags opencv` `pkg-config --libs opencv`
 	CCFLAGS2 += -arch x86_64
 else
 	USED_LIBS += -lglut -lglib-2.0 -lcv -lcxcore 

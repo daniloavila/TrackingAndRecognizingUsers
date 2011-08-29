@@ -693,9 +693,10 @@ void recognizeFromCam(void) {
 					newPersonFaces++;
 				} else if (newPersonFaces == NUMBER_OF_SAVED_FACES_FRONTAL + NUMBER_OF_SAVED_FACES_LEFT + NUMBER_OF_SAVED_FACES_RIGHT) {
 
-					newPersonFaces = newPersonFaces + saveRotateImages(nPersons + 1, newPersonName, newPersonFaces);
-					newPersonFaces = newPersonFaces + saveFlipImages(nPersons + 1, newPersonName, newPersonFaces);
-					newPersonFaces = newPersonFaces + saveNoiseImages(nPersons + 1, newPersonName, newPersonFaces);
+					// newPersonFaces = newPersonFaces + saveFlipImages(nPersons + 1, newPersonName, newPersonFaces);
+					// newPersonFaces = newPersonFaces + saveNoiseImages(nPersons + 1, newPersonName, newPersonFaces);
+					// newPersonFaces = newPersonFaces + saveRotateImages(nPersons + 1, newPersonName, newPersonFaces);
+					
 					printf("Pressione 't' para re-treinar.\n");
 					fflush(stdout);
 				}
