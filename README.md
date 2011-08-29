@@ -1,39 +1,49 @@
 Reconhecedor e localizador de usuários em tempo real dentro de um SmartSpace.
 =============
 
-Autores: Danilo Ávila e Tales Porto
+**Autores: Danilo Ávila e Tales Porto**
+
 
 Funcionalidade
 -------
 
 O Objetivo desse código é realizar reconhecimento facial em imagens 2d, utilizando eigenfaces. O sistema está integrado com Kinect.
 
+
 Base
 -------
 
 Esse código é baseado no código do Shervin Emami (www.shervinemami.co.cc), e no exemplo de UserTracker da bliblioteca OpenNi.
 
+
 Compilação
 -------
 
-compile.sh
+	./compile.sh
+
 
 Execução
 -------
-Para registrar:
+**Para registrar:**
+
 	./register
-Para rastrear:
+
+
+**Para rastrear:**
+
 	./tracker
 
 
 Links Utéis
 -------
 
+* [Wiki](https://github.com/daniloavila/TrackingAndRecognizingUsers/wiki) -- Explicação detalhada do projeto.
+
 * [Projeto final](https://github.com/talesporto/Projeto-Final) -- Repositorio da monografia.
 
 * [Apresentação do trabalho](https://github.com/talesporto/Seminario-TG1) -- Slides com a apresentação do projeto.
 
-* [Implementação do trabalho](https://github.com/daniloavila/RealTimeFaceRec) -- Repositorio com os codigos fontes que implementão o projeto.
+* [Implementação do trabalho](https://github.com/daniloavila/TrackingAndRecognizingUsers) -- Repositorio com os codigos fontes que implementão o projeto.
 
 * [Dropbox](https://www.dropbox.com/home#:::47090485) -- DropBox contendo todos os artigos usados para redigir o projeto.
 

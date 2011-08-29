@@ -22,7 +22,10 @@
 #define INTERVAL_IN_MILISECONDS_TREAT_RESPONSE 500
 #define INTERVAL_IN_MILISECONDS_RECHECK 5000
 
-#define ATTEMPTS_INICIAL_RECOGNITION 10
+#define ATTEMPTS_INICIAL_RECOGNITION 20
+
+#define MIN_OBJECT_DESLOCATION 30.0
+#define MAX_TIMES_OF_OBJECT_NO_DESLOCATION 5
 
 #define SAMPLE_XML_PATH "Config/SamplesConfig.xml"
 #define SAMPLE_XML_PATH_REGISTER "Config/Register.xml"
@@ -57,5 +60,19 @@
 #define NAME_OF_LOG_FILE "trackerLog"
 
 #define LOG_FOLDER "LOG/"
+
+typedef struct DeslocationStatus {
+	XnPoint3D lastPosition;
+	int numberTimesNotMoved; // numero de vezes que não se movimentou
+	int numberTimesMoved; // numero de vezes que se movimentou
+} DeslocationStatus;
+
+typedef struct UserStatus {
+	char *name;
+	float confidence;
+	bool canRecognize; // Pode reconhecer o usuário
+	// bool canShow; // Pode mostrar a sua label. TODO: Será usado posteriomente
+	DeslocationStatus deslocationStatus;
+} UserStatus;
 
 #endif

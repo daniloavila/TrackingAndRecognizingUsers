@@ -24,6 +24,8 @@
 #include "KinectUtil.h"
 #include "MessageQueue.h"
 
+#define USE_MAHALANOBIS_DISTANCE
+
 using namespace std;
 
 int idQueueRequest;
@@ -59,11 +61,11 @@ bool validarNome(char *nome) {
 	vector<string>::iterator it;
 	for (it = personNames.begin(); it < personNames.end(); it++) {
 		if ((*it).compare(nome) == 0) {
-			printf("Log - Recognizer diz: A label '%s' é valida.\n", nome);
+//			printf("Log - Recognizer diz: A label '%s' é valida.\n", nome);
 			return true;
 		}
 	}
-	printf("Log - Recognizer diz: A label '%s' não é valida.\n", nome);
+//	printf("Log - Recognizer diz: A label '%s' não é valida.\n", nome);
 	return false;
 }
 
@@ -105,7 +107,7 @@ int main(int argc, char** argv) {
 
 	while (1) {
 		msgrcv(idQueueRequest, &messageRequest, sizeof(MessageRequest) - sizeof(long), 0, 0);
-		printf("Log - Recognizer diz: Recebi pedido de reconhecimento. user_id = %ld e id_memoria = %x\n", messageRequest.user_id, messageRequest.memory_id);
+//		printf("Log - Recognizer diz: Recebi pedido de reconhecimento. user_id = %ld e id_memoria = %x\n", messageRequest.user_id, messageRequest.memory_id);
 
 		pshm = getSharedMemory(messageRequest.memory_id, false, sharedMemoryId);
 
@@ -134,7 +136,7 @@ int main(int argc, char** argv) {
 			messageResponse.user_name[0] = NULL;
 		}
 
-		printf("Log - Recognizer diz: Enviando mensagem de usuario reconhecido. user_id = %ld e nome = '%s'\n", messageRequest.user_id, nome);
+//		printf("Log - Recognizer diz: Enviando mensagem de usuario reconhecido. user_id = %ld e nome = '%s'\n", messageRequest.user_id, nome);
 
 		if (msgsnd(idQueueResponse, &messageResponse, sizeof(MessageResponse) - sizeof(long), 0) > 0) {
 			printf("Erro no envio de mensagem para o usuario\n");
@@ -285,14 +287,14 @@ char* recognizeFromCamImg(IplImage *camImg, CvHaarClassifierCascade* faceCascade
 		// tenta reconhecer as pessoas detectadas
 		if (nEigens > 0) {
 			// projeta a imagem de teste no subespaco PCA
+			// FIXME : Essa função aumenta o uso da memória e não libera depois.
+			// cvEigenDecomposite(processedFaceImg, nEigens, eigenVectArr, CV_EIGOBJ_BOTH_CALLBACK, 0, pAvgTrainImg, projectedTestFace);
 			cvEigenDecomposite(processedFaceImg, nEigens, eigenVectArr, 0, 0, pAvgTrainImg, projectedTestFace);
-			//verifica qual pessoa eh a mais parecida
+			// verifica qual pessoa eh a mais parecida
 			iNearest = findNearestNeighbor(projectedTestFace, &confidence);
 			nearest = trainPersonNumMat->data.i[iNearest];
 
 			*pointerConfidence = confidence;
-
-			//printf("Most likely person in camera: '%s' (confidence=%f).\n", personNames[nearest - 1].c_str(), confidence);
 
 			return (char*) personNames[nearest - 1].c_str();
 		}
