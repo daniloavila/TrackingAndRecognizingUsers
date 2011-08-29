@@ -251,24 +251,29 @@ void DrawDepthMap(const xn::DepthMetaData& dmd, const xn::SceneMetaData& smd, ma
 			xnOSMemSet(strLabel, 0, sizeof(strLabel));
 			if (!g_bPrintState) {
 				// Rastreando
-					sprintf(strLabel, "%d", aUsers[i]);	
+				sprintf(strLabel, "%d", aUsers[i]);
 			} else {
 				// Nada
-				if(strlen((*users)[aUsers[i]].name) == 0) {
-					long long int timeseconds = time(NULL);
-					if(timeseconds % 3 == 0) {
-						sprintf(strLabel, "%d - Recognizing.", aUsers[i]);
-					} else if(timeseconds % 3 == 1) {
-						sprintf(strLabel, "%d - Recognizing..", aUsers[i]);
-					} else if(timeseconds % 3 == 2) {
-						sprintf(strLabel, "%d - Recognizing...", aUsers[i]);
+				if (strlen((*users)[aUsers[i]].name) == 0) {
+					if (!(*users)[aUsers[i]].canRecognize) {
+						sprintf(strLabel, "%d - Not Recognize", aUsers[i]);
+					} else {
+						long long int timeseconds = time(NULL);
+						if (timeseconds % 3 == 0) {
+							sprintf(strLabel, "%d - Recognizing.", aUsers[i]);
+						} else if (timeseconds % 3 == 1) {
+							sprintf(strLabel, "%d - Recognizing..", aUsers[i]);
+						} else if (timeseconds % 3 == 2) {
+							sprintf(strLabel, "%d - Recognizing...", aUsers[i]);
+						}
 					}
 				} else {
-						if(&com != NULL){
-							sprintf(strLabel, "%d - %s\n%f - (%.2lf, %.2lf, %.2lf)", aUsers[i], (*users)[aUsers[i]].name, (*users)[aUsers[i]].confidence, comPosition.X, comPosition.Y, comPosition.Z);
-						}else{
-							sprintf(strLabel, "%d - %s\n%f", aUsers[i], (*users)[aUsers[i]].name, (*users)[aUsers[i]].confidence);
-						}
+					if (&com != NULL) {
+						sprintf(strLabel, "%d - %s\n%f - (%.2lf, %.2lf, %.2lf)", aUsers[i], (*users)[aUsers[i]].name, (*users)[aUsers[i]].confidence, comPosition.X, comPosition.Y,
+								comPosition.Z);
+					} else {
+						sprintf(strLabel, "%d - %s\n%f", aUsers[i], (*users)[aUsers[i]].name, (*users)[aUsers[i]].confidence);
+					}
 				}
 			}
 
