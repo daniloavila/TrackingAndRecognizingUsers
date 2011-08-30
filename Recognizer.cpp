@@ -129,7 +129,7 @@ int main(int argc, char** argv) {
 
 		MessageResponse messageResponse;
 		messageResponse.user_id = messageRequest.user_id;
-		messageResponse.confidence = fabs(confidence);
+		messageResponse.confidence = confidence;
 		if (nome != NULL) {
 			strcpy(messageResponse.user_name, nome);
 		} else {

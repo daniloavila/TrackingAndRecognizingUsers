@@ -32,9 +32,9 @@ bool compareNameByAttempts(string first, string second) {
 	map<string, float> *nameConfidence = &usersNameConfidence[idUserInTime];
 
 	if ((*nameAttempts)[first] == (*nameAttempts)[second]) {
-		/*if ((*nameConfidence)[first] > (*nameConfidence)[second]) {
+		if ((*nameConfidence)[first] > (*nameConfidence)[second]) {
 			return true;
-		}*/
+		}
 	} else if ((*nameAttempts)[first] > (*nameAttempts)[second]) {
 		return true;
 	}
@@ -96,6 +96,9 @@ void choiceNewLabelToUser(MessageResponse *messageResponse, map<int, UserStatus>
 		listNameOrdered.push_back(itAttempts->first);
 	}
 
+#ifdef USE_MAHALANOBIS_DISTANCE
+	listNameOrdered.sort(compareNameByAttempts);
+#else
 	statisticConfidence = 0.0;
 	int totalAttempts = 0;
 
@@ -106,10 +109,6 @@ void choiceNewLabelToUser(MessageResponse *messageResponse, map<int, UserStatus>
 
 	statisticConfidence = statisticConfidence / totalAttempts;
 
-#ifdef USE_MAHALANOBIS_DISTANCE
-//	listNameOrdered.sort(compareNameByAttempts);
-	listNameOrdered.sort(compareNameByConfidence);
-#else
 	listNameOrdered.sort(compareNameByConfidence);
 #endif
 
