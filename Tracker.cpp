@@ -85,7 +85,6 @@ void treatQueueResponse(int i) {
 	MessageResponse messageResponse;
 
 	printf("Log - Tracker diz: . TREAT QUEUE RESPONSE . \n");
-	fflush(stdout);
 
 	while (msgrcv(idQueueResponse, &messageResponse, sizeof(MessageResponse) - sizeof(long), 0, IPC_NOWAIT) >= 0) {
 

@@ -25,8 +25,6 @@
 #include "KinectUtil.h"
 #include "MessageQueue.h"
 
-#define USE_MAHALANOBIS_DISTANCE
-
 using namespace std;
 
 int idQueueRequest;
@@ -121,7 +119,8 @@ int main(int argc, char** argv) {
 
 		// Verificando se nome é valido
 		if(nome != NULL && !validarNome(nome)) {
-			nome[0] = NULL;
+			// nome[0] = NULL;
+			free(nome);
 		}
 
 		// deleta memoria compartilhada
@@ -218,11 +217,11 @@ int findNearestNeighbor(float * projectedTestFace, float *pConfidence) {
 
 		for (i = 0; i < nEigens; i++) {
 			float d_i = projectedTestFace[i] - projectedTrainFaceMat->data.fl[iTrain * nEigens + i];
-#ifdef USE_MAHALANOBIS_DISTANCE
-			distSq += d_i*d_i / eigenValMat->data.fl[i]; // Mahalanobis distance (might give better results than Eucalidean distance)
-#else
-			distSq += d_i * d_i; // Euclidean distance.
-#endif
+			#ifdef USE_MAHALANOBIS_DISTANCE
+						distSq += d_i * d_i / eigenValMat->data.fl[i]; // Mahalanobis distance (might give better results than Eucalidean distance)
+			#else
+						distSq += d_i * d_i; // Euclidean distance.
+			#endif
 		}
 
 		if (distSq < leastDistSq) {
@@ -242,20 +241,13 @@ int findNearestNeighbor(float * projectedTestFace, float *pConfidence) {
 // reocnhece a pessoa na camera
 char* recognizeFromCamImg(IplImage *camImg, CvHaarClassifierCascade* faceCascade, CvMat * trainPersonNumMat, float * projectedTestFace, float * pointerConfidence) {
 	int i;
-	char cstr[256];
-	int saveNextFaces = FALSE;
-	char newPersonName[256];
-	int newPersonFaces;
-
-	int iNearest, nearest, truth;
+	int iNearest, nearest;
 	IplImage *greyImg;
 	IplImage *faceImg;
 	IplImage *sizedImg;
 	IplImage *equalizedImg;
 	IplImage *processedFaceImg;
 	CvRect faceRect;
-	int keyPressed = 0;
-	FILE *trainFile;
 	float confidence;
 
 	if (!camImg) {
@@ -285,24 +277,25 @@ char* recognizeFromCamImg(IplImage *camImg, CvHaarClassifierCascade* faceCascade
 			exit(1);
 		}
 
+		cvReleaseImage(&greyImg);
+		cvReleaseImage(&faceImg);
+		cvReleaseImage(&sizedImg);		
+
 		// tenta reconhecer as pessoas detectadas
 		if (nEigens > 0) {
 			// projeta a imagem de teste no subespaco PCA
 			// FIXME : Essa função aumenta o uso da memória e não libera depois.
-			// cvEigenDecomposite(processedFaceImg, nEigens, eigenVectArr, CV_EIGOBJ_BOTH_CALLBACK, 0, pAvgTrainImg, projectedTestFace);
 			cvEigenDecomposite(processedFaceImg, nEigens, eigenVectArr, 0, 0, pAvgTrainImg, projectedTestFace);
 			// verifica qual pessoa eh a mais parecida
 			iNearest = findNearestNeighbor(projectedTestFace, &confidence);
 			nearest = trainPersonNumMat->data.i[iNearest];
-
 			*pointerConfidence = confidence;
+
+			cvReleaseImage(&equalizedImg);
 
 			return (char*) personNames[nearest - 1].c_str();
 		}
 
-		cvReleaseImage(&greyImg);
-		cvReleaseImage(&faceImg);
-		cvReleaseImage(&sizedImg);
 		cvReleaseImage(&equalizedImg);
 	}
 

@@ -29,7 +29,6 @@ using namespace std;
 
 // Haar Cascade file, usado na deteccao
 const char *frontalFaceCascadeFilename = HAARCASCADE_FRONTALFACE;
-const char *profileFaceCascadeFilename = HAARCASCADE_PROFILEFACE;
 
 //Mudar para 0 se voce nao querer que os eigevectors sejam armazenados em arquivos
 int SAVE_EIGENFACE_IMAGES = 1; 
@@ -237,11 +236,11 @@ int findNearestNeighbor(float * projectedTestFace, float *pConfidence) {
 
 		for (i = 0; i < nEigens; i++) {
 			float d_i = projectedTestFace[i] - projectedTrainFaceMat->data.fl[iTrain * nEigens + i];
-#ifdef USE_MAHALANOBIS_DISTANCE
-			distSq += d_i*d_i / eigenValMat->data.fl[i]; // Mahalanobis distance 
-#else
-			distSq += d_i * d_i; // Euclidean distance.
-#endif
+			#ifdef USE_MAHALANOBIS_DISTANCE
+						distSq += d_i*d_i / eigenValMat->data.fl[i]; // Mahalanobis distance 
+			#else
+						distSq += d_i * d_i; // Euclidean distance.
+			#endif
 		}
 
 		if (distSq < leastDistSq) {
@@ -250,10 +249,12 @@ int findNearestNeighbor(float * projectedTestFace, float *pConfidence) {
 		}
 	}
 
-	// retornar o nivel de confianca baseado na distancia euclidiana,
+	// retornar o nivel de confianca baseado na distancia euclidiana ou mahalanobis,
 	// para que imagens similares deem indice de confianca entre 0.5 - 1.0
 	// e imagens muitos diferentes deem indice de confianca entre 0.0 - 0.5
 	*pConfidence = 1.0f - sqrt(leastDistSq / (float) (nTrainFaces * nEigens)) / 255.0f;
+	printf("\t\t\t leastDistSq = %f - Conficanca = %f - ", leastDistSq, *pConfidence);
+
 
 	// Retorna o index
 	return iNearest;
@@ -574,58 +575,42 @@ void recognizeFromCam(void) {
 			break; 
 		}
 		switch (keyPressed) {
-		case 'p':
-			printf("Detectando face de perfil\n");
-			faceCascade = (CvHaarClassifierCascade*) cvLoad(profileFaceCascadeFilename, 0, 0, 0);
-			if (!faceCascade) {
-				printf("ERROR em recognizeFromCam(): Classificador '%s' nao pode ser lido.\n", profileFaceCascadeFilename);
-				exit(1);
-			}
-			break;
-		case 'f':
-			printf("Detect Frontal Face\n");
-			faceCascade = (CvHaarClassifierCascade*) cvLoad(frontalFaceCascadeFilename, 0, 0, 0);
-			if (!faceCascade) {
-				printf("ERROR em recognizeFromCam(): Classificador '%s' nao pode ser lido.\n", frontalFaceCascadeFilename);
-				exit(1);
-			}
-			break;
-		case 'n': // adiciona uma nova pessoa no cenario de treino
-			printf("Entre com o seu nome: ");
-			strcpy(newPersonName, "newPerson");
-			gets(newPersonName);
-			printf("Coletando todas as imagens ate que o suaurio entre com 't' para comecar o treinamento como '%s' ...\n", newPersonName);
-			newPersonFaces = 0; 
-			saveNextFaces = TRUE;
-			break;
-		case 't': // comeca a treinar
-			saveNextFaces = FALSE; // para de salvar novas faces
-			// amarzena os novos dados nos arquivo de treinamento
-			printf("Armazenando os dados de treinamento para nova pessoa '%s'.\n", newPersonName);
-			// concate a nova pessoa no final dos dados de treino
-			trainFile = fopen("Eigenfaces/train.txt", "a");
-			for (i = 0; i < newPersonFaces; i++) {
-				sprintf(cstr, "Eigenfaces/data/%d_%s%d.pgm", nPersons + 1, newPersonName, i + 1);
-				fprintf(trainFile, "%d %s %s\n", nPersons + 1, newPersonName, cstr);
-			}
-			fclose(trainFile);
+			case 'n': // adiciona uma nova pessoa no cenario de treino
+				printf("Entre com o seu nome: ");
+				strcpy(newPersonName, "newPerson");
+				gets(newPersonName);
+				printf("Coletando todas as imagens ate que o suaurio entre com 't' para comecar o treinamento como '%s' ...\n", newPersonName);
+				newPersonFaces = 0; 
+				saveNextFaces = TRUE;
+				break;
+			case 't': // comeca a treinar
+				saveNextFaces = FALSE; // para de salvar novas faces
+				// amarzena os novos dados nos arquivo de treinamento
+				printf("Armazenando os dados de treinamento para nova pessoa '%s'.\n", newPersonName);
+				// concate a nova pessoa no final dos dados de treino
+				trainFile = fopen("Eigenfaces/train.txt", "a");
+				for (i = 0; i < newPersonFaces; i++) {
+					sprintf(cstr, "Eigenfaces/data/%d_%s%d.pgm", nPersons + 1, newPersonName, i + 1);
+					fprintf(trainFile, "%d %s %s\n", nPersons + 1, newPersonName, cstr);
+				}
+				fclose(trainFile);
 
-			// reinicializa os dados locais
-			projectedTestFace = 0;
-			saveNextFaces = FALSE;
-			newPersonFaces = 0;
+				// reinicializa os dados locais
+				projectedTestFace = 0;
+				saveNextFaces = FALSE;
+				newPersonFaces = 0;
 
-			// retreina do novo banco de dados sem parar a execucao
-			cvFree( &trainPersonNumMat);
-			// libera os dados antigos antes de obter os novos
-			trainPersonNumMat = retrainOnline();
-			// projeta as iamgens de teste no subespaco PCA
-			cvFree(&projectedTestFace);
-			projectedTestFace = (float *) cvAlloc(nEigens * sizeof(float));
+				// retreina do novo banco de dados sem parar a execucao
+				cvFree( &trainPersonNumMat);
+				// libera os dados antigos antes de obter os novos
+				trainPersonNumMat = retrainOnline();
+				// projeta as iamgens de teste no subespaco PCA
+				cvFree(&projectedTestFace);
+				projectedTestFace = (float *) cvAlloc(nEigens * sizeof(float));
 
-			printf("Reconhecendo a pessoa na camera ...\n");
-			continue; // Begin with the next frame.
-			break;
+				printf("Reconhecendo a pessoa na camera ...\n");
+				continue; // Begin with the next frame.
+				break;
 		}
 
 		//pega a frame da camera
@@ -668,6 +653,8 @@ void recognizeFromCam(void) {
 					// verifica qual a pessoa mais parecida com a face
 					iNearest = findNearestNeighbor(projectedTestFace, &confidence);
 					nearest = trainPersonNumMat->data.i[iNearest];
+
+					printf("%s\n",personNames[nearest - 1].c_str());
 				} 
 
 				if (newPersonFaces == NUMBER_OF_SAVED_FACES_FRONTAL) {
@@ -696,7 +683,7 @@ void recognizeFromCam(void) {
 					// newPersonFaces = newPersonFaces + saveFlipImages(nPersons + 1, newPersonName, newPersonFaces);
 					// newPersonFaces = newPersonFaces + saveNoiseImages(nPersons + 1, newPersonName, newPersonFaces);
 					// newPersonFaces = newPersonFaces + saveRotateImages(nPersons + 1, newPersonName, newPersonFaces);
-					
+
 					printf("Pressione 't' para re-treinar.\n");
 					fflush(stdout);
 				}
