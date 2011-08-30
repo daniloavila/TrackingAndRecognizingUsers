@@ -1,6 +1,9 @@
 #ifndef DEFINITIONS_H_
 #define DEFINITIONS_H_
 
+// Definida para utilizar distancia mahalanobis em vez de euclidiana, pode-se obter melhores resultados
+#define USE_MAHALANOBIS_DISTANCE
+
 // Register parameters
 #define NUMBER_OF_SAVED_FACES_FRONTAL 50
 #define NUMBER_OF_SAVED_FACES_RIGHT 20
@@ -54,7 +57,6 @@
 #define SHARED_MEMORY 0x1230
 #define MAX_SHARED_MEMORY 0x12bc
 
-#define HAARCASCADE_PROFILEFACE "Eigenfaces-Profile/haarcascade_profileface_umist2.xml"
 #define HAARCASCADE_FRONTALFACE "Eigenfaces/haarcascade_frontalface_alt.xml"
 
 #define NAME_OF_LOG_FILE "trackerLog"

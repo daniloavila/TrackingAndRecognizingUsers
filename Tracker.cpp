@@ -84,24 +84,24 @@ void glInit(int * pargc, char ** argv);
 void treatQueueResponse(int i) {
 	MessageResponse messageResponse;
 
-//	printf("Log - Tracker diz: . TREAT QUEUE RESPONSE . \n");
+	printf("Log - Tracker diz: . TREAT QUEUE RESPONSE . \n");
 
 	while (msgrcv(idQueueResponse, &messageResponse, sizeof(MessageResponse) - sizeof(long), 0, IPC_NOWAIT) >= 0) {
 
-//		printf("---------------------------------------------\n");
+		printf("---------------------------------------------\n");
 
-//		printf("Log - Tracker diz: Recebi mensagem de usuario reconhecido. user => %ld - '%s' - %f\n", messageResponse.user_id, messageResponse.user_name,
-//				messageResponse.confidence);
+		printf("Log - Tracker diz: Recebi mensagem de usuario reconhecido. user => %ld - '%s' - %f\n", messageResponse.user_id, messageResponse.user_name,
+				messageResponse.confidence);
 
 		// verifica se o usuário ainda está sendo trackeado.
 		if (users.find(messageResponse.user_id) == users.end()) {
-//			printf("Log - Tracker diz: Usuário não está mais sendo rastreado\n");
+			printf("Log - Tracker diz: Usuário não está mais sendo rastreado\n");
 			continue;
 		}
 
 		// verifica se é uma label válida
 		if (messageResponse.user_name == NULL || strlen(messageResponse.user_name) == 0) {
-//			printf("Log - Tracker diz: Nome está vazio\n");
+			printf("Log - Tracker diz: Nome está vazio\n");
 			//  adicionado pois superlotava a fila de mensagens
 			int total = getTotalAttempts(messageResponse.user_id);
 			if (total < ATTEMPTS_INICIAL_RECOGNITION) {
@@ -117,7 +117,7 @@ void treatQueueResponse(int i) {
 
 		// Calcula o total de vezes que o usuario foi reconhecido. Independentemente da resposta.
 		int total = getTotalAttempts(messageResponse.user_id);
-//		printf("Log - Tracker diz: Total de tentativas de reconhecimento do usuario %ld => %d\n", messageResponse.user_id, total);
+		printf("Log - Tracker diz: Total de tentativas de reconhecimento do usuario %ld => %d\n", messageResponse.user_id, total);
 
 		if (total < ATTEMPTS_INICIAL_RECOGNITION) {
 			requestRecognition(messageResponse.user_id);
