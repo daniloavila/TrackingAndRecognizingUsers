@@ -97,7 +97,7 @@ void DrawLimb(XnUserID player, XnSkeletonJoint eJoint1, XnSkeletonJoint eJoint2)
 	glVertex3i(pt[1].X, pt[1].Y, 0);
 }
 
-void DrawDepthMap(const xn::DepthMetaData& dmd, const xn::SceneMetaData& smd, map<int, char*> users, map<int, float> usersConfidence) {
+void DrawDepthMap(const xn::DepthMetaData& dmd, const xn::SceneMetaData& smd, map<int, UserStatus> *users) {
 	static bool bInitialized = false;
 	static GLuint depthTexID;
 	static unsigned char* pDepthTexBuf;
@@ -110,8 +110,10 @@ void DrawDepthMap(const xn::DepthMetaData& dmd, const xn::SceneMetaData& smd, ma
 	float texXpos;
 	float texYpos;
 
-	if (!bInitialized) {
+	// printf("\t\tSCENE DRAWER - INICIO\n");
 
+	if (!bInitialized) {
+		// printf("\t\tSCENE DRAWER - PRIMEIRO IF\n");
 		texWidth = getClosestPowerOfTwo(dmd.XRes());
 		texHeight = getClosestPowerOfTwo(dmd.YRes());
 
@@ -128,6 +130,7 @@ void DrawDepthMap(const xn::DepthMetaData& dmd, const xn::SceneMetaData& smd, ma
 
 		memset(texcoords, 0, 8 * sizeof(float));
 		texcoords[0] = texXpos, texcoords[1] = texYpos, texcoords[2] = texXpos, texcoords[7] = texYpos;
+		// printf("\t\tSCENE DRAWER - FIM IF\n");
 
 	}
 	unsigned int nValue = 0;
@@ -136,15 +139,19 @@ void DrawDepthMap(const xn::DepthMetaData& dmd, const xn::SceneMetaData& smd, ma
 	unsigned int nX = 0;
 	unsigned int nY = 0;
 	unsigned int nNumberOfPoints = 0;
+
+	// printf("\t\tSCENE DRAWER - A\n");
 	XnUInt16 g_nXRes = dmd.XRes();
 	XnUInt16 g_nYRes = dmd.YRes();
 
 	unsigned char* pDestImage = pDepthTexBuf;
 
+	// printf("\t\tSCENE DRAWER - B\n");
 	const XnDepthPixel* pDepth = dmd.Data();
 	const XnLabel* pLabels = smd.Data();
 
 	memset(g_pDepthHist, 0, MAX_DEPTH * sizeof(float));
+	// printf("\t\tSCENE DRAWER - C\n");
 	for (nY = 0; nY < g_nYRes; nY++) {
 		for (nX = 0; nX < g_nXRes; nX++) {
 			nValue = *pDepth;
@@ -157,19 +164,24 @@ void DrawDepthMap(const xn::DepthMetaData& dmd, const xn::SceneMetaData& smd, ma
 			pDepth++;
 		}
 	}
+	// printf("\t\tSCENE DRAWER - D\n");
 
 	for (nIndex = 1; nIndex < MAX_DEPTH; nIndex++) {
 		g_pDepthHist[nIndex] += g_pDepthHist[nIndex - 1];
 	}
+
+	// printf("\t\tSCENE DRAWER - E\n");
 	if (nNumberOfPoints) {
 		for (nIndex = 1; nIndex < MAX_DEPTH; nIndex++) {
 			g_pDepthHist[nIndex] = (unsigned int) (256 * (1.0f - (g_pDepthHist[nIndex] / nNumberOfPoints)));
 		}
 	}
 
+	// printf("\t\tSCENE DRAWER - F\n");
 	pDepth = dmd.Data();
 	if (g_bDrawPixels) {
 		XnUInt32 nIndex = 0;
+		// printf("\t\tSCENE DRAWER - G\n");
 		// prepara o mapa de textura
 		for (nY = 0; nY < g_nYRes; nY++) {
 			for (nX = 0; nX < g_nXRes; nX++, nIndex++) {
@@ -202,12 +214,16 @@ void DrawDepthMap(const xn::DepthMetaData& dmd, const xn::SceneMetaData& smd, ma
 			pDestImage += (texWidth - g_nXRes) * 3;
 		}
 	} else {
+		// printf("\t\tSCENE DRAWER - I\n");
 		xnOSMemSet(pDepthTexBuf, 0, 3 * 2 * g_nXRes * g_nYRes);
 	}
+
+	// printf("\t\tSCENE DRAWER - J\n");
 
 	glBindTexture(GL_TEXTURE_2D, depthTexID);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, texWidth, texHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, pDepthTexBuf);
 
+	// printf("\t\tSCENE DRAWER - L\n");
 	// mostra o mapa de textura OpenGL
 	glColor4f(0.75, 0.75, 0.75, 1);
 
@@ -215,11 +231,15 @@ void DrawDepthMap(const xn::DepthMetaData& dmd, const xn::SceneMetaData& smd, ma
 	DrawTexture(dmd.XRes(), dmd.YRes(), 0, 0);
 	glDisable(GL_TEXTURE_2D);
 
+	// printf("\t\tSCENE DRAWER - M\n");
+
 	char strLabel[50] = "";
 	XnUInt16 nUsers = g_UserGenerator.GetNumberOfUsers();
 	XnUserID* aUsers = new XnUserID[nUsers];
 
 	g_UserGenerator.GetUsers(aUsers, nUsers);
+
+	// printf("\t\tSCENE DRAWER - N\n");
 	for (int i = 0; i < nUsers; ++i) {
 		if (g_bPrintID) {
 			XnPoint3D com, comPosition;
@@ -231,24 +251,22 @@ void DrawDepthMap(const xn::DepthMetaData& dmd, const xn::SceneMetaData& smd, ma
 			xnOSMemSet(strLabel, 0, sizeof(strLabel));
 			if (!g_bPrintState) {
 				// Rastreando
-					sprintf(strLabel, "%d", aUsers[i]);	
+				sprintf(strLabel, "%d", aUsers[i]);
 			} else {
 				// Nada
-				if(strlen((users)[aUsers[i]]) == 0) {
-					long long int timeseconds = time(NULL);
-					if(timeseconds % 3 == 0) {
-						sprintf(strLabel, "%d - Recognizing.", aUsers[i]);
-					} else if(timeseconds % 3 == 1) {
-						sprintf(strLabel, "%d - Recognizing..", aUsers[i]);
-					} else if(timeseconds % 3 == 2) {
-						sprintf(strLabel, "%d - Recognizing...", aUsers[i]);
+				if (strlen((*users)[aUsers[i]].name) == 0) {
+					if (!(*users)[aUsers[i]].canRecognize) {
+						sprintf(strLabel, "%d - Not Recognize", aUsers[i]);
+					} else {
+						sprintf(strLabel, "%d - Recognizing", aUsers[i]);
 					}
 				} else {
-						if(&com != NULL){
-							sprintf(strLabel, "%d - %s\n%f - (%.2lf, %.2lf, %.2lf)", aUsers[i], (users)[aUsers[i]], (usersConfidence)[aUsers[i]], comPosition.X, comPosition.Y, comPosition.Z);	
-						}else{
-							sprintf(strLabel, "%d - %s\n%f", aUsers[i], (users)[aUsers[i]], (usersConfidence)[aUsers[i]]);
-						}
+					if (&com != NULL) {
+						sprintf(strLabel, "%d - %s\n%f - (%.2lf, %.2lf, %.2lf)", aUsers[i], (*users)[aUsers[i]].name, (*users)[aUsers[i]].confidence, comPosition.X, comPosition.Y,
+								comPosition.Z);
+					} else {
+						sprintf(strLabel, "%d - %s\n%f", aUsers[i], (*users)[aUsers[i]].name, (*users)[aUsers[i]].confidence);
+					}
 				}
 			}
 
@@ -259,4 +277,5 @@ void DrawDepthMap(const xn::DepthMetaData& dmd, const xn::SceneMetaData& smd, ma
 		}
 
 	}
+	// printf("\t\tSCENE DRAWER - FIM\n");
 }

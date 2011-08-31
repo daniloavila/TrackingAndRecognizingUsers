@@ -1,14 +1,17 @@
 #ifndef DEFINITIONS_H_
 #define DEFINITIONS_H_
 
-// Register parameters
-#define NUMBER_OF_SAVED_FACES_FRONTAL 50
-#define NUMBER_OF_SAVED_FACES_RIGHT 20
-#define NUMBER_OF_SAVED_FACES_LEFT 20
+// Definida para utilizar distancia mahalanobis em vez de euclidiana, pode-se obter melhores resultados
+#define USE_MAHALANOBIS_DISTANCE
 
-#define NUMBER_OF_ROTATE_IMAGES 20
-#define NUMBER_OF_FLIP_IMAGES 20
-#define NUMBER_OF_NOISE_IMAGES 20
+// Register parameters
+#define NUMBER_OF_SAVED_FACES_FRONTAL 10
+#define NUMBER_OF_SAVED_FACES_RIGHT 10
+#define NUMBER_OF_SAVED_FACES_LEFT 10
+
+#define NUMBER_OF_ROTATE_IMAGES 1
+#define NUMBER_OF_FLIP_IMAGES 1
+#define NUMBER_OF_NOISE_IMAGES 1
 
 #define MAX_ANGLE_OF_ROTATE 10
 
@@ -22,10 +25,10 @@
 #define INTERVAL_IN_MILISECONDS_TREAT_RESPONSE 500
 #define INTERVAL_IN_MILISECONDS_RECHECK 5000
 
-#define ATTEMPTS_INICIAL_RECOGNITION 10
+#define ATTEMPTS_INICIAL_RECOGNITION 20
 
-#define MIN_OBJECT_DESLOCATION 10
-#define MAX_TIMES_OF_OBJECT_NO_DESLOCATION 10
+#define MIN_OBJECT_DESLOCATION 30.0
+#define MAX_TIMES_OF_OBJECT_NO_DESLOCATION 5
 
 #define SAMPLE_XML_PATH "Config/SamplesConfig.xml"
 #define SAMPLE_XML_PATH_REGISTER "Config/Register.xml"
@@ -54,21 +57,26 @@
 #define SHARED_MEMORY 0x1230
 #define MAX_SHARED_MEMORY 0x12bc
 
-#define HAARCASCADE_PROFILEFACE "Eigenfaces-Profile/haarcascade_profileface_umist2.xml"
 #define HAARCASCADE_FRONTALFACE "Eigenfaces/haarcascade_frontalface_alt.xml"
 
 #define NAME_OF_LOG_FILE "trackerLog"
 
-#define USE_MAHALANOBIS_DISTANCE
-
 #define LOG_FOLDER "LOG/"
+
+#define UNKNOWN "Unknown"
 
 typedef struct DeslocationStatus {
 	XnPoint3D lastPosition;
-	//XnPoint3D actualPosition;
 	int numberTimesNotMoved; // numero de vezes que não se movimentou
 	int numberTimesMoved; // numero de vezes que se movimentou
-	bool recognize;
 } DeslocationStatus;
+
+typedef struct UserStatus {
+	char *name;
+	float confidence;
+	bool canRecognize; // Pode reconhecer o usuário
+	// bool canShow; // Pode mostrar a sua label. TODO: Será usado posteriomente
+	DeslocationStatus deslocationStatus;
+} UserStatus;
 
 #endif
