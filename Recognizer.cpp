@@ -276,9 +276,10 @@ char* recognizeFromCamImg(IplImage *camImg, CvHaarClassifierCascade* faceCascade
 			exit(1);
 		}
 
+		// liberando espaco
 		cvReleaseImage(&greyImg);
 		cvReleaseImage(&faceImg);
-		cvReleaseImage(&sizedImg);		
+		cvReleaseImage(&sizedImg);
 
 		// tenta reconhecer as pessoas detectadas
 		if (nEigens > 0) {
@@ -290,14 +291,18 @@ char* recognizeFromCamImg(IplImage *camImg, CvHaarClassifierCascade* faceCascade
 			nearest = trainPersonNumMat->data.i[iNearest];
 			*pointerConfidence = confidence;
 
+			// liberando espaco
 			cvReleaseImage(&equalizedImg);
 
 			return (char*) personNames[nearest - 1].c_str();
 		}
 
+		// liberando espaco
 		cvReleaseImage(&equalizedImg);
 	}
 
+	printf("\nRecognizer - Nao achou face\n\n");
+	cvReleaseImage(&greyImg);
 	return NULL;
 }
 

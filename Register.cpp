@@ -253,7 +253,6 @@ int findNearestNeighbor(float * projectedTestFace, float *pConfidence) {
 	// para que imagens similares deem indice de confianca entre 0.5 - 1.0
 	// e imagens muitos diferentes deem indice de confianca entre 0.0 - 0.5
 	*pConfidence = 1.0f - sqrt(leastDistSq / (float) (nTrainFaces * nEigens)) / 255.0f;
-	printf("\t\t\t leastDistSq = %f - Conficanca = %f - ", leastDistSq, *pConfidence);
 
 
 	// Retorna o index
@@ -654,7 +653,6 @@ void recognizeFromCam(void) {
 					iNearest = findNearestNeighbor(projectedTestFace, &confidence);
 					nearest = trainPersonNumMat->data.i[iNearest];
 
-					printf("%s\n",personNames[nearest - 1].c_str());
 				} 
 
 				if (newPersonFaces == NUMBER_OF_SAVED_FACES_FRONTAL) {
