@@ -234,13 +234,22 @@ int findNearestNeighbor(float * projectedTestFace, float *pConfidence) {
 	double leastDistSq = DBL_MAX;
 	int i, iTrain, iNearest = 0;
 
+#ifdef USE_MAHALANOBIS_DISTANCE
+	double leastDistSqMahalanobis = DBL_MAX;
+	int iNearestMahalanobis = 0;
+#endif
+
 	for (iTrain = 0; iTrain < nTrainFaces; iTrain++) {
-		double distSq = 0;
+		double distSq = 0, distSq2 = 0;
+#ifdef USE_MAHALANOBIS_DISTANCE
+		double distSqMahalanobis = 0;
+#endif
 
 		for (i = 0; i < nEigens; i++) {
 			float d_i = projectedTestFace[i] - projectedTrainFaceMat->data.fl[iTrain * nEigens + i];
 #ifdef USE_MAHALANOBIS_DISTANCE
-			distSq += d_i*d_i / eigenValMat->data.fl[i]; // Mahalanobis distance 
+			distSq += d_i * d_i; // Euclidean distance.
+			distSqMahalanobis += d_i * d_i / eigenValMat->data.fl[i]; // Mahalanobis distance
 #else
 			distSq += d_i * d_i; // Euclidean distance.
 #endif
@@ -250,15 +259,30 @@ int findNearestNeighbor(float * projectedTestFace, float *pConfidence) {
 			leastDistSq = distSq;
 			iNearest = iTrain;
 		}
+
+#ifdef USE_MAHALANOBIS_DISTANCE
+		if (distSqMahalanobis < leastDistSqMahalanobis) {
+			leastDistSqMahalanobis = distSqMahalanobis;
+			iNearestMahalanobis = iTrain;
+		}
+#endif
 	}
 
 	// retornar o nivel de confianca baseado na distancia euclidiana,
 	// para que imagens similares deem indice de confianca entre 0.5 - 1.0
 	// e imagens muitos diferentes deem indice de confianca entre 0.0 - 0.5
+#ifdef USE_MAHALANOBIS_DISTANCE
 	*pConfidence = 1.0f - sqrt(leastDistSq / (float) (nTrainFaces * nEigens)) / 255.0f;
-
-	// Retorna o index
+	if (iNearest == iNearestMahalanobis) {
+		printf(".\n");
+		return iNearest;
+	}
+	return -1;
+#else
+	*pConfidence = 1.0f - sqrt(leastDistSq / (float) (nTrainFaces * nEigens)) / 255.0f;
 	return iNearest;
+#endif
+
 }
 
 // faz a analize das componentes principais, achando a imagem media
@@ -555,7 +579,7 @@ void recognizeFromCam(void) {
 	}
 
 	while (1) {
-		int iNearest, nearest, truth;
+		int iNearest, nearest = 0, truth;
 		IplImage *camImg;
 		IplImage *greyImg;
 		IplImage *faceImg;
@@ -669,7 +693,8 @@ void recognizeFromCam(void) {
 
 					// verifica qual a pessoa mais parecida com a face
 					iNearest = findNearestNeighbor(projectedTestFace, &confidence);
-					nearest = trainPersonNumMat->data.i[iNearest];
+					if(iNearest > 0)
+						nearest = trainPersonNumMat->data.i[iNearest];
 				} 
 
 				if (newPersonFaces == NUMBER_OF_SAVED_FACES_FRONTAL) {
@@ -721,7 +746,10 @@ void recognizeFromCam(void) {
 					CvScalar textColor = CV_RGB(0,255,255); // texto azul claro
 					char text[256];
 
-					snprintf(text, sizeof(text) - 1, "Name: '%s'", personNames[nearest - 1].c_str());
+					if(nearest > 0)
+						snprintf(text, sizeof(text) - 1, "Name: '%s'", personNames[nearest - 1].c_str());
+					else
+						snprintf(text, sizeof(text) - 1, "Name: '%s'", "Unknown");
 
 					cvPutText(shownImg, text, cvPoint(faceRect.x, faceRect.y + faceRect.height + 15), &font, textColor);
 					snprintf(text, sizeof(text) - 1, "Confidence: %f", confidence);

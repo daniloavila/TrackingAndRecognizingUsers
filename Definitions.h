@@ -59,6 +59,8 @@
 
 #define NAME_OF_LOG_FILE "trackerLog"
 
+#define USE_MAHALANOBIS_DISTANCE
+
 #define LOG_FOLDER "LOG/"
 
 typedef struct DeslocationStatus {
