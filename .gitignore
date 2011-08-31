@@ -8,5 +8,6 @@ recognizer
 register
 Eigenfaces/data/
 Eigenfaces/backup/
+Eigenfaces/Cambridge_FaceDB/
 LOG/
 backup/
