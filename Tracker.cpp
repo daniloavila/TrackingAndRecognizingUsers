@@ -112,7 +112,6 @@ void treatQueueResponse(int i) {
 		} else if(strcmp(messageResponse.user_name, UNKNOWN) == 0) {
 			users[messageResponse.user_id].name = (char *) malloc(strlen(UNKNOWN) + 1);
 			strcpy(users[messageResponse.user_id].name, UNKNOWN);
-			// TODO : Iterar o contador de tentativas pra não 'floodar' o recognizer
 			int total = getTotalAttempts(messageResponse.user_id);
 			if (total < ATTEMPTS_INICIAL_RECOGNITION) {
 				requestRecognition(messageResponse.user_id);

@@ -10,4 +10,7 @@ else
 	rm -rf ../data/*
 	mv data/* ../data/
 	rm -rf data/
+	rm -rf ../Cambridge_FaceDB/*
+	mv Cambridge_FaceDB/* ../Cambridge_FaceDB/
+	rm -rf Cambridge_FaceDB/
 fi

@@ -261,6 +261,7 @@ int findNearestNeighbor(float * projectedTestFace, float *pConfidence) {
 	return -1;
 #else
 	*pConfidence = 1.0f - sqrt(leastDistSq / (float) (nTrainFaces * nEigens)) / 255.0f;
+
 	return iNearest;
 #endif
 
