@@ -62,13 +62,33 @@ void calculateNewStatistics(MessageResponse *messageResponse) {
 /**
  * Verifica se a escolha é valida, ou seja, se já não existe outro usuário com a mesma label, e se existe qual deve prevalecer a partir da confiança.
  */
-bool verifyChoice(string name, float confidence, map<int, UserStatus> *users) {
+bool verifyChoiceEuclidian(string name, float confidence, map<int, UserStatus> *users) {
 	map<int, UserStatus>::iterator itUsers;
 	for (itUsers = users->begin(); itUsers != users->end(); itUsers++) {
 		string name2(itUsers->second.name);
 		if (name.compare(name2) == 0 && itUsers->first != idUserInTime) {
 			map<string, float> *nameConfidence = &usersNameConfidence[itUsers->first];
 			if ((*nameConfidence)[name] > confidence) {
+				return false;
+			}
+		}
+	}
+	return true;
+}
+
+/**
+ * Verifica se a escolha é valida, ou seja, se já não existe outro usuário com a mesma label, e se existe qual deve prevalecer a partir da confiança.
+ */
+bool verifyChoiceMahalanobis(string name, int attempts, map<int, UserStatus> *users) {
+	map<int, UserStatus>::iterator itUsers;
+
+	for (itUsers = users->begin(); itUsers != users->end(); itUsers++) {
+		string name2(itUsers->second.name);
+
+		if (name.compare(name2) == 0 && itUsers->first != idUserInTime) {
+			map<string, int> *nameAttempts = &usersNameAttempts[itUsers->first];
+
+			if ((*nameAttempts)[name] > attempts) {
 				return false;
 			}
 		}
@@ -88,6 +108,7 @@ void choiceNewLabelToUser(MessageResponse *messageResponse, map<int, UserStatus>
 
 	string name;
 	float confidence = 0.0;
+	int attempts = 0;
 
 	map<string, int>::iterator itAttempts;
 
@@ -115,8 +136,14 @@ void choiceNewLabelToUser(MessageResponse *messageResponse, map<int, UserStatus>
 	while (listNameOrdered.size() > 0) {
 		name = listNameOrdered.front();
 		confidence = (*nameConfidence)[name];
-
-		if (verifyChoice(name, confidence, users)) {
+		attempts = (*nameAttempts)[name];
+		if (
+			#ifdef USE_MAHALANOBIS_DISTANCE
+				verifyChoiceMahalanobis(name, attempts, users)
+			#else
+				verifyChoiceEuclidian(name, confidence, users)
+			#endif
+		){
 			break;
 		} else {
 			name = "";

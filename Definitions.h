@@ -5,9 +5,9 @@
 #define USE_MAHALANOBIS_DISTANCE
 
 // Register parameters
-#define NUMBER_OF_SAVED_FACES_FRONTAL 10
-#define NUMBER_OF_SAVED_FACES_RIGHT 10
-#define NUMBER_OF_SAVED_FACES_LEFT 10
+#define NUMBER_OF_SAVED_FACES_FRONTAL 6
+#define NUMBER_OF_SAVED_FACES_RIGHT 2
+#define NUMBER_OF_SAVED_FACES_LEFT 2
 
 #define NUMBER_OF_ROTATE_IMAGES 1
 #define NUMBER_OF_FLIP_IMAGES 1
@@ -62,8 +62,6 @@
 #define NAME_OF_LOG_FILE "trackerLog"
 
 #define LOG_FOLDER "LOG/"
-
-#define USE_MAHALANOBIS_DISTANCE // You might get better recognition accuracy if you enable this.
 
 typedef struct DeslocationStatus {
 	XnPoint3D lastPosition;

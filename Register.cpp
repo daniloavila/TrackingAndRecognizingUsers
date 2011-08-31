@@ -252,7 +252,7 @@ int findNearestNeighbor(float * projectedTestFace, float *pConfidence) {
 	// retornar o nivel de confianca baseado na distancia euclidiana ou mahalanobis,
 	// para que imagens similares deem indice de confianca entre 0.5 - 1.0
 	// e imagens muitos diferentes deem indice de confianca entre 0.0 - 0.5
-	*pConfidence = 1.0f - sqrt(leastDistSq / (float) (nTrainFaces * nEigens)) / 255.0f;
+	*pConfidence = 1.0 - sqrt(leastDistSq / (float) (nTrainFaces * nEigens)) / 255.0f;
 
 
 	// Retorna o index

@@ -232,7 +232,8 @@ int findNearestNeighbor(float * projectedTestFace, float *pConfidence) {
 
 	//retorna o nivel de confianca baseado na distancia euclidiana para que imagens similares deem confianca entre 0.5 e 1.0
 	// e imagens muito diferentes confianca entre 0.0 e 0.5
-	*pConfidence = 1.0f - sqrt(leastDistSq / (float) (nTrainFaces * nEigens)) / 255.0f;
+	// *pConfidence = 1.0f - sqrt(leastDistSq / (float) (nTrainFaces * nEigens)) / 255.0f;
+	*pConfidence =1.0 - sqrt(leastDistSq / (float) (nTrainFaces * nEigens)) / 255.0f;
 
 	// Return the found index.
 	return iNearest;
@@ -302,7 +303,6 @@ char* recognizeFromCamImg(IplImage *camImg, CvHaarClassifierCascade* faceCascade
 		cvReleaseImage(&equalizedImg);
 	}
 
-	printf("\nRecognizer - Nao achou face\n\n");
 	cvReleaseImage(&greyImg);
 	return NULL;
 }
