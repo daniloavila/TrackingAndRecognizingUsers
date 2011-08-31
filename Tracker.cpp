@@ -124,7 +124,8 @@ void treatQueueResponse(int i) {
 		}
 	}
 
-//	printf("---------------------------------------------\n");
+	printf("---------------------------------------------\n");
+	fflush(stdout);
 
 	glutTimerFunc(INTERVAL_IN_MILISECONDS_TREAT_RESPONSE, treatQueueResponse, 0);
 }
@@ -135,7 +136,8 @@ void treatQueueResponse(int i) {
 void recheckUsers(int i) {
 	map<int, UserStatus>::iterator it;
 
-//	printf("Log - Tracker diz: - RECHECK - \n");
+	printf("Log - Tracker diz: - RECHECK - \n");
+	fflush(stdout);
 
 	for (it = users.begin(); it != users.end(); it++) {
 		if (getTotalAttempts((*it).first) >= ATTEMPTS_INICIAL_RECOGNITION) {
@@ -270,6 +272,9 @@ int main(int argc, char **argv) {
 	printf("Iniciado em: %s\n", asctime(local));
 	printf("Nome do arquivo de log: %s\n", trackerLogFileName);
 	printf("Nome da pasta com as frames dos usuários: %s\n", trackerLogFolderFrames);
+
+	fclose(trackerLogFile);
+	trackerLogFile = fopen(trackerLogFileName, "a+");
 
 	//procura por um node Depth nas configuracoes
 	nRetVal = g_Context.FindExistingNode(XN_NODE_TYPE_DEPTH, g_DepthGenerator);
@@ -407,7 +412,7 @@ void verifyDeslocationObject(int userId) {
 		printf("Log - Tracker diz: - Numero de vezes sem locomover: %d.\n", (*deslocationStatus).numberTimesNotMoved);
 		printf("Log - Tracker diz: - Numero de vezes que se locomoveu: %d.\n", (*deslocationStatus).numberTimesMoved);
 
-		if ((*deslocationStatus).numberTimesNotMoved < MAX_TIMES_OF_OBJECT_NO_DESLOCATION * (*deslocationStatus).numberTimesMoved && users[userId].name == NULL) {
+		if ((*deslocationStatus).numberTimesNotMoved < MAX_TIMES_OF_OBJECT_NO_DESLOCATION + (*deslocationStatus).numberTimesMoved && users[userId].name == NULL) {
 			users[userId].canRecognize = false;
 			printf("Log - Tracker diz: - Usuário %d não é um usuário reconhecivel ###.\n", userId);
 
