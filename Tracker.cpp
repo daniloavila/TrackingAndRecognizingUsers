@@ -411,9 +411,11 @@ void verifyDeslocationObject(int userId) {
 
 		printf("Log - Tracker diz: - Numero de vezes sem locomover: %d.\n", (*deslocationStatus).numberTimesNotMoved);
 		printf("Log - Tracker diz: - Numero de vezes que se locomoveu: %d.\n", (*deslocationStatus).numberTimesMoved);
-
-		if ((*deslocationStatus).numberTimesNotMoved < MAX_TIMES_OF_OBJECT_NO_DESLOCATION + (*deslocationStatus).numberTimesMoved && users[userId].name == NULL) {
+		printf("Log - Tracker diz: - %s\n", users[userId].name);
+		if ((*deslocationStatus).numberTimesNotMoved > MAX_TIMES_OF_OBJECT_NO_DESLOCATION && strlen(users[userId].name) == 0) {
 			users[userId].canRecognize = false;
+			users[userId].name = (char *) malloc(sizeof(char) * (strlen(OBJECT) + 1));
+			strcpy(users[userId].name, OBJECT);
 			printf("Log - Tracker diz: - Usuário %d não é um usuário reconhecivel ###.\n", userId);
 
 			struct tm *local;
