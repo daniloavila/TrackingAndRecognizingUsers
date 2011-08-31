@@ -28,7 +28,7 @@
 #define ATTEMPTS_INICIAL_RECOGNITION 20
 
 #define MIN_OBJECT_DESLOCATION 30.0
-#define MAX_TIMES_OF_OBJECT_NO_DESLOCATION 5
+#define MAX_TIMES_OF_OBJECT_NO_DESLOCATION 10
 
 #define SAMPLE_XML_PATH "Config/SamplesConfig.xml"
 #define SAMPLE_XML_PATH_REGISTER "Config/Register.xml"
@@ -64,6 +64,8 @@
 #define LOG_FOLDER "LOG/"
 
 #define UNKNOWN "Unknown"
+
+#define OBJECT "Object"
 
 typedef struct DeslocationStatus {
 	XnPoint3D lastPosition;
