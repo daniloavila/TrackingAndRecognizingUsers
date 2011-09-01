@@ -210,31 +210,21 @@ int loadTrainingData(CvMat ** pTrainPersonNumMat) {
 	return 1;
 }
 
-// acha a pessoa mais parecia baseado com a deteccao. Retorna o index e armazena o indice de confianca em pConfidence
+#ifdef USE_MAHALANOBIS_DISTANCE
 int findNearestNeighbor(float * projectedTestFace, float *pConfidence) {
 	double leastDistSq = DBL_MAX;
 	int i, iTrain, iNearest = 0;
 
-#ifdef USE_MAHALANOBIS_DISTANCE
 	double leastDistSqMahalanobis = DBL_MAX;
 	int iNearestMahalanobis = 0;
-#endif
 
 	for (iTrain = 0; iTrain < nTrainFaces; iTrain++) {
 		double distSq = 0, distSq2 = 0;
-#ifdef USE_MAHALANOBIS_DISTANCE
 		double distSqMahalanobis = 0;
-#endif
-
 		for (i = 0; i < nEigens; i++) {
 			float d_i = projectedTestFace[i] - projectedTrainFaceMat->data.fl[iTrain * nEigens + i];
-
-#ifdef USE_MAHALANOBIS_DISTANCE
 			distSq += d_i * d_i; // Euclidean distance.
 			distSqMahalanobis += d_i * d_i / eigenValMat->data.fl[i]; // Mahalanobis distance
-#else
-			distSq += d_i * d_i; // Euclidean distance.
-#endif
 		}
 
 		if (distSq < leastDistSq) {
@@ -242,31 +232,52 @@ int findNearestNeighbor(float * projectedTestFace, float *pConfidence) {
 			iNearest = iTrain;
 		}
 
-#ifdef USE_MAHALANOBIS_DISTANCE
 		if (distSqMahalanobis < leastDistSqMahalanobis) {
 			leastDistSqMahalanobis = distSqMahalanobis;
 			iNearestMahalanobis = iTrain;
 		}
-#endif
 	}
 
 	// retornar o nivel de confianca baseado na distancia euclidiana ou mahalanobis,
 	// para que imagens similares deem indice de confianca entre 0.5 - 1.0
 	// e imagens muitos diferentes deem indice de confianca entre 0.0 - 0.5
-#ifdef USE_MAHALANOBIS_DISTANCE
 	*pConfidence = 1.0f - sqrt(leastDistSq / (float) (nTrainFaces * nEigens)) / 255.0f;
-	if (iNearest == iNearestMahalanobis) {
+
+	if (iNearest == iNearestMahalanobis && *pConfidence > THRESHOLD) {
 		return iNearest;
 	}
 	return -1;
+}
 #else
+// acha a pessoa mais parecia baseado com a deteccao. Retorna o index e armazena o indice de confianca em pConfidence
+int findNearestNeighbor(float * projectedTestFace, float *pConfidence) {
+	double leastDistSq = DBL_MAX;
+	int i, iTrain, iNearest = 0;
+
+	for (iTrain = 0; iTrain < nTrainFaces; iTrain++) {
+		double distSq = 0, distSq2 = 0;
+
+		for (i = 0; i < nEigens; i++) {
+			float d_i = projectedTestFace[i] - projectedTrainFaceMat->data.fl[iTrain * nEigens + i];
+			distSq += d_i * d_i; // Euclidean distance.
+		}
+
+		if (distSq < leastDistSq) {
+			leastDistSq = distSq;
+			iNearest = iTrain;
+		}
+	}
+
+	// retornar o nivel de confianca baseado na distancia euclidiana ou mahalanobis,
+	// para que imagens similares deem indice de confianca entre 0.5 - 1.0
+	// e imagens muitos diferentes deem indice de confianca entre 0.0 - 0.5
 	*pConfidence = 1.0f - sqrt(leastDistSq / (float) (nTrainFaces * nEigens)) / 255.0f;
+	if(*pConfidence < THRESHOLD) return -1;
 
 	return iNearest;
-#endif
 
 }
-
+#endif
 // reocnhece a pessoa na camera
 char* recognizeFromCamImg(IplImage *camImg, CvHaarClassifierCascade* faceCascade, CvMat * trainPersonNumMat, float * projectedTestFace, float * pointerConfidence) {
 	int i;

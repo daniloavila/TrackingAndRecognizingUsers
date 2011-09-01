@@ -4,7 +4,10 @@
 // Definida para utilizar distancia mahalanobis em vez de euclidiana, pode-se obter melhores resultados
 #define USE_MAHALANOBIS_DISTANCE
 
-// Register parameters
+
+/*********************************
+****** Register parameters ******
+*********************************/
 #define NUMBER_OF_SAVED_FACES_FRONTAL 6
 #define NUMBER_OF_SAVED_FACES_RIGHT 2
 #define NUMBER_OF_SAVED_FACES_LEFT 2
@@ -18,18 +21,25 @@
 // vai de 0 a 255 e quanto menor mais ruído.
 #define LEVEL_OF_NOISE_IMAGES 50
 
-// Tracker parameters
+/*********************************
+****** Tracker parameters ******
+*********************************/
 #define GL_WIN_SIZE_X 720
 #define GL_WIN_SIZE_Y 480
 
+//intervalo em milisegundos definido como tempo de espera para que a funcao de tratar a resposta do recognition
+//e que faz reconhecimento dos usarios ja reocnhecidos novamente
 #define INTERVAL_IN_MILISECONDS_TREAT_RESPONSE 500
 #define INTERVAL_IN_MILISECONDS_RECHECK 5000
 
+//numero de frames capturadas do usario ao ser rastreado pela primeira vez
 #define ATTEMPTS_INICIAL_RECOGNITION 20
 
+// distancia minima que o rastreado tenha que se deslocar para ser considerada uma pessoa
 #define MIN_OBJECT_DESLOCATION 30.0
-#define MAX_TIMES_OF_OBJECT_NO_DESLOCATION 10
+#define MAX_TIMES_OF_OBJECT_NO_DESLOCATION 5
 
+// arquivos de configuracao do kinect
 #define SAMPLE_XML_PATH "Config/SamplesConfig.xml"
 #define SAMPLE_XML_PATH_REGISTER "Config/Register.xml"
 
@@ -57,14 +67,19 @@
 #define SHARED_MEMORY 0x1230
 #define MAX_SHARED_MEMORY 0x12bc
 
+// classificador para localizar a face em uma imagem
 #define HAARCASCADE_FRONTALFACE "Eigenfaces/haarcascade_frontalface_alt.xml"
 
 #define NAME_OF_LOG_FILE "trackerLog"
-
 #define LOG_FOLDER "LOG/"
 
+// limiar de confianca para identificar o usuario
+#define THRESHOLD 0.9
+
+// label de estado definida para o usuario não reocnhecido
 #define UNKNOWN "Unknown"
 
+// label definida para objetos que foram rastreados por entrar em contato 
 #define OBJECT "Object"
 
 typedef struct DeslocationStatus {
