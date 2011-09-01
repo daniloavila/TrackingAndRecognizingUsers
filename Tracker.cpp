@@ -44,10 +44,6 @@ xn::ImageGenerator g_ImageGenerator;
 xn::UserGenerator g_UserGenerator;
 xn::SceneAnalyzer g_SceneAnalyzer;
 
-XnBool g_bNeedPose = FALSE;
-XnChar g_strPose[20] = "";
-XnBool g_bDrawSkeleton = TRUE;
-
 int idQueueRequest;
 int idQueueResponse;
 int faceRecId;
@@ -57,9 +53,6 @@ int faceRecId;
 #else
 #include <GL/glut.h>
 #endif
-
-XnBool g_bRecord = false;
-XnBool g_bQuit = false;
 
 map<int, UserStatus> users;
 
@@ -309,6 +302,7 @@ int main(int argc, char **argv) {
 	glInit(&argc, argv);
 	glutMainLoop();
 
+	return EXIT_SUCCESS;
 }
 
 
@@ -507,10 +501,6 @@ void glutDisplay(void) {
 }
 
 void glutIdle(void) {
-	if (g_bQuit) {
-		cleanupQueueAndExit();
-	}
-
 	// Display the frame
 	glutPostRedisplay();
 }
