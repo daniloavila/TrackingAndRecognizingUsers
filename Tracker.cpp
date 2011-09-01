@@ -111,7 +111,7 @@ void treatQueueResponse(int i) {
 			}
 			continue;
 		} else if(strcmp(messageResponse.user_name, UNKNOWN) == 0) {
-            if(total == 1) {
+            if(total == 0) {
             	users[messageResponse.user_id].name = (char *) malloc(strlen(UNKNOWN) + 1);
             	strcpy(users[messageResponse.user_id].name, UNKNOWN);
             }
