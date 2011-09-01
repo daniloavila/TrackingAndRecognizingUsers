@@ -44,14 +44,6 @@ xn::ImageGenerator g_ImageGenerator;
 xn::UserGenerator g_UserGenerator;
 xn::SceneAnalyzer g_SceneAnalyzer;
 
-XnBool g_bNeedPose = FALSE;
-XnChar g_strPose[20] = "";
-XnBool g_bDrawBackground = TRUE;
-XnBool g_bDrawPixels = TRUE;
-XnBool g_bDrawSkeleton = TRUE;
-XnBool g_bPrintID = TRUE;
-XnBool g_bPrintState = TRUE;
-
 int idQueueRequest;
 int idQueueResponse;
 int faceRecId;
@@ -61,10 +53,6 @@ int faceRecId;
 #else
 #include <GL/glut.h>
 #endif
-
-XnBool g_bPause = false;
-XnBool g_bRecord = false;
-XnBool g_bQuit = false;
 
 map<int, UserStatus> users;
 
@@ -314,6 +302,7 @@ int main(int argc, char **argv) {
 	glInit(&argc, argv);
 	glutMainLoop();
 
+	return EXIT_SUCCESS;
 }
 
 
@@ -496,12 +485,7 @@ void glutDisplay(void) {
 	xn::SceneMetaData sceneMD;
 	xn::DepthMetaData depthMD;
 
-	if (!g_bPause) {
-		// Read next available data
-		// printf("\t\t\tVAI DA PAU\n");
-		g_Context.WaitAndUpdateAll();
-		// printf("\t\t\tNAO DEU PAU\n");
-	}
+	g_Context.WaitAndUpdateAll();
 
 	// Process the data
 	g_DepthGenerator.GetMetaData(depthMD);
@@ -519,10 +503,6 @@ void glutDisplay(void) {
 }
 
 void glutIdle(void) {
-	if (g_bQuit) {
-		cleanupQueueAndExit();
-	}
-
 	// Display the frame
 	glutPostRedisplay();
 }
@@ -531,24 +511,6 @@ void glutKeyboard(unsigned char key, int x, int y) {
 	switch (key) {
 	case 27:
 		cleanupQueueAndExit();
-	case 'b':
-		// Draw background?
-		g_bDrawBackground = !g_bDrawBackground;
-		break;
-	case 'x':
-		// Draw pixels at all?
-		g_bDrawPixels = !g_bDrawPixels;
-		break;
-	case 'i':
-		// Print label?
-		g_bPrintID = !g_bPrintID;
-		break;
-	case 'l':
-		// Print ID & state as label, or only ID?
-		g_bPrintState = !g_bPrintState;
-		break;
-	case 'p':
-		g_bPause = !g_bPause;
 		break;
 	}
 }
