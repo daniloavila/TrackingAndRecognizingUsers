@@ -99,20 +99,23 @@ void treatQueueResponse(int i) {
 			continue;
 		}
 
+		int total = getTotalAttempts(messageResponse.user_id);
+
 		// verifica se é uma label válida
 		if (messageResponse.user_name == NULL || strlen(messageResponse.user_name) == 0) {
 			printf("Log - Tracker diz: Nome está vazio\n");
 			//  adicionado pois superlotava a fila de mensagens
-			int total = getTotalAttempts(messageResponse.user_id);
 			if (total < ATTEMPTS_INICIAL_RECOGNITION) {
 				requestRecognition(messageResponse.user_id);
 				verifyDeslocationObject(messageResponse.user_id);
 			}
 			continue;
 		} else if(strcmp(messageResponse.user_name, UNKNOWN) == 0) {
-			users[messageResponse.user_id].name = (char *) malloc(strlen(UNKNOWN) + 1);
-			strcpy(users[messageResponse.user_id].name, UNKNOWN);
-			int total = getTotalAttempts(messageResponse.user_id);
+            if(total == 1) {
+            	users[messageResponse.user_id].name = (char *) malloc(strlen(UNKNOWN) + 1);
+            	strcpy(users[messageResponse.user_id].name, UNKNOWN);
+            }
+
 			if (total < ATTEMPTS_INICIAL_RECOGNITION) {
 				requestRecognition(messageResponse.user_id);
 				verifyDeslocationObject(messageResponse.user_id);
@@ -125,7 +128,6 @@ void treatQueueResponse(int i) {
 		choiceNewLabelToUser(&messageResponse, &users);
 
 		// Calcula o total de vezes que o usuario foi reconhecido. Independentemente da resposta.
-		int total = getTotalAttempts(messageResponse.user_id);
 		printf("Log - Tracker diz: Total de tentativas de reconhecimento do usuario %ld => %d\n", messageResponse.user_id, total);
 
 		if (total < ATTEMPTS_INICIAL_RECOGNITION) {
