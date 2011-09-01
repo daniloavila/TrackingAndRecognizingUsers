@@ -9,5 +9,7 @@ register
 Eigenfaces/data/
 Eigenfaces/backup/
 Eigenfaces/Cambridge_FaceDB/
+Eigenfaces/facedata.xml
+Eigenfaces/out_eigenfaces.bmp
 LOG/
 backup/
