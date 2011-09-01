@@ -359,6 +359,8 @@ void getFrameFromUserId(XnUserID nId, char *maskPixels) {
 		}
 	}
 
+
+
 	sceneMD.~OutputMetaData();
 	free(result);
 }
