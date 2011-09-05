@@ -63,6 +63,9 @@
 // key da fila de messagens entre "FaceRec" e "UserTracker". Utilizado para responder as requisicoes enviadas pelo "UserTracker".
 #define MESSAGE_QUEUE_RESPONSE 0x1228
 
+// key da fila de messagens
+#define MESSAGE_QUEUE_COMUNICATION_JAVA_C 0x1232
+
 // key da memoria compartilhada entre "FaceRec" e "UserTracker". Utilizado para enviar a imagem do novo usuario detectado.
 #define SHARED_MEMORY 0x1230
 #define MAX_SHARED_MEMORY 0x12bc
@@ -95,5 +98,7 @@ typedef struct UserStatus {
 	// bool canShow; // Pode mostrar a sua label. TODO: Será usado posteriomente
 	DeslocationStatus deslocationStatus;
 } UserStatus;
+
+#define JAVA_INTEGRATION
 
 #endif

@@ -1,7 +1,3 @@
-//---------------------------------------------------------------------------
-// Includes
-//---------------------------------------------------------------------------
-
 #include "SceneDrawer.h"
 #include <time.h>
 
@@ -13,17 +9,12 @@ using namespace std;
 #include <GL/glut.h>
 #endif
 
+#define MAX_DEPTH 10000
+float g_pDepthHist[MAX_DEPTH];
+
 extern xn::UserGenerator g_UserGenerator;
 extern xn::DepthGenerator g_DepthGenerator;
 
-extern XnBool g_bDrawBackground;
-extern XnBool g_bDrawPixels;
-extern XnBool g_bDrawSkeleton;
-extern XnBool g_bPrintID;
-extern XnBool g_bPrintState;
-
-#define MAX_DEPTH 10000
-float g_pDepthHist[MAX_DEPTH];
 unsigned int getClosestPowerOfTwo(unsigned int n) {
 	unsigned int m = 2;
 	while (m < n)
@@ -110,10 +101,8 @@ void DrawDepthMap(const xn::DepthMetaData& dmd, const xn::SceneMetaData& smd, ma
 	float texXpos;
 	float texYpos;
 
-	// printf("\t\tSCENE DRAWER - INICIO\n");
 
 	if (!bInitialized) {
-		// printf("\t\tSCENE DRAWER - PRIMEIRO IF\n");
 		texWidth = getClosestPowerOfTwo(dmd.XRes());
 		texHeight = getClosestPowerOfTwo(dmd.YRes());
 
@@ -130,7 +119,6 @@ void DrawDepthMap(const xn::DepthMetaData& dmd, const xn::SceneMetaData& smd, ma
 
 		memset(texcoords, 0, 8 * sizeof(float));
 		texcoords[0] = texXpos, texcoords[1] = texYpos, texcoords[2] = texXpos, texcoords[7] = texYpos;
-		// printf("\t\tSCENE DRAWER - FIM IF\n");
 
 	}
 	unsigned int nValue = 0;
@@ -140,18 +128,15 @@ void DrawDepthMap(const xn::DepthMetaData& dmd, const xn::SceneMetaData& smd, ma
 	unsigned int nY = 0;
 	unsigned int nNumberOfPoints = 0;
 
-	// printf("\t\tSCENE DRAWER - A\n");
 	XnUInt16 g_nXRes = dmd.XRes();
 	XnUInt16 g_nYRes = dmd.YRes();
 
 	unsigned char* pDestImage = pDepthTexBuf;
 
-	// printf("\t\tSCENE DRAWER - B\n");
 	const XnDepthPixel* pDepth = dmd.Data();
 	const XnLabel* pLabels = smd.Data();
 
 	memset(g_pDepthHist, 0, MAX_DEPTH * sizeof(float));
-	// printf("\t\tSCENE DRAWER - C\n");
 	for (nY = 0; nY < g_nYRes; nY++) {
 		for (nX = 0; nX < g_nXRes; nX++) {
 			nValue = *pDepth;
@@ -164,32 +149,28 @@ void DrawDepthMap(const xn::DepthMetaData& dmd, const xn::SceneMetaData& smd, ma
 			pDepth++;
 		}
 	}
-	// printf("\t\tSCENE DRAWER - D\n");
 
 	for (nIndex = 1; nIndex < MAX_DEPTH; nIndex++) {
 		g_pDepthHist[nIndex] += g_pDepthHist[nIndex - 1];
 	}
 
-	// printf("\t\tSCENE DRAWER - E\n");
 	if (nNumberOfPoints) {
 		for (nIndex = 1; nIndex < MAX_DEPTH; nIndex++) {
 			g_pDepthHist[nIndex] = (unsigned int) (256 * (1.0f - (g_pDepthHist[nIndex] / nNumberOfPoints)));
 		}
 	}
 
-	// printf("\t\tSCENE DRAWER - F\n");
 	pDepth = dmd.Data();
-	if (g_bDrawPixels) {
-		XnUInt32 nIndex = 0;
-		// printf("\t\tSCENE DRAWER - G\n");
+
+		XnUInt32 nIndexX = 0;
 		// prepara o mapa de textura
 		for (nY = 0; nY < g_nYRes; nY++) {
-			for (nX = 0; nX < g_nXRes; nX++, nIndex++) {
+			for (nX = 0; nX < g_nXRes; nX++, nIndexX++) {
 
 				pDestImage[0] = 0;
 				pDestImage[1] = 0;
 				pDestImage[2] = 0;
-				if (g_bDrawBackground || *pLabels != 0) {
+				if (TRUE || *pLabels != 0) {
 					nValue = *pDepth;
 					XnLabel label = *pLabels;
 					XnUInt32 nColorID = label % nColors;
@@ -213,17 +194,11 @@ void DrawDepthMap(const xn::DepthMetaData& dmd, const xn::SceneMetaData& smd, ma
 
 			pDestImage += (texWidth - g_nXRes) * 3;
 		}
-	} else {
-		// printf("\t\tSCENE DRAWER - I\n");
-		xnOSMemSet(pDepthTexBuf, 0, 3 * 2 * g_nXRes * g_nYRes);
-	}
 
-	// printf("\t\tSCENE DRAWER - J\n");
 
 	glBindTexture(GL_TEXTURE_2D, depthTexID);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, texWidth, texHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, pDepthTexBuf);
 
-	// printf("\t\tSCENE DRAWER - L\n");
 	// mostra o mapa de textura OpenGL
 	glColor4f(0.75, 0.75, 0.75, 1);
 
@@ -231,7 +206,6 @@ void DrawDepthMap(const xn::DepthMetaData& dmd, const xn::SceneMetaData& smd, ma
 	DrawTexture(dmd.XRes(), dmd.YRes(), 0, 0);
 	glDisable(GL_TEXTURE_2D);
 
-	// printf("\t\tSCENE DRAWER - M\n");
 
 	char strLabel[50] = "";
 	XnUInt16 nUsers = g_UserGenerator.GetNumberOfUsers();
@@ -239,48 +213,38 @@ void DrawDepthMap(const xn::DepthMetaData& dmd, const xn::SceneMetaData& smd, ma
 
 	g_UserGenerator.GetUsers(aUsers, nUsers);
 
-	// printf("\t\tSCENE DRAWER - N\n");
 	for (int i = 0; i < nUsers; ++i) {
-		if (g_bPrintID) {
-			XnPoint3D com, comPosition;
+		XnPoint3D com, comPosition;
 
-			g_UserGenerator.GetCoM(aUsers[i], com);
-			comPosition = com;
-			g_DepthGenerator.ConvertRealWorldToProjective(1, &com, &com);
+		g_UserGenerator.GetCoM(aUsers[i], com);
+		comPosition = com;
+		g_DepthGenerator.ConvertRealWorldToProjective(1, &com, &com);
 
-			xnOSMemSet(strLabel, 0, sizeof(strLabel));
-			if (!g_bPrintState) {
-				// Rastreando
-				sprintf(strLabel, "%d", aUsers[i]);
+		xnOSMemSet(strLabel, 0, sizeof(strLabel));
+		// Nada
+		if (strlen((*users)[aUsers[i]].name) == 0) {
+			if (!(*users)[aUsers[i]].canRecognize) {
+				sprintf(strLabel, "%d - Not Recognize", aUsers[i]);
 			} else {
-				// Nada
-				if (strlen((*users)[aUsers[i]].name) == 0) {
-					if (!(*users)[aUsers[i]].canRecognize) {
-						sprintf(strLabel, "%d - Not Recognize", aUsers[i]);
-					} else {
-						sprintf(strLabel, "%d - Recognizing", aUsers[i]);
-					}
-				} else {
-					if (&com != NULL) {
-						if (strcmp((*users)[aUsers[i]].name, UNKNOWN) == 0) {
-							sprintf(strLabel, "%d - %s - (%.2lf, %.2lf, %.2lf)", aUsers[i], (*users)[aUsers[i]].name, comPosition.X, comPosition.Y,
-									comPosition.Z);
-						} else {
-							sprintf(strLabel, "%d - %s \n%f - (%.2lf, %.2lf, %.2lf)", aUsers[i], (*users)[aUsers[i]].name, (*users)[aUsers[i]].confidence, comPosition.X,
-									comPosition.Y, comPosition.Z);
-						}
-					} else {
-						sprintf(strLabel, "%d - %s\n%f", aUsers[i], (*users)[aUsers[i]].name, (*users)[aUsers[i]].confidence);
-					}
-				}
+				sprintf(strLabel, "%d - Recognizing", aUsers[i]);
 			}
-
-			glColor4f(1 - Colors[i % nColors][0], 1 - Colors[i % nColors][1], 1 - Colors[i % nColors][2], 1);
-
-			glRasterPos2i(com.X, com.Y);
-			glPrintString(GLUT_BITMAP_HELVETICA_18, strLabel);
+		} else {
+			if (&com != NULL) {
+				if (strcmp((*users)[aUsers[i]].name, UNKNOWN) == 0 || strcmp((*users)[aUsers[i]].name, OBJECT) == 0) {
+					sprintf(strLabel, "%d - %s - (%.2lf, %.2lf, %.2lf)", aUsers[i], (*users)[aUsers[i]].name, comPosition.X, comPosition.Y, comPosition.Z);
+				} else {
+					sprintf(strLabel, "%d - %s \n%f - (%.2lf, %.2lf, %.2lf)", aUsers[i], (*users)[aUsers[i]].name, (*users)[aUsers[i]].confidence, comPosition.X, comPosition.Y,
+							comPosition.Z);
+				}
+			} else {
+				sprintf(strLabel, "%d - %s\n%f", aUsers[i], (*users)[aUsers[i]].name, (*users)[aUsers[i]].confidence);
+			}
 		}
 
+		glColor4f(1 - Colors[i % nColors][0], 1 - Colors[i % nColors][1], 1 - Colors[i % nColors][2], 1);
+
+		glRasterPos2i(com.X, com.Y);
+		glPrintString(GLUT_BITMAP_HELVETICA_18, strLabel);
+
 	}
-	// printf("\t\tSCENE DRAWER - FIM\n");
 }
