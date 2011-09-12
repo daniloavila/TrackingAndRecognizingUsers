@@ -44,16 +44,9 @@ xn::ImageGenerator g_ImageGenerator;
 xn::UserGenerator g_UserGenerator;
 xn::SceneAnalyzer g_SceneAnalyzer;
 
-XnBool g_bNeedPose = FALSE;
-XnChar g_strPose[20] = "";
-XnBool g_bDrawBackground = TRUE;
-XnBool g_bDrawPixels = TRUE;
-XnBool g_bDrawSkeleton = TRUE;
-XnBool g_bPrintID = TRUE;
-XnBool g_bPrintState = TRUE;
-
 int idQueueRequest;
 int idQueueResponse;
+int idQueueComunicationJavaC;
 int faceRecId;
 
 #if (XN_PLATFORM == XN_PLATFORM_MACOSX)
@@ -61,10 +54,6 @@ int faceRecId;
 #else
 #include <GL/glut.h>
 #endif
-
-XnBool g_bPause = false;
-XnBool g_bRecord = false;
-XnBool g_bQuit = false;
 
 map<int, UserStatus> users;
 
@@ -77,6 +66,7 @@ void requestRecognition(int id);
 void saveLogNewUser(XnUserID nId);
 void saveLogUserLost(XnUserID nId);
 void glInit(int * pargc, char ** argv);
+void sendChoice(int id);
 
 /**
  * Recebe as mensagens da fila de resposta e reenvia as frames dos usuarios não reconhecidos.
@@ -114,6 +104,9 @@ void treatQueueResponse(int i) {
             if(total == 0) {
             	users[messageResponse.user_id].name = (char *) malloc(strlen(UNKNOWN) + 1);
             	strcpy(users[messageResponse.user_id].name, UNKNOWN);
+				#ifdef JAVA_INTEGRATION
+					sendChoice(messageResponse.user_id);
+				#endif
             }
 
 			if (total < ATTEMPTS_INICIAL_RECOGNITION) {
@@ -126,6 +119,10 @@ void treatQueueResponse(int i) {
 		calculateNewStatistics(&messageResponse);
 
 		choiceNewLabelToUser(&messageResponse, &users);
+
+		#ifdef JAVA_INTEGRATION
+			sendChoice(messageResponse.user_id);
+		#endif
 
 		// Calcula o total de vezes que o usuario foi reconhecido. Independentemente da resposta.
 		printf("Log - Tracker diz: Total de tentativas de reconhecimento do usuario %ld => %d\n", messageResponse.user_id, total);
@@ -191,6 +188,8 @@ void cleanupQueueAndExit() {
 
 	//matando a fila de mensagens
 	msgctl(idQueueResponse, IPC_RMID, NULL);
+	// TODO : Remover pois quem deve fazer é o java.
+//	msgctl(idQueueComunicationJavaC, IPC_RMID, NULL);
 	kill(faceRecId, SIGUSR1);
 
 	printfLogComplete(&users, stdout);
@@ -245,6 +244,7 @@ int main(int argc, char **argv) {
 
 	idQueueRequest = createMessageQueue(MESSAGE_QUEUE_REQUEST);
 	idQueueResponse = createMessageQueue(MESSAGE_QUEUE_RESPONSE);
+	idQueueComunicationJavaC = createMessageQueue(MESSAGE_QUEUE_COMUNICATION_JAVA_C);
 
 	users.clear();
 	statisticsClearAll();
@@ -391,6 +391,23 @@ void requestRecognition(int id) {
 	}
 }
 
+#ifdef JAVA_INTEGRATION
+void sendChoice(int id) {
+	MessageResponse messageResponse;
+
+	messageResponse.user_id = id;
+//	messageResponse.user_name = (char *) malloc(strlen(users[id].name) + 1);
+	strcpy(messageResponse.user_name, users[id].name);
+	messageResponse.confidence = users[id].confidence;
+
+	printf("Log - Tracker diz: Enviando escolha para o JAVA.\n");
+
+	if (msgsnd(idQueueComunicationJavaC, &messageResponse, sizeof(MessageResponse) - sizeof(long), 0) > 0) {
+		printf("Log - Tracker diz: Erro no envio de mensagem para o JAVA.\n");
+	}
+}
+#endif
+
 /**
  * Verifica se o objeto deslocou ou não da ultima vez que foi chamado e caso perceba que o usuário não está se deslocando e não está sendo reconhecido retira a sua permissão para deslocar.
  */
@@ -407,26 +424,17 @@ void verifyDeslocationObject(int userId) {
 		variacaoY = fabs((*deslocationStatus).lastPosition.Y - com.Y);
 		variacaoZ = fabs((*deslocationStatus).lastPosition.Z - com.Z);
 
-//		printf("Log - Tracker diz: - #######################\n");
-//		printf("Log - Tracker diz: - Usuário %d.\n", userId);
-//		printf("Log - Tracker diz: - Variação: X = %f - Y = %f - Z = %f.", variacaoX, variacaoY, variacaoX);
-
 		if (variacaoX < MIN_OBJECT_DESLOCATION || variacaoY < MIN_OBJECT_DESLOCATION || variacaoZ < MIN_OBJECT_DESLOCATION) {
-//			printf("IF\n");
 			(*deslocationStatus).numberTimesNotMoved = (*deslocationStatus).numberTimesNotMoved + 1;
 		} else {
-//			printf("ELSE\n");
 			(*deslocationStatus).numberTimesNotMoved = 0;
 			(*deslocationStatus).numberTimesMoved = (*deslocationStatus).numberTimesMoved + 1;
 		}
 
-		printf("Log - Tracker diz: - Numero de vezes sem locomover: %d.\n", (*deslocationStatus).numberTimesNotMoved);
-		printf("Log - Tracker diz: - Numero de vezes que se locomoveu: %d.\n", (*deslocationStatus).numberTimesMoved);
 		if ((*deslocationStatus).numberTimesNotMoved > MAX_TIMES_OF_OBJECT_NO_DESLOCATION && strlen(users[userId].name) == 0) {
 			users[userId].canRecognize = false;
 			users[userId].name = (char *) malloc(sizeof(char) * (strlen(OBJECT) + 1));
 			strcpy(users[userId].name, OBJECT);
-			printf("Log - Tracker diz: - Usuário %d não é um usuário reconhecivel ###.\n", userId);
 
 			struct tm *local;
 			time_t t;
@@ -494,12 +502,7 @@ void glutDisplay(void) {
 	xn::SceneMetaData sceneMD;
 	xn::DepthMetaData depthMD;
 
-	if (!g_bPause) {
-		// Read next available data
-		// printf("\t\t\tVAI DA PAU\n");
 		g_Context.WaitAndUpdateAll();
-		// printf("\t\t\tNAO DEU PAU\n");
-	}
 
 	// Process the data
 	g_DepthGenerator.GetMetaData(depthMD);
@@ -517,10 +520,6 @@ void glutDisplay(void) {
 }
 
 void glutIdle(void) {
-	if (g_bQuit) {
-		cleanupQueueAndExit();
-	}
-
 	// Display the frame
 	glutPostRedisplay();
 }
@@ -529,24 +528,6 @@ void glutKeyboard(unsigned char key, int x, int y) {
 	switch (key) {
 	case 27:
 		cleanupQueueAndExit();
-	case 'b':
-		// Draw background?
-		g_bDrawBackground = !g_bDrawBackground;
-		break;
-	case 'x':
-		// Draw pixels at all?
-		g_bDrawPixels = !g_bDrawPixels;
-		break;
-	case 'i':
-		// Print label?
-		g_bPrintID = !g_bPrintID;
-		break;
-	case 'l':
-		// Print ID & state as label, or only ID?
-		g_bPrintState = !g_bPrintState;
-		break;
-	case 'p':
-		g_bPause = !g_bPause;
 		break;
 	}
 }

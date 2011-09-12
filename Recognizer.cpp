@@ -114,12 +114,20 @@ int main(int argc, char** argv) {
 
 		pshm = getSharedMemory(messageRequest.memory_id, false, sharedMemoryId);
 
+		if(pshm == NULL)
+			continue;
+
 		IplImage* frame = cvCreateImage(cvSize(KINECT_HEIGHT_CAPTURE, KINECT_WIDTH_CAPTURE), IPL_DEPTH_8U, KINECT_NUMBER_OF_CHANNELS);
 		frame->imageData = pshm;
 
 		float confidence = 0.0;
 		nome = recognizeFromCamImg(frame, frontalFaceCascade, trainPersonNumMat, projectedTestFace, &confidence);
 		cvReleaseImage(&frame);
+
+//		cvNamedWindow("teste", CV_WINDOW_AUTOSIZE);
+//		cvMoveWindow("teste", 500, 500);
+//		cvShowImage("teste", frame);
+//		cvWaitKey(10);
 
 		// Verificando se nome é valido
 		if(nome != NULL && !validarNome(nome)) {

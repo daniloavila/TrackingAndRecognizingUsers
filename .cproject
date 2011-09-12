@@ -25,6 +25,8 @@
 								<option id="gnu.c.compiler.option.debugging.level.1514061823" name="Debug Level" superClass="gnu.c.compiler.option.debugging.level" value="gnu.c.debugging.level.max" valueType="enumerated"/>
 								<option id="gnu.c.compiler.option.include.paths.1586889210" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="/home/tales/workspace-eclipse-c/TrackerRecognitionUser/OpenNI"/>
+									<listOptionValue builtIn="false" value="/usr/lib/jvm/java-6-openjdk/include"/>
+									<listOptionValue builtIn="false" value="/usr/lib/jvm/java-6-openjdk/include/linux"/>
 									<listOptionValue builtIn="false" value="/usr/local/include/opencv"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.2136492395" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
@@ -34,6 +36,8 @@
 								<option id="gnu.cpp.compiler.option.debugging.level.1262792637" name="Debug Level" superClass="gnu.cpp.compiler.option.debugging.level" value="gnu.cpp.compiler.debugging.level.max" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.include.paths.597850894" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="/usr/local/include/opencv"/>
+									<listOptionValue builtIn="false" value="/usr/lib/jvm/java-6-openjdk/include/linux"/>
+									<listOptionValue builtIn="false" value="/usr/lib/jvm/java-6-openjdk/include"/>
 									<listOptionValue builtIn="false" value="/home/tales/workspace-eclipse-c/TrackerRecognitionUser/OpenNI"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.156550217" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
@@ -103,7 +107,7 @@
 								<option id="gnu.cpp.link.option.paths.1031834014" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths">
 									<listOptionValue builtIn="false" value="/home/tales/Documentos/TrackerAndRecognitionUsers/OpenNI"/>
 								</option>
-								<option id="gnu.cpp.link.option.userobjs.1042442269" name="Other objects" superClass="gnu.cpp.link.option.userobjs" valueType="userObjs"/>
+								<option id="gnu.cpp.link.option.userobjs.1042442269" name="Other objects" superClass="gnu.cpp.link.option.userobjs"/>
 								<option id="gnu.cpp.link.option.shared.14471510" name="Shared (-shared)" superClass="gnu.cpp.link.option.shared" value="false" valueType="boolean"/>
 								<option id="gnu.cpp.link.option.flags.2001433852" name="Linker flags" superClass="gnu.cpp.link.option.flags" value="-I/home/tales/Documentos/TrackerAndRecognitionUsers/OpenNI -I/usr/local/include/opencv" valueType="string"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.1623967270" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">

@@ -37,10 +37,12 @@ char *getSharedMemory(int memory_id, bool create, int *sharedMemoryId) {
 
 	if ((*sharedMemoryId = shmget(memory_id, sizeof(char) * KINECT_WIDTH_CAPTURE * KINECT_HEIGHT_CAPTURE * KINECT_NUMBER_OF_CHANNELS, flag | 0x1ff)) < 0) {
 		printf("Log - KinectUtil diz: Erro na criacao da memoria - %s\n", create ? "CREATE" : "EXCL");
+		return NULL;
 	}
 	char *maskPixels = (char*) ((shmat(*sharedMemoryId, (char*) ((0)), 0)));
 	if (maskPixels == (char*) ((-1))) {
 		printf("Log - KinectUtil diz: Erro no attach da memoria - %s\n", create ? "CREATE" : "EXCL");
+		return NULL;
 	}
 
 	if(mallocMemory) free(sharedMemoryId);
