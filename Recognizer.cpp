@@ -53,6 +53,9 @@ int loadTrainingData(CvMat ** pTrainPersonNumMat);
 int findNearestNeighbor(float * projectedTestFace, float *pConfidence);
 char* recognizeFromCamImg(IplImage *camImg, CvHaarClassifierCascade* faceCascade, CvMat * trainPersonNumMat, float * projectedTestFace, float * pointerConfidence);
 
+void lostRecognizerSignals();
+void getRecognizerSignals();
+
 /**
  * Verifica se o nome é algum dos conhecidos.
  */
@@ -64,11 +67,11 @@ bool validarNome(char *nome) {
 
 	for (it = personNames.begin(); it < personNames.end(); it++) {
 		if ((*it).compare(nome) == 0) {
-			printf("Log - Recognizer diz: A label '%s' é valida.\n", nome);
+			printLogConsole("Log - Recognizer diz: A label '%s' é valida.\n", nome);
 			return true;
 		}
 	}
-	printf("Log - Recognizer diz: A label '%s' não é valida.\n", nome);
+	printLogConsole("Log - Recognizer diz: A label '%s' não é valida.\n", nome);
 	return false;
 }
 
@@ -83,7 +86,7 @@ int main(int argc, char** argv) {
 	char* nome;
 	char *pshm;
 
-	signal(SIGUSR1, cleanup);
+	getRecognizerSignals();
 
 	// lendo os dados do treinamento
 	if (loadTrainingData(&trainPersonNumMat)) {
@@ -99,8 +102,8 @@ int main(int argc, char** argv) {
 	// lendo o classificador
 	frontalFaceCascade = (CvHaarClassifierCascade*) cvLoad(frontalFaceCascadeFilename, 0, 0, 0);
 	if (!frontalFaceCascade) {
-		printf("ERROR em recognizeFromCam(): O classificador de face em cascata nao pode ser lido em '%s'.\n", frontalFaceCascadeFilename);
-		exit(1);
+		fprintf(stderr, "ERROR em recognizeFromCam(): O classificador de face em cascata nao pode ser lido em '%s'.\n", frontalFaceCascadeFilename);
+		exit(EXIT_FAILURE);
 	}
 
 	idQueueRequest = getMessageQueue(MESSAGE_QUEUE_REQUEST);
@@ -110,7 +113,7 @@ int main(int argc, char** argv) {
 
 	while (1) {
 		msgrcv(idQueueRequest, &messageRequest, sizeof(MessageRequest) - sizeof(long), 0, 0);
-		printf("Log - Recognizer diz: Recebi pedido de reconhecimento. user_id = %ld e id_memoria = %x\n", messageRequest.user_id, messageRequest.memory_id);
+		printLogConsole("Log - Recognizer diz: Recebi pedido de reconhecimento. user_id = %ld e id_memoria = %x\n", messageRequest.user_id, messageRequest.memory_id);
 
 		pshm = getSharedMemory(messageRequest.memory_id, false, sharedMemoryId);
 
@@ -145,13 +148,13 @@ int main(int argc, char** argv) {
 		if (nome != NULL) {
 			strcpy(messageResponse.user_name, nome);
 		} else {
-			messageResponse.user_name[0] = NULL;
+			messageResponse.user_name[0] = '\0';
 		}
 
-		printf("Log - Recognizer diz: Enviando mensagem de usuario reconhecido. user_id = %ld e nome = '%s'\n", messageRequest.user_id, nome);
+		printLogConsole("Log - Recognizer diz: Enviando mensagem de usuario reconhecido. user_id = %ld e nome = '%s'\n", messageRequest.user_id, nome);
 
 		if (msgsnd(idQueueResponse, &messageResponse, sizeof(MessageResponse) - sizeof(long), 0) > 0) {
-			printf("Erro no envio de mensagem para o usuario\n");
+			fprintf(stderr, "Erro no envio de mensagem para o usuario\n");
 		}
 
 
@@ -169,7 +172,7 @@ int loadTrainingData(CvMat ** pTrainPersonNumMat) {
 
 	fileStorage = cvOpenFileStorage("Eigenfaces/facedata.xml", 0, CV_STORAGE_READ);
 	if (!fileStorage) {
-		printf("O arquivo de dados para treino facedata.xml nao pode ser aberto.\n");
+		fprintf(stderr, "O arquivo de dados para treino facedata.xml nao pode ser aberto.\n");
 		return 0;
 	}
 
@@ -177,7 +180,7 @@ int loadTrainingData(CvMat ** pTrainPersonNumMat) {
 	personNames.clear(); // tendo certeza que ele comece vazio
 	nPersons = cvReadIntByName(fileStorage, 0, "nPersons", 0);
 	if (nPersons == 0) {
-		printf("Nenhuma pessoa encontrada nos dados de treinamento do facedata.xml.\n");
+		fprintf(stderr, "Nenhuma pessoa encontrada nos dados de treinamento do facedata.xml.\n");
 		return 0;
 	}
 	// lendo o nome de cada pessoa
@@ -205,15 +208,15 @@ int loadTrainingData(CvMat ** pTrainPersonNumMat) {
 
 	cvReleaseFileStorage(&fileStorage);
 
-	printf("Training data loaded (%d training images of %d people):\n", nTrainFaces, nPersons);
-	printf("Dados de treino lidos (%d imagens de treinamento de %d pessoas):\n", nTrainFaces, nPersons);
-	printf("Pessoas: ");
+	printLogConsole("Training data loaded (%d training images of %d people):\n", nTrainFaces, nPersons);
+	printLogConsole("Dados de treino lidos (%d imagens de treinamento de %d pessoas):\n", nTrainFaces, nPersons);
+	printLogConsole("Pessoas: ");
 	if (nPersons > 0)
-		printf("<%s>", personNames[0].c_str());
+		printLogConsole("<%s>", personNames[0].c_str());
 	for (i = 1; i < nPersons; i++) {
-		printf(", <%s>", personNames[i].c_str());
+		printLogConsole(", <%s>", personNames[i].c_str());
 	}
-	printf(".\n");
+	printLogConsole(".\n");
 
 	return 1;
 }
@@ -299,8 +302,8 @@ char* recognizeFromCamImg(IplImage *camImg, CvHaarClassifierCascade* faceCascade
 	float confidence;
 
 	if (!camImg) {
-		printf("ERROR em recognizeFromCam(): Imagem de entrada ruim!\n");
-		exit(1);
+		fprintf(stderr, "ERROR em recognizeFromCam(): Imagem de entrada ruim!\n");
+		exit(EXIT_FAILURE);
 	}
 
 	// convert a imagem para escala de cinza
@@ -321,8 +324,8 @@ char* recognizeFromCamImg(IplImage *camImg, CvHaarClassifierCascade* faceCascade
 		cvEqualizeHist(sizedImg, equalizedImg);
 		processedFaceImg = equalizedImg;
 		if (!processedFaceImg) {
-			printf("ERROR em recognizeFromCam(): Nao ha imagem de entrada!\n");
-			exit(1);
+			fprintf(stderr, "ERROR em recognizeFromCam(): Nao ha imagem de entrada!\n");
+			exit(EXIT_FAILURE);
 		}
 
 		// liberando espaco
@@ -350,7 +353,7 @@ char* recognizeFromCamImg(IplImage *camImg, CvHaarClassifierCascade* faceCascade
 				return (char*) personNames[nearest - 1].c_str();
 			else {
 				*pointerConfidence = 0.0;
-				return UNKNOWN;
+				return (char *) UNKNOWN;
 			}
 		}
 
@@ -362,7 +365,38 @@ char* recognizeFromCamImg(IplImage *camImg, CvHaarClassifierCascade* faceCascade
 	return NULL;
 }
 
+void getRecognizerSignals() {
+	// reinicia o processo
+	signal(SIGILL, SIG_DFL);
+	signal(SIGTRAP, SIG_DFL);
+	signal(SIGABRT, SIG_DFL);
+	signal(SIGSEGV, SIG_DFL);
+	signal(SIGSYS, SIG_DFL);
+
+	// ignora
+	signal(SIGINT, SIG_IGN);
+	signal(SIGQUIT, SIG_IGN);
+	signal(SIGKILL, SIG_IGN);
+	signal(SIGTERM, SIG_IGN);
+
+	// trata o sinal do tracker
+	signal(SIGUSR1, cleanup);
+}
+
+void lostRecognizerSignals() {
+	signal(SIGINT, SIG_IGN);
+	signal(SIGQUIT, SIG_IGN);
+	signal(SIGILL, SIG_IGN);
+	signal(SIGTRAP, SIG_IGN);
+	signal(SIGABRT, SIG_IGN);
+	signal(SIGKILL, SIG_IGN);
+	signal(SIGSEGV, SIG_IGN);
+	signal(SIGTERM, SIG_IGN);
+	signal(SIGSYS, SIG_IGN);
+}
+
 void cleanup(int i){
+	lostRecognizerSignals();
 	MessageRequest messageRequest;
 	int sharedMemoryId;
 
@@ -373,6 +407,5 @@ void cleanup(int i){
 
 	msgctl(idQueueRequest, IPC_RMID, NULL);
 
-	exit(1);
-			
+	exit(EXIT_SUCCESS);
 }

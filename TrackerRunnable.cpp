@@ -18,30 +18,47 @@
 
 using namespace std;
 
-int idQueueRequest;
-int idQueueResponse;
-int faceRecId;
+//#define CLASS_NAME "TrackerRunnable"
+//#define METHOD_NAME "registerUser"
+//#define METHOD_SIGNATURE "(ILjava/lang/String;F)V"
 
-map<int, UserStatus> users;
+#define CLASS_NAME "br/unb/unbiquitous/ubiquitos/uos/driver/UserDriver"
+#define METHOD_NAME "registerUser"
+#define METHOD_SIGNATURE "(ILjava/lang/String;F)V"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+void lostTrackerRunnalbeSignals();
+void getTrackerRunnalbeSignals();
+
+int idQueueComunicationJavaC = 0;
+int trackerId = 0;
+
+// TODO : Tales - 10/09/2011 - Metodo não é chamado quando mata o processo java. Verificar o que acontece com os sinais.
+void cleanupQueue(int signal) {
+	lostTrackerRunnalbeSignals();
+	printLogConsole("Siganal TrackerRunnable - %d\n", signal);
+	msgctl(idQueueComunicationJavaC, IPC_RMID, NULL);
+	kill(trackerId, signal);
+}
+
 /*
- * Class:     TrackerRunnable
+ * Class:     br_unb_unbiquitous_ubiquitos_uos_driver_UserDriver_TrackerRunnale
  * Method:    doTracker
  * Signature: ()V
  */
-void JNICALL Java_TrackerRunnable_doTracker
+void JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriver_00024TrackerRunnable_doTracker
 (JNIEnv * env, jobject obj) {
-	printf("Init Tracker Comunication...\n");
+	printLogConsole("Init Tracker Comunication...\n");
 
-	int idQueueComunicationJavaC = createMessageQueue(MESSAGE_QUEUE_COMUNICATION_JAVA_C);
+	idQueueComunicationJavaC = createMessageQueue(MESSAGE_QUEUE_COMUNICATION_JAVA_C);
 
 	//criando um processo filho. Este processo sera transformado do deamon utilizando o execl
-	int trackerId = fork();
+	trackerId = fork();
 	if (trackerId < 0) {
-		printf("erro no fork\n");
+		fprintf(stderr, "Erro na criação do Tracker através do fork\n");
 		exit(1);
 	}
 
@@ -52,28 +69,63 @@ void JNICALL Java_TrackerRunnable_doTracker
 
 	while (1) {
 		MessageResponse messageResponse;
-		printf("\n+++++++++++> Esperando escolha.\n");
+		printLogConsole("+++++++++++> Esperando escolha.\n");
 		msgrcv(idQueueComunicationJavaC, &messageResponse, sizeof(MessageResponse) - sizeof(long), 0, 0);
-		printf("\n+++++++++++> %s\n\n", messageResponse.user_name);
+		printLogConsole("+++++++++++> %s\n\n", messageResponse.user_name);
 
 		jmethodID mid;
 
-		jclass trackerRunnableClass = (env)->FindClass("TrackerRunnable");
+		jclass trackerRunnableClass = (env)->FindClass(CLASS_NAME);
 		if (trackerRunnableClass == NULL) {
-			printf("Não encontrou a classe.\n"); /* error handling */
+			fprintf(stderr, "Não encontrou a classe %s.\n", CLASS_NAME); /* error handling */
 		}
 
-		mid = (env)->GetMethodID(trackerRunnableClass, "registerUser", "(ILjava/lang/String;F)V");
+		mid = (env)->GetStaticMethodID(trackerRunnableClass, METHOD_NAME, METHOD_SIGNATURE);
 		if (mid == NULL) {
-			printf("Não encontrou o metodo.\n"); /* error handling */
+			fprintf(stderr, "Não encontrou o metodo %s %s.\n", METHOD_NAME, METHOD_SIGNATURE); /* error handling */
 		}
 
 		jstring name = (env)->NewStringUTF(messageResponse.user_name);
 
-		(env)->CallVoidMethod(obj, mid, messageResponse.user_id, name, messageResponse.confidence);
+		(env)->CallStaticVoidMethod(trackerRunnableClass, mid, messageResponse.user_id, name, messageResponse.confidence);
+		//(env)->CallVoidMethod(obj, mid, messageResponse.user_id, name, messageResponse.confidence);
 	}
 
-	printf("FIM Tracker");
+	printLogConsole("FIM Tracker");
+}
+
+/*
+ * Class:     br_unb_unbiquitous_ubiquitos_uos_driver_UserDriver
+ * Method:    stopTracker
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriver_stopTracker
+  (JNIEnv *, jobject) {
+	cleanupQueue(SIGINT);
+}
+
+void getTrackerRunnalbeSignals() {
+	signal(SIGINT, cleanupQueue);
+	signal(SIGQUIT, cleanupQueue);
+	signal(SIGILL, cleanupQueue);
+	signal(SIGTRAP, cleanupQueue);
+	signal(SIGABRT, cleanupQueue);
+	signal(SIGKILL, cleanupQueue);
+	signal(SIGSEGV, cleanupQueue);
+	signal(SIGTERM, cleanupQueue);
+	signal(SIGSYS, cleanupQueue);
+}
+
+void lostTrackerRunnalbeSignals() {
+	signal(SIGINT, SIG_IGN);
+	signal(SIGQUIT, SIG_IGN);
+	signal(SIGILL, SIG_IGN);
+	signal(SIGTRAP, SIG_IGN);
+	signal(SIGABRT, SIG_IGN);
+	signal(SIGKILL, SIG_IGN);
+	signal(SIGSEGV, SIG_IGN);
+	signal(SIGTERM, SIG_IGN);
+	signal(SIGSYS, SIG_IGN);
 }
 
 #ifdef __cplusplus

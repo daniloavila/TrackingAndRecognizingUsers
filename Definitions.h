@@ -1,37 +1,32 @@
 #ifndef DEFINITIONS_H_
 #define DEFINITIONS_H_
 
-// Definida para utilizar distancia mahalanobis em vez de euclidiana, pode-se obter melhores resultados
-#define USE_MAHALANOBIS_DISTANCE
+#define USE_MAHALANOBIS_DISTANCE // Define o uso da distancia mahalanobis para auxiliar a euclidiana
+
+#define JAVA_INTEGRATION // Define se será ou não enviado mensagens para o processo java.
+
+//#define DEBUG // Define se será ou não mostrado no console informações de log.
+
+//#define SAVE_LOG // Define se será salvo um log sobre os usuários encontrados.
 
 
 /*********************************
-****** Register parameters ******
-*********************************/
+ ****** Register parameters ******
+ *********************************/
 #define NUMBER_OF_SAVED_FACES_FRONTAL 6
 #define NUMBER_OF_SAVED_FACES_RIGHT 2
 #define NUMBER_OF_SAVED_FACES_LEFT 2
 
-#define NUMBER_OF_ROTATE_IMAGES 1
-#define NUMBER_OF_FLIP_IMAGES 1
-#define NUMBER_OF_NOISE_IMAGES 1
-
-#define MAX_ANGLE_OF_ROTATE 10
-
-// vai de 0 a 255 e quanto menor mais ruído.
-#define LEVEL_OF_NOISE_IMAGES 50
-
 /*********************************
-****** Tracker parameters ******
-*********************************/
+ ****** Tracker parameters ******
+ *********************************/
 #define GL_WIN_SIZE_X 720
 #define GL_WIN_SIZE_Y 480
 
 //intervalo em milisegundos definido como tempo de espera para que a funcao de tratar a resposta do recognition
 //e que faz reconhecimento dos usarios ja reocnhecidos novamente
-#define INTERVAL_IN_MILISECONDS_TREAT_RESPONSE 500
-#define INTERVAL_IN_MILISECONDS_RECHECK 5000
-
+#define INTERVAL_IN_MILISECONDS_TREAT_RESPONSE 500 // 0.5 segundos
+#define INTERVAL_IN_MILISECONDS_RECHECK 5000 // 5 segundos
 //numero de frames capturadas do usario ao ser rastreado pela primeira vez
 #define ATTEMPTS_INICIAL_RECOGNITION 20
 
@@ -50,11 +45,23 @@
 //valor que o pixel da area expandida do usuario recebe
 #define ADJUSTED 999
 
+// Avalia os erros do Kinect
 #define CHECK_RC(nRetVal, what) \
 	if (nRetVal != XN_STATUS_OK){\
-		printf("%s failed: %s\n", what, xnGetStatusString(nRetVal));\
+		fprintf(stderr, "%s failed: %s\n", what, xnGetStatusString(nRetVal));\
 		return nRetVal; \
 	}
+
+// Ajuda no debug da aplicação
+#ifdef DEBUG
+	#define printLogConsole(...) \
+		do { \
+			/* printf("%s:%d:%s(): ", __FILE__, __LINE__, __func__); */ \
+			printf(__VA_ARGS__); \
+		} while (0)
+#else
+	#define printLogConsole(...)
+#endif
 
 // Message parameters
 // key da fila de messagens entre "UserTracker" e "FaceRec". Utilizada para enviar requisicoes de reconhecimento ao "FaceRec".
@@ -98,7 +105,5 @@ typedef struct UserStatus {
 	// bool canShow; // Pode mostrar a sua label. TODO: Será usado posteriomente
 	DeslocationStatus deslocationStatus;
 } UserStatus;
-
-#define JAVA_INTEGRATION
 
 #endif

@@ -147,26 +147,26 @@ void choiceNewLabelToUser(MessageResponse *messageResponse, map<int, UserStatus>
 			break;
 		} else {
 			name = "";
-			printf("Log - StatisticsUtil diz: Verificou que existe outro usuário no com a mesma label.\n");
+			printLogConsole("Log - StatisticsUtil diz: Verificou que existe outro usuário no com a mesma label.\n");
 			listNameOrdered.pop_front();
 		}
 	}
+
+	if ((*users)[messageResponse->user_id].name != NULL)
+			free((*users)[messageResponse->user_id].name);
 
 	if (name.length() > 0) {
 		(*users)[messageResponse->user_id].name = (char*) (malloc(sizeof(char) * name.size()));
 		strcpy((*users)[messageResponse->user_id].name, name.c_str());
 		(*users)[messageResponse->user_id].confidence = confidence;
 	} else {
-		if ((*users)[messageResponse->user_id].name != NULL
-		)
-			free((*users)[messageResponse->user_id].name);
 		(*users)[messageResponse->user_id].name = NULL;
 		(*users)[messageResponse->user_id].confidence = confidence;
 	}
 
-	printf("Log - StatisticsUtil diz: Nome => '%s' - Tentativas => %d - Confiança => %f\n", messageResponse->user_name, (*nameAttempts)[messageResponse->user_name],
+	printLogConsole("Log - StatisticsUtil diz: Nome => '%s' - Tentativas => %d - Confiança => %f\n", messageResponse->user_name, (*nameAttempts)[messageResponse->user_name],
 			(*nameConfidence)[messageResponse->user_name]);
-	printf("Log - StatisticsUtil diz: A label escolhida foi '%s' com o índice de confiança igual a %f\n", (*users)[messageResponse->user_id].name,
+	printLogConsole("Log - StatisticsUtil diz: A label escolhida foi '%s' com o índice de confiança igual a %f\n", (*users)[messageResponse->user_id].name,
 			(*users)[messageResponse->user_id].confidence);
 }
 

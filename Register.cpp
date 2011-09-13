@@ -62,7 +62,7 @@ int main(int argc, char** argv) {
 	printf("register\n");
 
 	if (argc >= 2 && strcmp(argv[1], "train") == 0) {
-		learn("Eigenfaces/train.txt");
+		learn((char *) "Eigenfaces/train.txt");
 	} else {
 		recognizeFromCam();
 	}
@@ -426,7 +426,7 @@ CvMat* retrainOnline(void) {
 	cvFree( &projectedTrainFaceMat);
 
 	printf("Retreino com a nova pessoa ...\n");
-	learn("Eigenfaces/train.txt");
+	learn((char *) "Eigenfaces/train.txt");
 	printf("Retrinamento completo.\n");
 
 	if (!loadTrainingData(&trainPersonNumMat)) {
@@ -469,77 +469,6 @@ IplImage* getCameraFrame(void) {
 		//return NULL;
 	}
 	return frame;
-}
-
-int saveRotateImages(int personId, char *newPersonName, int numberOfSavedFaces) {
-	printf("Imagens Rotacionadas...\n");
-	for (int i = 1; i <= NUMBER_OF_ROTATE_IMAGES; i++) {
-		char cstrRotate[256], cstr[256];
-		IplImage *processedFaceImg;
-
-		int personFace = rand() % numberOfSavedFaces;
-		sprintf(cstr, "Eigenfaces/data/%d_%s%d.pgm", personId, newPersonName, personFace);
-		processedFaceImg = cvLoadImage(cstr);
-		int randNumber = rand();
-		int angle = randNumber % MAX_ANGLE_OF_ROTATE;
-		int signedAngle = randNumber % 2;
-		if (signedAngle == 1) {
-			angle = angle * -1;
-		}
-		IplImage rotateFaceImg = rotateImage(processedFaceImg, (double) angle);
-		sprintf(cstrRotate, "Eigenfaces/data/%d_%s%d.pgm", personId, newPersonName, numberOfSavedFaces + i);
-		printf("Armazecando a face corrente de '%s' na imagem '%s'.\n", newPersonName, cstrRotate);
-		cvSaveImage(cstrRotate, &rotateFaceImg, NULL);
-	}
-
-	return NUMBER_OF_ROTATE_IMAGES;
-}
-
-int saveFlipImages(int personId, char *newPersonName, int numberOfSavedFaces) {
-	printf("Imagens espelhadas...\n");
-	for (int i = 1; i <= NUMBER_OF_FLIP_IMAGES; i++) {
-		char cstrFlip[256], cstr[256];
-		IplImage *processedFaceImg;
-
-		int personFace = rand() % numberOfSavedFaces;
-
-		sprintf(cstr, "Eigenfaces/data/%d_%s%d.pgm", personId, newPersonName, personFace);
-		processedFaceImg = cvLoadImage(cstr);
-
-		sprintf(cstrFlip, "Eigenfaces/data/%d_%s%d.pgm", personId, newPersonName, numberOfSavedFaces + i);
-		printf("Armazecando a face corrente de '%s' na imagem '%s'.\n", newPersonName, cstrFlip);
-
-		Mat source(processedFaceImg, false);
-		flip(source, source, 1);
-		IplImage rotateImage = IplImage(source);
-		cvSaveImage(cstrFlip, &rotateImage, NULL);
-	}
-
-	return NUMBER_OF_FLIP_IMAGES;
-}
-
-int saveNoiseImages(int personId, char *newPersonName, int numberOfSavedFaces) {
-	printf("Imagens com ruido...\n");
-	for (int i = 1; i <= NUMBER_OF_NOISE_IMAGES; i++) {
-		char cstrNoise[256], cstr[256];
-		IplImage *processedFaceImg;
-
-		int personFace = rand() % numberOfSavedFaces;
-		sprintf(cstr, "Eigenfaces/data/%d_%s%d.pgm", personId, newPersonName, personFace);
-		processedFaceImg = cvLoadImage(cstr);
-
-		sprintf(cstrNoise, "Eigenfaces/data/%d_%s%d.pgm", personId, newPersonName, numberOfSavedFaces + i);
-		printf("Armazecando a face corrente de '%s' na imagem '%s'.\n", newPersonName, cstrNoise);
-
-		IplImage *noiseFaceImg = generateNoiseImage(processedFaceImg, LEVEL_OF_NOISE_IMAGES);
-		if(noiseFaceImg == NULL) {
-			i--;
-			continue;
-		}
-		cvSaveImage(cstrNoise, noiseFaceImg, NULL);
-	}
-
-	return NUMBER_OF_NOISE_IMAGES;
 }
 
 // reconhece a pessoa na camera continuamente
@@ -714,12 +643,8 @@ void recognizeFromCam(void) {
 
 					newPersonFaces++;
 				} else if (newPersonFaces == NUMBER_OF_SAVED_FACES_FRONTAL + NUMBER_OF_SAVED_FACES_LEFT + NUMBER_OF_SAVED_FACES_RIGHT) {
-
-					// newPersonFaces = newPersonFaces + saveFlipImages(nPersons + 1, newPersonName, newPersonFaces);
-					// newPersonFaces = newPersonFaces + saveNoiseImages(nPersons + 1, newPersonName, newPersonFaces);
-					// newPersonFaces = newPersonFaces + saveRotateImages(nPersons + 1, newPersonName, newPersonFaces);
-
 					printf("Pressione 't' para re-treinar.\n");
+					newPersonFaces =+ 1;
 					fflush(stdout);
 				}
 

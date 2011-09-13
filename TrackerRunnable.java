@@ -1,6 +1,6 @@
 public class TrackerRunnable implements Runnable{
 
-	private native void doTracker();
+	
 	
 	static {
 		System.loadLibrary("TrackerRunnable");
@@ -8,7 +8,7 @@ public class TrackerRunnable implements Runnable{
 
 	// TODO : remover
 	public static void main(String[] args) {
-		new TrackerRunnable().doTracker();
+		//new TrackerRunnable().doTracker();
 	}
 
 	private void registerUser(int id, String name, float confidence) {
@@ -18,7 +18,10 @@ public class TrackerRunnable implements Runnable{
 
 	@Override
 	public void run() {
-		doTracker();
+	}
+
+	private class Run{
+		private native void doTracker();
 	}
 
 }
