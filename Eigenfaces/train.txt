@@ -421,3 +421,13 @@
 43 Estevao Eigenfaces/data/43_Estevao8.pgm
 43 Estevao Eigenfaces/data/43_Estevao9.pgm
 43 Estevao Eigenfaces/data/43_Estevao10.pgm
+44 Mauro Eigenfaces/data/44_Mauro1.pgm
+44 Mauro Eigenfaces/data/44_Mauro2.pgm
+44 Mauro Eigenfaces/data/44_Mauro3.pgm
+44 Mauro Eigenfaces/data/44_Mauro4.pgm
+44 Mauro Eigenfaces/data/44_Mauro5.pgm
+44 Mauro Eigenfaces/data/44_Mauro6.pgm
+44 Mauro Eigenfaces/data/44_Mauro7.pgm
+44 Mauro Eigenfaces/data/44_Mauro8.pgm
+44 Mauro Eigenfaces/data/44_Mauro9.pgm
+44 Mauro Eigenfaces/data/44_Mauro10.pgm
