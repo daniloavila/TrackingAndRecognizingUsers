@@ -1,4 +1,4 @@
-Reconhecedor e localizador de usuários em tempo real dentro de um SmartSpace.
+TRUE - Tracker and Recoginizer Users in Environment
 =============
 
 **Autores: Danilo Ávila e Tales Porto**
