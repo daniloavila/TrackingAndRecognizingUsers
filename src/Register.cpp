@@ -517,6 +517,7 @@ void recognizeFromCam(void) {
 		exit(1);
 	}
 
+	bool train = false;
 	while (1) {
 		int iNearest, nearest = 0, truth;
 		IplImage *camImg;
@@ -537,6 +538,9 @@ void recognizeFromCam(void) {
 
 		if (keyPressed == VK_ESCAPE) { // veririfica se o usario entrou com ESC
 			break; 
+		}else if(train) {
+			keyPressed = 't';
+			train = false;
 		}
 		switch (keyPressed) {
 			case 'n': // adiciona uma nova pessoa no cenario de treino
@@ -621,12 +625,12 @@ void recognizeFromCam(void) {
 						nearest = trainPersonNumMat->data.i[iNearest];
 				} 
 
-				if (newPersonFaces == NUMBER_OF_SAVED_FACES_FRONTAL) {
+				if (saveNextFaces && newPersonFaces == NUMBER_OF_SAVED_FACES_FRONTAL) {
 					printf("Movimente a cabeça levemente para a esquerda e tecle Enter.\n");
 					fflush(stdin);
 					fflush(stdout);
 					getchar();
-				} else if (newPersonFaces == NUMBER_OF_SAVED_FACES_FRONTAL + NUMBER_OF_SAVED_FACES_LEFT) {
+				} else if (saveNextFaces && newPersonFaces == NUMBER_OF_SAVED_FACES_FRONTAL + NUMBER_OF_SAVED_FACES_LEFT) {
 					printf("Movimente a cabeça levemente para a direita e tecle Enter.\n");
 					fflush(stdin);
 					fflush(stdout);
@@ -640,12 +644,10 @@ void recognizeFromCam(void) {
 					sprintf(cstr, "Eigenfaces/data/%d_%s%d.pgm", nPersons + 1, newPersonName, newPersonFaces + 1);
 					printf("Armazenando a face corrente de '%s' na imagem '%s'.\n", newPersonName, cstr);
 					cvSaveImage(cstr, processedFaceImg, NULL);
-
 					newPersonFaces++;
 				} else if (newPersonFaces == NUMBER_OF_SAVED_FACES_FRONTAL + NUMBER_OF_SAVED_FACES_LEFT + NUMBER_OF_SAVED_FACES_RIGHT) {
-					printf("Pressione 't' para re-treinar.\n");
-					newPersonFaces =+ 1;
-					fflush(stdout);
+					train = true;
+					saveNextFaces = false;
 				}
 
 				// libera os recursos
