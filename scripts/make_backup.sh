@@ -1,4 +1,4 @@
-if [$1 =  '']; then
+if [ -z "$1" ]; then
 	echo 'passe o numero da nova versão como parâmetro'
 else
 	cd ../Eigenfaces/

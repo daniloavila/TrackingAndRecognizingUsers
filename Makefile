@@ -1,6 +1,9 @@
 OSTYPE := $(shell uname -s)
 
-INC_DIRS = -IOpenNI/
+INC_DIRS = -Iinclude/OpenNI/
+RELEASE_DIR = bin/
+SRC = src/
+LIB_DIR = lib/
 
 CC = g++
 
@@ -14,21 +17,20 @@ USED_LIBS += -lOpenNI
 EXE_TRACKER = tracker
 EXE_REC = recognizer
 EXE_REG = register
-RELEASE_DIR = Release/
 
 ifeq ("$(OSTYPE)","Darwin")
 	CCFLAGS += -arch x86_64
 	LDFLAGS += -framework OpenGL -framework GLUT `pkg-config --cflags opencv` `pkg-config --libs opencv`
 	CCFLAGS2 += -arch x86_64
 	SO_LINK += -I/System/Library/Java/JavaVirtualMachines/1.6.0.jdk/Contents/Home/include 
-	EXE_LIB = libTrackerRunnable.dylib
+	EXE_LIB = $(LIB_DIR)libTrackerRunnable.dylib
 	DYNAMIC_LINK += -dynamiclib -Wl,-dylib_install_name,TrackerRunnable
 else
 	USED_LIBS += -lglut -lglib-2.0 -lcv -lcxcore 
 	INC_DIRS += -I/usr/local/include/opencv 
 	LDFLAGS += `pkg-config --cflags opencv` `pkg-config --libs opencv`
 	SO_LINK += -I/usr/lib/jvm/java-6-openjdk/include -I/usr/lib/jvm/java-6-openjdk/include/linux
-	EXE_LIB = libTrackerRunnable.so
+	EXE_LIB = $(LIB_DIR)libTrackerRunnable.so
 	DYNAMIC_LINK += -shared -Wl,-soname,TrackerRunnable
 endif
 
@@ -41,25 +43,28 @@ all: $(OBJS)
 	$(CC) $(DYNAMIC_LINK) -o $(EXE_LIB) $(RELEASE_DIR)MessageQueue.o $(RELEASE_DIR)TrackerRunnable.o $(CCFLAGS2) $(USED_LIBS) $(LDFLAGS)
 
 $(RELEASE_DIR)ImageUtil.o: 
-	$(CC) $(CCFLAGS) $(INC_DIRS) -o $(RELEASE_DIR)ImageUtil.o ImageUtil.cpp
+	$(CC) $(CCFLAGS) $(INC_DIRS) -o $(RELEASE_DIR)ImageUtil.o $(SRC)ImageUtil.cpp
 $(RELEASE_DIR)KeyboardUtil.o:
-	$(CC) $(CCFLAGS) $(INC_DIRS) -o $(RELEASE_DIR)KeyboardUtil.o KeyboardUtil.cpp
+	$(CC) $(CCFLAGS) $(INC_DIRS) -o $(RELEASE_DIR)KeyboardUtil.o $(SRC)KeyboardUtil.cpp
 $(RELEASE_DIR)KinectUtil.o: 
-	$(CC) $(CCFLAGS) $(INC_DIRS) -o $(RELEASE_DIR)KinectUtil.o KinectUtil.cpp
+	$(CC) $(CCFLAGS) $(INC_DIRS) -o $(RELEASE_DIR)KinectUtil.o $(SRC)KinectUtil.cpp
 $(RELEASE_DIR)MessageQueue.o: $(RELEASE_DIR)KinectUtil.o
-	$(CC) $(CCFLAGS) $(INC_DIRS) -o $(RELEASE_DIR)MessageQueue.o MessageQueue.cpp
+	$(CC) $(CCFLAGS) $(INC_DIRS) -o $(RELEASE_DIR)MessageQueue.o $(SRC)MessageQueue.cpp
 $(RELEASE_DIR)SceneDrawer.o:
-	$(CC) $(CCFLAGS) $(INC_DIRS) -o $(RELEASE_DIR)SceneDrawer.o SceneDrawer.cpp
+	$(CC) $(CCFLAGS) $(INC_DIRS) -o $(RELEASE_DIR)SceneDrawer.o $(SRC)SceneDrawer.cpp
 $(RELEASE_DIR)StatisticsUtil.o: $(RELEASE_DIR)MessageQueue.o
-	$(CC) $(CCFLAGS) $(INC_DIRS) -o $(RELEASE_DIR)StatisticsUtil.o StatisticsUtil.cpp	
+	$(CC) $(CCFLAGS) $(INC_DIRS) -o $(RELEASE_DIR)StatisticsUtil.o $(SRC)StatisticsUtil.cpp	
 $(RELEASE_DIR)Recognizer.o: $(RELEASE_DIR)ImageUtil.o  $(RELEASE_DIR)KinectUtil.o $(RELEASE_DIR)MessageQueue.o
-	$(CC) $(CCFLAGS) $(INC_DIRS) -o $(RELEASE_DIR)Recognizer.o Recognizer.cpp
+	$(CC) $(CCFLAGS) $(INC_DIRS) -o $(RELEASE_DIR)Recognizer.o $(SRC)Recognizer.cpp
 $(RELEASE_DIR)Tracker.o: $(RELEASE_DIR)KeyboardUtil.o $(RELEASE_DIR)KinectUtil.o $(RELEASE_DIR)MessageQueue.o $(RELEASE_DIR)SceneDrawer.o $(RELEASE_DIR)StatisticsUtil.o
-	$(CC) $(CCFLAGS) $(INC_DIRS) -o $(RELEASE_DIR)Tracker.o Tracker.cpp
+	$(CC) $(CCFLAGS) $(INC_DIRS) -o $(RELEASE_DIR)Tracker.o $(SRC)Tracker.cpp
 $(RELEASE_DIR)Register.o: $(RELEASE_DIR)ImageUtil.o  $(RELEASE_DIR)KinectUtil.o $(RELEASE_DIR)MessageQueue.o
-	$(CC) $(CCFLAGS) $(INC_DIRS) -o $(RELEASE_DIR)Register.o Register.cpp
+	$(CC) $(CCFLAGS) $(INC_DIRS) -o $(RELEASE_DIR)Register.o $(SRC)Register.cpp
 $(RELEASE_DIR)TrackerRunnable.o: $(RELEASE_DIR)MessageQueue.o
-	$(CC) $(CCFLAGS) $(INC_DIRS) $(SO_LINK) -o $(RELEASE_DIR)TrackerRunnable.o TrackerRunnable.cpp
+	$(CC) $(CCFLAGS) $(INC_DIRS) $(SO_LINK) -o $(RELEASE_DIR)TrackerRunnable.o $(SRC)TrackerRunnable.cpp
 
 clean: 
 	rm -rf $(RELEASE_DIR)*.o $(EXE_TRACKER) $(EXE_REC) $(EXE_REG) $(EXE_LIB)
+
+install:
+	
