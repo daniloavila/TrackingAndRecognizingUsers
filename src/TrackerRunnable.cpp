@@ -102,7 +102,7 @@ void JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriver_00024Tracke
 		jstring name = (env)->NewStringUTF(messageEvents.user_name);
 
 		jstring last_name = NULL;
-		if(messageEvents.last_name != NULL)
+		if(strlen(messageEvents.last_name) > 0)
 			last_name = (env)->NewStringUTF(messageEvents.last_name);
 
 		if (messageEvents.type == NEW_USER) {

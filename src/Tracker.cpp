@@ -137,7 +137,10 @@ void treatQueueResponse(int i) {
 		choiceNewLabelToUser(&messageResponse, &users);
 
 		#ifdef JAVA_INTEGRATION
-			if(total == 0 && strcmp(messageResponse.user_name, UNKNOWN) != 0){
+			char my_unkwown[255];
+			sprintf(my_unkwown, "%s_%d", UNKNOWN, messageResponse.user_id);
+
+			if(total == 0 && strcmp(messageResponse.user_name, my_unkwown) != 0){
 				sendChoice(messageResponse.user_id, NEW_USER, NULL);
 			}else{
 				sendChoice(messageResponse.user_id, RECHECK, last_name);
@@ -205,7 +208,7 @@ void XN_CALLBACK_TYPE registerLostUser(xn::UserGenerator& generator, XnUserID nI
 	#endif
 
 	#ifdef JAVA_INTEGRATION
-		if(users[nId].name != NULL && strlen(users[nId].name) > 0)
+		if(users[nId].name != NULL && strlen(users[nId].name) > 0 && strcmp(users[nId].name, "Object") != 0)
 			sendChoice(nId, LOST_USER, NULL);
 	#endif
 
@@ -479,6 +482,8 @@ void sendChoice(int id, MessageType type,char *last_name) {
 	
 	if(last_name != NULL && strlen(last_name) == 0) {
 		strcpy(messageEvent.last_name, last_name);
+	} else {
+		strcpy(messageEvent.last_name, "");
 	}
 
 	messageEvent.type = type;
