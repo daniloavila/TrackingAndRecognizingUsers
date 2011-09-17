@@ -23,8 +23,15 @@ using namespace std;
 //#define METHOD_SIGNATURE "(ILjava/lang/String;F)V"
 
 #define CLASS_NAME "br/unb/unbiquitous/ubiquitos/uos/driver/UserDriver"
-#define METHOD_NAME "registerUser"
-#define METHOD_SIGNATURE "(ILjava/lang/String;F)V"
+
+#define METHOD_NAME_NEW_USER "registerNewUser"
+#define METHOD_SIGNATURE_NEW_USER "(ILjava/lang/String;FFFF)V"
+
+#define METHOD_NAME_LOST_USER "registerLostUser"
+#define METHOD_SIGNATURE_LOST_USER "(I)V"
+
+#define METHOD_NAME_RECHECK_USER "registerRecheckUser"
+#define METHOD_SIGNATURE_RECHECK_USER "(ILjava/lang/String;FFFF)V"
 
 #ifdef __cplusplus
 extern "C" {
@@ -49,8 +56,7 @@ void cleanupQueue(int signal) {
  * Method:    doTracker
  * Signature: ()V
  */
-void JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriver_00024TrackerRunnable_doTracker
-(JNIEnv * env, jobject obj) {
+void JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriver_00024TrackerRunnable_doTracker(JNIEnv * env, jobject obj) {
 	printLogConsole("Init Tracker Comunication...\n");
 
 	idQueueComunicationJavaC = createMessageQueue(MESSAGE_QUEUE_COMUNICATION_JAVA_C);
@@ -67,28 +73,41 @@ void JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriver_00024Tracke
 		execl("tracker", "tracker", (char *) 0);
 	}
 
+	jclass trackerRunnableClass = (env)->FindClass(CLASS_NAME);
+	if (trackerRunnableClass == NULL) {
+		fprintf(stderr, "Não encontrou a classe %s.\n", CLASS_NAME); /* error handling */
+	}
+
+	jmethodID midNewUser = (env)->GetStaticMethodID(trackerRunnableClass, METHOD_NAME_NEW_USER, METHOD_SIGNATURE_NEW_USER);
+	if (midNewUser == NULL) {
+		fprintf(stderr, "Não encontrou o metodo %s %s.\n", METHOD_NAME_NEW_USER, METHOD_SIGNATURE_NEW_USER); /* error handling */
+	}
+
+	jmethodID midLostUser = (env)->GetStaticMethodID(trackerRunnableClass, METHOD_NAME_LOST_USER, METHOD_SIGNATURE_LOST_USER);
+	if (midLostUser == NULL) {
+		fprintf(stderr, "Não encontrou o metodo %s %s.\n", METHOD_NAME_LOST_USER, METHOD_SIGNATURE_LOST_USER); /* error handling */
+	}
+
+	jmethodID midRecheckUser = (env)->GetStaticMethodID(trackerRunnableClass, METHOD_NAME_RECHECK_USER, METHOD_SIGNATURE_RECHECK_USER);
+	if (midLostUser == NULL) {
+		fprintf(stderr, "Não encontrou o metodo %s %s.\n", METHOD_NAME_RECHECK_USER, METHOD_SIGNATURE_RECHECK_USER); /* error handling */
+	}
+
 	while (1) {
-		MessageResponse messageResponse;
+		MessageEvents messageEvents;
 		printLogConsole("+++++++++++> Esperando escolha.\n");
-		msgrcv(idQueueComunicationJavaC, &messageResponse, sizeof(MessageResponse) - sizeof(long), 0, 0);
-		printLogConsole("+++++++++++> %s\n\n", messageResponse.user_name);
+		msgrcv(idQueueComunicationJavaC, &messageEvents, sizeof(MessageEvents) - sizeof(long), 0, 0);
+		printLogConsole("+++++++++++> %s\n\n", messageEvents.user_name);
 
-		jmethodID mid;
+		jstring name = (env)->NewStringUTF(messageEvents.user_name);
 
-		jclass trackerRunnableClass = (env)->FindClass(CLASS_NAME);
-		if (trackerRunnableClass == NULL) {
-			fprintf(stderr, "Não encontrou a classe %s.\n", CLASS_NAME); /* error handling */
+		if (messageEvents.type == NewUser) {
+			(env)->CallStaticVoidMethod(trackerRunnableClass, midNewUser, messageEvents.user_id, name, messageEvents.confidence, messageEvents.x, messageEvents.y, messageEvents.z);
+		} else if (messageEvents.type == LostUser) {
+			(env)->CallStaticVoidMethod(trackerRunnableClass, midLostUser, messageEvents.user_id);
+		} else if (messageEvents.type == Recheck) {
+			(env)->CallStaticVoidMethod(trackerRunnableClass, midRecheckUser, messageEvents.user_id, name, messageEvents.confidence, messageEvents.x, messageEvents.y, messageEvents.z);
 		}
-
-		mid = (env)->GetStaticMethodID(trackerRunnableClass, METHOD_NAME, METHOD_SIGNATURE);
-		if (mid == NULL) {
-			fprintf(stderr, "Não encontrou o metodo %s %s.\n", METHOD_NAME, METHOD_SIGNATURE); /* error handling */
-		}
-
-		jstring name = (env)->NewStringUTF(messageResponse.user_name);
-
-		(env)->CallStaticVoidMethod(trackerRunnableClass, mid, messageResponse.user_id, name, messageResponse.confidence);
-		//(env)->CallVoidMethod(obj, mid, messageResponse.user_id, name, messageResponse.confidence);
 	}
 
 	printLogConsole("FIM Tracker");
@@ -99,8 +118,7 @@ void JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriver_00024Tracke
  * Method:    stopTracker
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriver_stopTracker
-  (JNIEnv *, jobject) {
+JNIEXPORT void JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriver_stopTracker(JNIEnv *, jobject) {
 	cleanupQueue(SIGINT);
 }
 

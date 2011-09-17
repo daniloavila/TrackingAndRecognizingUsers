@@ -28,9 +28,9 @@ typedef struct MessageEvents {
 	long user_id;
 	char user_name[255];
 	float confidence;
-	int x;
-	int y;
-	int z;
+	float x;
+	float y;
+	float z;
 	MessageType type;
 } MessageEvents;
 
