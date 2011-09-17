@@ -54,12 +54,10 @@
 
 // Ajuda no debug da aplicação
 #ifdef DEBUG
+	extern FILE *log;
 	#define printLogConsole(...) \
 		do { \
-			/* printf("%s:%d:%s(): ", __FILE__, __LINE__, __func__); */ 
-			printf("\x1b\x5b1;31;40m");
-			printf(__VA_ARGS__); \
-			printf ("\x1b\x5b0;37;40m");
+			fprintf(log, __VA_ARGS__); \
 		} while (0)
 #else
 	#define printLogConsole(...)
