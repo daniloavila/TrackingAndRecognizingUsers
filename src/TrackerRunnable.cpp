@@ -25,13 +25,13 @@ using namespace std;
 #define CLASS_NAME "br/unb/unbiquitous/ubiquitos/uos/driver/UserDriver"
 
 #define METHOD_NAME_NEW_USER "registerNewUser"
-#define METHOD_SIGNATURE_NEW_USER "(ILjava/lang/String;FFFF)V"
+#define METHOD_SIGNATURE_NEW_USER "(Ljava/lang/String;FFFF)V"
 
 #define METHOD_NAME_LOST_USER "registerLostUser"
-#define METHOD_SIGNATURE_LOST_USER "(I)V"
+#define METHOD_SIGNATURE_LOST_USER "(Ljava/lang/String;)V"
 
 #define METHOD_NAME_RECHECK_USER "registerRecheckUser"
-#define METHOD_SIGNATURE_RECHECK_USER "(ILjava/lang/String;FFFF)V"
+#define METHOD_SIGNATURE_RECHECK_USER "(Ljava/lang/String;Ljava/lang/String;FFFF)V"
 
 #ifdef __cplusplus
 extern "C" {
@@ -101,12 +101,16 @@ void JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriver_00024Tracke
 
 		jstring name = (env)->NewStringUTF(messageEvents.user_name);
 
-		if (messageEvents.type == NewUser) {
-			(env)->CallStaticVoidMethod(trackerRunnableClass, midNewUser, messageEvents.user_id, name, messageEvents.confidence, messageEvents.x, messageEvents.y, messageEvents.z);
-		} else if (messageEvents.type == LostUser) {
-			(env)->CallStaticVoidMethod(trackerRunnableClass, midLostUser, messageEvents.user_id);
-		} else if (messageEvents.type == Recheck) {
-			(env)->CallStaticVoidMethod(trackerRunnableClass, midRecheckUser, messageEvents.user_id, name, messageEvents.confidence, messageEvents.x, messageEvents.y, messageEvents.z);
+		jstring last_name = NULL;
+		if(messageEvents.last_name != NULL)
+			last_name = (env)->NewStringUTF(messageEvents.last_name);
+
+		if (messageEvents.type == NEW_USER) {
+			(env)->CallStaticVoidMethod(trackerRunnableClass, midNewUser, name, messageEvents.confidence, messageEvents.x, messageEvents.y, messageEvents.z);
+		} else if (messageEvents.type == LOST_USER) {
+			(env)->CallStaticVoidMethod(trackerRunnableClass, midLostUser, name);
+		} else if (messageEvents.type == RECHECK) {
+			(env)->CallStaticVoidMethod(trackerRunnableClass, midRecheckUser, name, last_name, messageEvents.confidence, messageEvents.x, messageEvents.y, messageEvents.z);
 		}
 	}
 

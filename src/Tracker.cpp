@@ -76,7 +76,7 @@ void getTrackerSignals();
 #endif
 
 #ifdef JAVA_INTEGRATION
-	void sendChoice(int id, MessageType type);
+	void sendChoice(int id, MessageType type, char* last_name);
 #endif
 
 /**
@@ -111,30 +111,36 @@ void treatQueueResponse(int i) {
 				verifyDeslocationObject(messageResponse.user_id);
 			}
 			continue;
-		} else if(strcmp(messageResponse.user_name, UNKNOWN) != 0) {
+		} else if(strcmp(messageResponse.user_name, UNKNOWN) == 0) {
+			if(users[messageResponse.user_id].name == NULL || strlen(users[messageResponse.user_id].name) == 0) {
 				users[messageResponse.user_id].name = (char *) malloc(strlen(UNKNOWN) + 1);
 				strcpy(users[messageResponse.user_id].name, UNKNOWN);
 
 				#ifdef JAVA_INTEGRATION
-					sendChoice(messageResponse.user_id, NEW_USER);
+					sendChoice(messageResponse.user_id, NEW_USER, NULL);
 				#endif
+			}
 
-				if (total < ATTEMPTS_INICIAL_RECOGNITION) {
-					requestRecognition(messageResponse.user_id);
-					verifyDeslocationObject(messageResponse.user_id);
-				}
-				continue;
+			if (total < ATTEMPTS_INICIAL_RECOGNITION) {
+				requestRecognition(messageResponse.user_id);
+				verifyDeslocationObject(messageResponse.user_id);
+			}
+			continue;
 		}
+
+		char last_name[255];
+		if(users[messageResponse.user_id].name != NULL)
+			strcpy(last_name, users[messageResponse.user_id].name);
 
 		calculateNewStatistics(&messageResponse);
 
 		choiceNewLabelToUser(&messageResponse, &users);
 
 		#ifdef JAVA_INTEGRATION
-			if(total == 0){
-				sendChoice(messageResponse.user_id, NEW_USER);
+			if(total == 0 && strcmp(messageResponse.user_name, UNKNOWN) != 0){
+				sendChoice(messageResponse.user_id, NEW_USER, NULL);
 			}else{
-				sendChoice(messageResponse.user_id, RECHECK);
+				sendChoice(messageResponse.user_id, RECHECK, last_name);
 			}
 				
 		#endif
@@ -200,7 +206,7 @@ void XN_CALLBACK_TYPE registerLostUser(xn::UserGenerator& generator, XnUserID nI
 
 	#ifdef JAVA_INTEGRATION
 		if(users[nId].name != NULL && strlen(users[nId].name) > 0)
-			sendChoice(nId, LOST_USER);
+			sendChoice(nId, LOST_USER, NULL);
 	#endif
 
 	users.erase((int) nId);
@@ -367,7 +373,7 @@ void getTrackerSignals() {
 	signal(SIGTRAP, cleanupQueueAndExit);
 	signal(SIGABRT, cleanupQueueAndExit);
 	signal(SIGKILL, cleanupQueueAndExit);
-	signal(SIGSEGV, cleanupQueueAndExit);
+	signal(SIGSEGV, SIG_DFL);
 	signal(SIGTERM, cleanupQueueAndExit);
 	signal(SIGSYS, cleanupQueueAndExit);
 }
@@ -450,12 +456,15 @@ void requestRecognition(int id) {
 }
 
 #ifdef JAVA_INTEGRATION
-void sendChoice(int id, MessageType type) {
+void sendChoice(int id, MessageType type,char *last_name) {
 	MessageEvents messageEvent;
 	XnPoint3D com;
 	g_UserGenerator.GetCoM(id, com);
 
 	strcpy(messageEvent.user_name, users[id].name);
+	if(strcmp(users[id].name, UNKNOWN) == 0) {
+		sprintf(messageEvent.user_name, "%s_%d", messageEvent.user_name, id);
+	}
 	messageEvent.confidence = users[id].confidence;
 
 	if(type == LOST_USER){
@@ -468,6 +477,10 @@ void sendChoice(int id, MessageType type) {
 		messageEvent.z = com.Z;	
 	}
 	
+	if(last_name != NULL && strlen(last_name) == 0) {
+		strcpy(messageEvent.last_name, last_name);
+	}
+
 	messageEvent.type = type;
 
 	printLogConsole("Log - Tracker diz: Enviando escolha para o JAVA.\n");
