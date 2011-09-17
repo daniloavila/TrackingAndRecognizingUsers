@@ -8,18 +8,32 @@
 #include "KinectUtil.h"
 #include "Definitions.h"
 
-// estrutura da mensagem trocada entre "UserTracker" e "FaceRec"
+// estrutura da mensagem trocada entre "Tracker" e "Recognizer"
 typedef struct MessageRequest {
 	long user_id;
 	int memory_id;
 } MessageRequest;
 
-// estrutura da mensagem trocada entre "FaceRec" e "UserTracker"
+// estrutura da mensagem trocada entre "Recognizer" e "Tracker"
 typedef struct MessageResponse {
 	long user_id;
 	char user_name[255];
 	float confidence;
 } MessageResponse;
+
+enum MessageType{ NewUser, LostUser, Recheck};
+
+// estrutura da mensagem trocada entre "TrackerRunnable" e "Tracker"
+typedef struct MessageEvents {
+	long user_id;
+	char user_name[255];
+	float confidence;
+	int x;
+	int y;
+	int z;
+	MessageType type;
+} MessageEvents;
+
 
 //cria fila de mensagens para comunicao entre o processo tracker e recognition
 int createMessageQueue(int key);
