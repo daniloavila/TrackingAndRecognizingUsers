@@ -172,7 +172,7 @@ void recheckUsers(int i) {
 }
 
 /**
- * Registra a entrada de um novo usuário e pede para o mesmo ser reconhecido.
+ * sendtra a entrada de um novo usuário e pede para o mesmo ser reconhecido.
  */
 void XN_CALLBACK_TYPE registerNewUser(xn::UserGenerator& generator, XnUserID nId, void* pCookie) {
 	int id = (int) nId;
@@ -458,9 +458,17 @@ void sendChoice(int id, MessageType type) {
 	messageEvent.user_id = id;
 	strcpy(messageEvent.user_name, users[id].name);
 	messageEvent.confidence = users[id].confidence;
-	messageEvent.x = com.X;
-	messageEvent.y = com.Y;
-	messageEvent.z = com.Z;
+
+	if(type == LOST_USER){
+		messageEvent.x = 0;
+		messageEvent.y = 0;
+		messageEvent.z = 0;	
+	}else{
+		messageEvent.x = com.X;
+		messageEvent.y = com.Y;
+		messageEvent.z = com.Z;	
+	}
+	
 	messageEvent.type = type;
 
 	printLogConsole("Log - Tracker diz: Enviando escolha para o JAVA.\n");
