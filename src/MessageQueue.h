@@ -21,16 +21,16 @@ typedef struct MessageResponse {
 	float confidence;
 } MessageResponse;
 
-enum MessageType{ NewUser, LostUser, Recheck};
+enum MessageType{ NEW_USER, LOST_USER, RECHECK};
 
 // estrutura da mensagem trocada entre "TrackerRunnable" e "Tracker"
 typedef struct MessageEvents {
 	long user_id;
 	char user_name[255];
 	float confidence;
-	int x;
-	int y;
-	int z;
+	float x;
+	float y;
+	float z;
 	MessageType type;
 } MessageEvents;
 
