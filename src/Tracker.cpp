@@ -76,7 +76,7 @@ void getTrackerSignals();
 #endif
 
 #ifdef JAVA_INTEGRATION
-	void sendChoice(int id);
+	void sendChoice(int id, MessageType type);
 #endif
 
 /**
@@ -115,9 +115,9 @@ void treatQueueResponse(int i) {
             if(total == 0) {
             	users[messageResponse.user_id].name = (char *) malloc(strlen(UNKNOWN) + 1);
             	strcpy(users[messageResponse.user_id].name, UNKNOWN);
-				#ifdef JAVA_INTEGRATION
-					sendChoice(messageResponse.user_id);
-				#endif
+							#ifdef JAVA_INTEGRATION
+								sendChoice(messageResponse.user_id, NEW_USER);
+							#endif
             }
 
 			if (total < ATTEMPTS_INICIAL_RECOGNITION) {
@@ -132,7 +132,12 @@ void treatQueueResponse(int i) {
 		choiceNewLabelToUser(&messageResponse, &users);
 
 		#ifdef JAVA_INTEGRATION
-			sendChoice(messageResponse.user_id);
+			if(total == 0){
+				sendChoice(messageResponse.user_id, NEW_USER);
+			}else{
+				sendChoice(messageResponse.user_id, RECHECK);
+			}
+				
 		#endif
 
 		// Calcula o total de vezes que o usuario foi reconhecido. Independentemente da resposta.
@@ -192,6 +197,10 @@ void XN_CALLBACK_TYPE registerLostUser(xn::UserGenerator& generator, XnUserID nI
 
 	#ifdef SAVE_LOG
 		saveLogUserLost(nId);
+	#endif
+
+	#ifdef JAVA_INTEGRATION
+		sendChoice(nId, LOST_USER);
 	#endif
 
 	users.erase((int) nId);
@@ -441,16 +450,22 @@ void requestRecognition(int id) {
 }
 
 #ifdef JAVA_INTEGRATION
-void sendChoice(int id) {
-	MessageResponse messageResponse;
+void sendChoice(int id, MessageType type) {
+	MessageEvents messageEvent;
+	XnPoint3D com;
+	g_UserGenerator.GetCoM(id, com);
 
-	messageResponse.user_id = id;
-	strcpy(messageResponse.user_name, users[id].name);
-	messageResponse.confidence = users[id].confidence;
+	messageEvent.user_id = id;
+	strcpy(messageEvent.user_name, users[id].name);
+	messageEvent.confidence = users[id].confidence;
+	messageEvent.x = com.X;
+	messageEvent.y = com.Y;
+	messageEvent.z = com.Z;
+	messageEvent.type = type;
 
 	printLogConsole("Log - Tracker diz: Enviando escolha para o JAVA.\n");
 
-	if (msgsnd(idQueueComunicationJavaC, &messageResponse, sizeof(MessageResponse) - sizeof(long), 0) > 0) {
+	if (msgsnd(idQueueComunicationJavaC, &messageEvent, sizeof(messageEvent) - sizeof(long), 0) > 0) {
 		printLogConsole("Log - Tracker diz: Erro no envio de mensagem para o JAVA.\n");
 	}
 }
