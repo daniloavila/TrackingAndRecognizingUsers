@@ -12,4 +12,4 @@ Eigenfaces/Cambridge_FaceDB/
 Eigenfaces/facedata.xml
 Eigenfaces/out_eigenfaces.bmp
 LOG/
-backup/
+bin/*.o
