@@ -25,7 +25,6 @@ enum MessageType{ NEW_USER, LOST_USER, RECHECK};
 
 // estrutura da mensagem trocada entre "TrackerRunnable" e "Tracker"
 typedef struct MessageEvents {
-	long user_id;
 	char user_name[255];
 	float confidence;
 	float x;
