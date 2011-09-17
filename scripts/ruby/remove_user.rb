@@ -36,7 +36,7 @@ class RemoveUser
 		lines = index_update_train_file
 		File.delete @file_path + "train.txt"
 		@train = File.new(@file_path + "train.txt", "w+")
-		@train.write lines
+		@train.write(lines + "\n")
 
 		files = @entries.select {|entrie| entrie.match(/\S#{@name}\S/)}
 		index_update_file(user_index(files.first)) #corrigindo index dos outros arquivos

@@ -11,5 +11,7 @@ Eigenfaces/backup/
 Eigenfaces/Cambridge_FaceDB/
 Eigenfaces/facedata.xml
 Eigenfaces/out_eigenfaces.bmp
+Eigenfaces/out_averageImage.bmp
+Eigenfaces/train.txt
 LOG/
 bin/*.o

@@ -1,4 +1,4 @@
-if [$1 =  '']; then
+if [ -z "$1" ]; then
 	echo 'Passe o nome do backup q deseja restaurar'
 else
 	cd ../Eigenfaces/backup
