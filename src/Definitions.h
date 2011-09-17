@@ -1,3 +1,5 @@
+#include <stdio.h>
+
 #ifndef DEFINITIONS_H_
 #define DEFINITIONS_H_
 
@@ -54,10 +56,11 @@
 
 // Ajuda no debug da aplicação
 #ifdef DEBUG
+	extern FILE *loggerFile;
 	#define printLogConsole(...) \
 		do { \
-			printf(__VA_ARGS__); \
-		} while (0);
+			fprintf(loggerFile, __VA_ARGS__); \
+		} while (0)
 #else
 	#define printLogConsole(...)
 #endif

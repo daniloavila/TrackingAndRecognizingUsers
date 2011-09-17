@@ -75,6 +75,10 @@ bool validarNome(char *nome) {
 	return false;
 }
 
+#ifdef DEBUG
+	FILE *loggerFile;
+#endif
+
 int main(int argc, char** argv) {
 	int i;
 	CvMat * trainPersonNumMat; // o numero das pessoas durante o treinamento

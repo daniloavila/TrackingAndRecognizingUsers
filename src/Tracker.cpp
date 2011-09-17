@@ -63,6 +63,10 @@ map<int, UserStatus> users;
 	char trackerLogFolderFrames[255];
 #endif
 
+#ifdef DEBUG
+	FILE *loggerFile;
+#endif
+
 void verifyDeslocationObject(int userId);
 void requestRecognition(int id);
 void glInit(int * pargc, char ** argv);
@@ -325,6 +329,10 @@ int main(int argc, char **argv) {
 
 		fclose(trackerLogFile);
 		trackerLogFile = fopen(trackerLogFileName, "a+");
+	#endif
+
+	#ifdef DEBUG
+		loggerFile = fopen("LOG/log.out", "w");
 	#endif
 
 	//procura por um node Depth nas configuracoes

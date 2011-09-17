@@ -40,6 +40,7 @@ extern "C" {
 void lostTrackerRunnalbeSignals();
 void getTrackerRunnalbeSignals();
 
+
 int idQueueComunicationJavaC = 0;
 int trackerId = 0;
 
