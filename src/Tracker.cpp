@@ -199,7 +199,7 @@ void XN_CALLBACK_TYPE registerLostUser(xn::UserGenerator& generator, XnUserID nI
 	#endif
 
 	#ifdef JAVA_INTEGRATION
-		if(users[nId].name != NULL && strlen(users[nId].name) > 0)
+		if(users[nId].name != NULL && strlen(users[nId].name) > 0 && strcmp(users[nId].name, "Object") != 0)
 			sendChoice(nId, LOST_USER);
 	#endif
 
