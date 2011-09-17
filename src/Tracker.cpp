@@ -111,20 +111,19 @@ void treatQueueResponse(int i) {
 				verifyDeslocationObject(messageResponse.user_id);
 			}
 			continue;
-		} else if(strcmp(messageResponse.user_name, UNKNOWN) == 0) {
-            if(total == 0) {
-            	users[messageResponse.user_id].name = (char *) malloc(strlen(UNKNOWN) + 1);
-            	strcpy(users[messageResponse.user_id].name, UNKNOWN);
-							#ifdef JAVA_INTEGRATION
-								sendChoice(messageResponse.user_id, NEW_USER);
-							#endif
-            }
+		} else if(strcmp(messageResponse.user_name, UNKNOWN) != 0) {
+				users[messageResponse.user_id].name = (char *) malloc(strlen(UNKNOWN) + 1);
+				strcpy(users[messageResponse.user_id].name, UNKNOWN);
 
-			if (total < ATTEMPTS_INICIAL_RECOGNITION) {
-				requestRecognition(messageResponse.user_id);
-				verifyDeslocationObject(messageResponse.user_id);
-			}
-			continue;
+				#ifdef JAVA_INTEGRATION
+					sendChoice(messageResponse.user_id, NEW_USER);
+				#endif
+
+				if (total < ATTEMPTS_INICIAL_RECOGNITION) {
+					requestRecognition(messageResponse.user_id);
+					verifyDeslocationObject(messageResponse.user_id);
+				}
+				continue;
 		}
 
 		calculateNewStatistics(&messageResponse);
@@ -456,7 +455,6 @@ void sendChoice(int id, MessageType type) {
 	XnPoint3D com;
 	g_UserGenerator.GetCoM(id, com);
 
-	messageEvent.user_id = id;
 	strcpy(messageEvent.user_name, users[id].name);
 	messageEvent.confidence = users[id].confidence;
 
