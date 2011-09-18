@@ -132,28 +132,30 @@ void treatQueueResponse(int i) {
 			continue;
 		}
 
-		char last_name[255];
-		if(users[messageResponse.user_id].name != NULL)
-			strcpy(last_name, users[messageResponse.user_id].name);
+		#ifdef JAVA_INTEGRATION
+			char last_name[255];
+			if(users[messageResponse.user_id].name != NULL)
+				strcpy(last_name, users[messageResponse.user_id].name);
+		#endif
 
 		calculateNewStatistics(&messageResponse);
 
 		choiceNewLabelToUser(&messageResponse, &users);
 
 		#ifdef JAVA_INTEGRATION
-			char my_unkwown[255];
-			sprintf(my_unkwown, "%s_%d", UNKNOWN, messageResponse.user_id);
+			if(strcmp(last_name, UNKNOWN) == 0) {
+				sprintf(last_name, "%s_%d", UNKNOWN, messageResponse.user_id);
+			}
 
-			if(total == 0 && strcmp(messageResponse.user_name, my_unkwown) != 0){
+			if(total == 0 && strncmp(last_name, UNKNOWN, strlen(UNKNOWN)) != 0){
 				sendChoice(messageResponse.user_id, NEW_USER, NULL);
 			}else{
 				sendChoice(messageResponse.user_id, RECHECK, last_name);
 			}
-				
 		#endif
 
 		// Calcula o total de vezes que o usuario foi reconhecido. Independentemente da resposta.
-			printLogConsole("Log - Tracker diz: Total de tentativas de reconhecimento do usuario %ld => %d\n", messageResponse.user_id, total);
+		printLogConsole("Log - Tracker diz: Total de tentativas de reconhecimento do usuario %ld => %d\n", messageResponse.user_id, total);
 
 		if (total < ATTEMPTS_INICIAL_RECOGNITION) {
 			requestRecognition(messageResponse.user_id);
@@ -488,7 +490,7 @@ void sendChoice(int id, MessageType type,char *last_name) {
 		messageEvent.z = com.Z;	
 	}
 	
-	if(last_name != NULL && strlen(last_name) == 0) {
+	if(last_name != NULL && strlen(last_name) > 0) {
 		strcpy(messageEvent.last_name, last_name);
 	} else {
 		strcpy(messageEvent.last_name, "");
