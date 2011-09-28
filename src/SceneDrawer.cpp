@@ -207,7 +207,7 @@ void DrawDepthMap(const xn::DepthMetaData& dmd, const xn::SceneMetaData& smd, ma
 	glDisable(GL_TEXTURE_2D);
 
 
-	char strLabel[50] = "";
+	char strLabel[255] = "";
 	XnUInt16 nUsers = g_UserGenerator.GetNumberOfUsers();
 	XnUserID* aUsers = new XnUserID[nUsers];
 
