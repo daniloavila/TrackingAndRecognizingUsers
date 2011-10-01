@@ -504,7 +504,7 @@ void sendChoice(int id, MessageType type,char *last_name) {
 
 	printLogConsole("Log - Tracker diz: Enviando escolha para o JAVA.\n");
 
-	if (msgsnd(idQueueComunicationJavaC, &messageEvent, sizeof(messageEvent) - sizeof(long), 0) > 0) {
+	if (msgsnd(idQueueComunicationJavaC, &messageEvent, sizeof(MessageEvents) - sizeof(long), 0) > 0) {
 		printLogConsole("Log - Tracker diz: Erro no envio de mensagem para o JAVA.\n");
 	}
 }
