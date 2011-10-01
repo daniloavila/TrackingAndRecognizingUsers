@@ -371,6 +371,10 @@ int main(int argc, char **argv) {
 	return EXIT_SUCCESS;
 }
 
+void reexecute(int signal) {
+	cleanupQueueAndExit(signal);
+	execl("tracker", "tracker", (char *) 0);
+}
 
 
 // ##########################################################
@@ -386,7 +390,7 @@ void getTrackerSignals() {
 	signal(SIGTRAP, cleanupQueueAndExit);
 	signal(SIGABRT, cleanupQueueAndExit);
 	signal(SIGKILL, cleanupQueueAndExit);
-	signal(SIGSEGV, SIG_DFL);
+	signal(SIGSEGV, reexecute);
 	signal(SIGTERM, cleanupQueueAndExit);
 	signal(SIGSYS, cleanupQueueAndExit);
 }
