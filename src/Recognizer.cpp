@@ -174,9 +174,9 @@ int loadTrainingData(CvMat ** pTrainPersonNumMat) {
 	CvFileStorage * fileStorage;
 	int i;
 
-	fileStorage = cvOpenFileStorage("Eigenfaces/facedata.xml", 0, CV_STORAGE_READ);
+	fileStorage = cvOpenFileStorage(FACE_DATA, 0, CV_STORAGE_READ);
 	if (!fileStorage) {
-		fprintf(stderr, "O arquivo de dados para treino facedata.xml nao pode ser aberto.\n");
+		fprintf(stderr, "O arquivo de dados para treino %s nao pode ser aberto.\n", FACE_DATA);
 		return 0;
 	}
 

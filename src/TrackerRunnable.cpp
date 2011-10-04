@@ -99,7 +99,6 @@ void JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriver_00024Tracke
 		printLogConsole("+++++++++++> Esperando escolha.\n");
 		msgrcv(idQueueComunicationJavaC, &messageEvents, sizeof(MessageEvents) - sizeof(long), 0, 0);
 		printLogConsole("+++++++++++> %s\n\n", messageEvents.user_name);
-		printf("TRACKER +++++++++++> %s\n\n", messageEvents.user_name);
 
 		jstring name = (env)->NewStringUTF(messageEvents.user_name);
 
