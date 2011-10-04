@@ -47,7 +47,7 @@ int trackerId = 0;
 // TODO : Tales - 10/09/2011 - Metodo não é chamado quando mata o processo java. Verificar o que acontece com os sinais.
 void cleanupQueue(int signal) {
 	lostTrackerRunnalbeSignals();
-	printLogConsole("Siganal TrackerRunnable - %d\n", signal);
+	printLogConsole("Signal TrackerRunnable - %d\n", signal);	
 	msgctl(idQueueComunicationJavaC, IPC_RMID, NULL);
 	kill(trackerId, signal);
 }
@@ -99,7 +99,6 @@ void JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriver_00024Tracke
 		printLogConsole("+++++++++++> Esperando escolha.\n");
 		msgrcv(idQueueComunicationJavaC, &messageEvents, sizeof(MessageEvents) - sizeof(long), 0, 0);
 		printLogConsole("+++++++++++> %s\n\n", messageEvents.user_name);
-		printf("TRACKER +++++++++++> %s\n\n", messageEvents.user_name);
 
 		jstring name = (env)->NewStringUTF(messageEvents.user_name);
 
