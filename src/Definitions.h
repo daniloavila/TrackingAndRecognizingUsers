@@ -26,6 +26,9 @@
 #define NUMBER_OF_SAVED_FACES_RIGHT 2
 #define NUMBER_OF_SAVED_FACES_LEFT 2
 
+#define FACE_WIDTH 92
+#define FACE_HEIGHT 112
+
 /*********************************
  ****** Tracker parameters ******
  *********************************/

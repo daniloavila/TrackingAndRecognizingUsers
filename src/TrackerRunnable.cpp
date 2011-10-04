@@ -11,6 +11,7 @@
 #include <signal.h>
 #include <time.h>
 
+#include "ImageUtil.h"
 #include "MessageQueue.h"
 #include "Definitions.h"
 
@@ -39,6 +40,7 @@ extern "C" {
 
 void lostTrackerRunnalbeSignals();
 void getTrackerRunnalbeSignals();
+int getNumberOfRegisteredPersons();
 
 
 int idQueueComunicationJavaC = 0;
@@ -125,6 +127,80 @@ void JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriver_00024Tracke
  */
 JNIEXPORT void JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriver_stopTracker(JNIEnv *, jobject) {
 	cleanupQueue(SIGINT);
+}
+
+/*
+ * Class:     br_unb_unbiquitous_ubiquitos_uos_driver_UserDriver
+ * Method:    saveImage
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriver_saveImage(JNIEnv * env, jobject obj, jstring name, jint index, jbyteArray image) {
+	IplImage *greyImg;
+	IplImage *faceImg;
+	IplImage *sizedImg;
+	IplImage *equalizedImg;
+	CvRect faceRect;
+	CvHaarClassifierCascade* faceCascade;
+	char cstr[256];
+	int nPeople;
+
+	// le o classificador utilizado para detecao
+	faceCascade = (CvHaarClassifierCascade*) cvLoad(HAARCASCADE_FRONTALFACE, 0, 0, 0);
+	if (!faceCascade) {
+		printf("ERROR em recognizeFromCam(): Classificador '%s' nao pode ser lido.\n", HAARCASCADE_FRONTALFACE);
+		return;
+	}
+
+	IplImage* frame = cvCreateImage(cvSize(KINECT_HEIGHT_CAPTURE, KINECT_WIDTH_CAPTURE), IPL_DEPTH_8U, KINECT_NUMBER_OF_CHANNELS);
+	frame->imageData = (char *) image;
+
+	// transforma a imagem em escala de cinza
+	greyImg = convertImageToGreyscale(frame);
+
+	// realiza deteccao facial na imagem de entrada, usando o classificador
+	faceRect = detectFaceInImage(greyImg, faceCascade);					
+
+	// veririfica se uma faxe foi detectada
+	if (faceRect.width > 0) {
+		faceImg = cropImage(greyImg, faceRect); // pega a face detectada
+		// redimensiona a imagem
+		sizedImg = resizeImage(faceImg, FACE_WIDTH, FACE_HEIGHT);
+		// da a imagem o brilho e contraste padrao
+		equalizedImg = cvCreateImage(cvGetSize(sizedImg), 8, 1); // cria uma imagem vazia em escala de cinza
+		cvEqualizeHist(sizedImg, equalizedImg);
+
+		//salvando a imagem
+		nPeople = getNumberOfRegisteredPersons();
+		sprintf(cstr, NEW_IMAGES_SCHEME, nPeople + 1, name, index);
+		cvSaveImage(cstr, equalizedImg, NULL);
+
+		// libera os recursos
+		cvReleaseImage(&greyImg);
+		cvReleaseImage(&faceImg);
+		cvReleaseImage(&sizedImg);
+		cvReleaseImage(&equalizedImg);
+	}
+
+}
+
+int getNumberOfRegisteredPersons(){
+	CvFileStorage * fileStorage;
+
+	// cria uma interface arqivo - armazenamento
+	fileStorage = cvOpenFileStorage(FACE_DATA, 0, CV_STORAGE_READ);
+	if (!fileStorage) {
+		printf("Arquivo 'facedata.xml' nao pode ser aberto.\n");
+		return 0;
+	}
+
+	// le os nomes das pessoas
+	int nPersons = cvReadIntByName(fileStorage, 0, "nPersons", 0);
+	if (nPersons == 0) {
+		printf("Nenhuma pessoa encontrada em 'facedata.xml'.\n");
+		return 0;
+	}
+
+	return nPersons;
 }
 
 void getTrackerRunnalbeSignals() {

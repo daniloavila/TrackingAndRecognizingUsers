@@ -40,7 +40,7 @@ all: $(OBJS)
 	$(CC) -o $(EXE_TRACKER) $(RELEASE_DIR)KeyboardUtil.o $(RELEASE_DIR)KinectUtil.o $(RELEASE_DIR)MessageQueue.o $(RELEASE_DIR)SceneDrawer.o $(RELEASE_DIR)StatisticsUtil.o $(RELEASE_DIR)StringUtil.o $(RELEASE_DIR)Tracker.o $(CCFLAGS2) $(USED_LIBS) $(LDFLAGS) 
 	$(CC) -o $(EXE_REC) $(RELEASE_DIR)ImageUtil.o $(RELEASE_DIR)KeyboardUtil.o $(RELEASE_DIR)KinectUtil.o $(RELEASE_DIR)MessageQueue.o $(RELEASE_DIR)StringUtil.o $(RELEASE_DIR)Recognizer.o $(CCFLAGS2) $(USED_LIBS) $(LDFLAGS)
 	$(CC) -o $(EXE_REG) $(RELEASE_DIR)ImageUtil.o $(RELEASE_DIR)KeyboardUtil.o $(RELEASE_DIR)KinectUtil.o $(RELEASE_DIR)MessageQueue.o $(RELEASE_DIR)StringUtil.o $(RELEASE_DIR)Register.o $(CCFLAGS2) $(USED_LIBS) $(LDFLAGS)
-	$(CC) $(DYNAMIC_LINK) -o $(EXE_LIB) $(RELEASE_DIR)MessageQueue.o $(RELEASE_DIR)TrackerRunnable.o $(CCFLAGS2) $(USED_LIBS) $(LDFLAGS)
+	$(CC) $(DYNAMIC_LINK) -o $(EXE_LIB) $(RELEASE_DIR)MessageQueue.o $(RELEASE_DIR)ImageUtil.o $(RELEASE_DIR)TrackerRunnable.o $(CCFLAGS2) $(USED_LIBS) $(LDFLAGS)
 
 $(RELEASE_DIR)ImageUtil.o: 
 	$(CC) $(CCFLAGS) $(INC_DIRS) -o $(RELEASE_DIR)ImageUtil.o $(SRC)ImageUtil.cpp
@@ -62,7 +62,7 @@ $(RELEASE_DIR)Tracker.o: $(RELEASE_DIR)KeyboardUtil.o $(RELEASE_DIR)KinectUtil.o
 	$(CC) $(CCFLAGS) $(INC_DIRS) -o $(RELEASE_DIR)Tracker.o $(SRC)Tracker.cpp
 $(RELEASE_DIR)Register.o: $(RELEASE_DIR)ImageUtil.o  $(RELEASE_DIR)KinectUtil.o $(RELEASE_DIR)MessageQueue.o
 	$(CC) $(CCFLAGS) $(INC_DIRS) -o $(RELEASE_DIR)Register.o $(SRC)Register.cpp
-$(RELEASE_DIR)TrackerRunnable.o: $(RELEASE_DIR)MessageQueue.o
+$(RELEASE_DIR)TrackerRunnable.o: $(RELEASE_DIR)MessageQueue.o $(RELEASE_DIR)ImageUtil.o
 	$(CC) $(CCFLAGS) $(INC_DIRS) $(SO_LINK) -o $(RELEASE_DIR)TrackerRunnable.o $(SRC)TrackerRunnable.cpp
 
 clean: 
