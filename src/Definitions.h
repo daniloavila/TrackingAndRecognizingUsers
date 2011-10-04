@@ -19,15 +19,6 @@
 
 //#define INSTALATION_VERSION // Define se será usado o path de instalação
 
-// TODO : Verificar necessidade de uma variavel de ambiente para esse path
-// no MAC é o msm path???
-#ifdef INSTALATION_VERSION
-#define RECOGNIZER_PATH "/usr/bin/recognizer"
-#else
-#define RECOGNIZER_PATH "recognizer"
-#endif
-
-
 /*********************************
  ****** Register parameters ******
  *********************************/
@@ -51,20 +42,6 @@
 // distancia minima que o rastreado tenha que se deslocar para ser considerada uma pessoa
 #define MIN_OBJECT_DESLOCATION 3.0
 #define MAX_TIMES_OF_OBJECT_NO_DESLOCATION 5
-
-// arquivos de configuracao do kinect
-
-#ifdef INSTALATION_VERSION
-#define SAMPLE_XML_PATH concatStringToPathFiles("Config/SamplesConfig.xml")
-#else
-#define SAMPLE_XML_PATH "Config/SamplesConfig.xml"
-#endif
-
-#ifdef INSTALATION_VERSION
-#define SAMPLE_XML_PATH_REGISTER concatStringToPathFiles("Config/Register.xml")
-#else
-#define SAMPLE_XML_PATH_REGISTER "Config/Register.xml"
-#endif
 
 //define o numero de ajuste dos pixels do usuario da camera depth para o rgb
 #define ADJUSTMENT_LEFT 40
@@ -106,48 +83,30 @@
 
 // classificador para localizar a face em uma imagem
 #ifdef INSTALATION_VERSION
-#define HAARCASCADE_FRONTALFACE concatStringToPathFiles("Eigenfaces/haarcascade_frontalface_alt.xml")
+	#define HAARCASCADE_FRONTALFACE concatStringToPathFiles("Eigenfaces/haarcascade_frontalface_alt.xml")
+	#define FACE_DATA concatStringToPathFiles("Eigenfaces/facedata.xml")
+	#define TRAIN_DATA concatStringToPathFiles("Eigenfaces/train.txt")
+	#define AVERAGE_IMAGE concatStringToPathFiles("Eigenfaces/out_averageImage.bmp")
+	#define EIGEN_FACES concatStringToPathFiles("Eigenfaces/out_eigenfaces.bmp")
+	#define NEW_IMAGES_SCHEME concatStringToPathFiles("Eigenfaces/data/%d_%s%d.pgm")
+	#define LOG_FOLDER concatStringToPathFiles("LOG/")
+	#define SAMPLE_XML_PATH concatStringToPathFiles("Config/SamplesConfig.xml")
+	#define SAMPLE_XML_PATH_REGISTER concatStringToPathFiles("Config/Register.xml")
+	#define RECOGNIZER_PATH "/usr/bin/recognizer"
 #else
-#define HAARCASCADE_FRONTALFACE "Eigenfaces/haarcascade_frontalface_alt.xml"
-#endif
-
-#ifdef INSTALATION_VERSION
-#define FACE_DATA concatStringToPathFiles("Eigenfaces/facedata.xml")
-#else
-#define FACE_DATA "Eigenfaces/facedata.xml"
-#endif
-
-#ifdef INSTALATION_VERSION
-#define TRAIN_DATA concatStringToPathFiles("Eigenfaces/train.txt")
-#else
-#define TRAIN_DATA "Eigenfaces/train.txt"
-#endif
-
-#ifdef INSTALATION_VERSION
-#define AVERAGE_IMAGE concatStringToPathFiles("Eigenfaces/out_averageImage.bmp")
-#else
-#define AVERAGE_IMAGE "Eigenfaces/out_averageImage.bmp"
-#endif
-
-#ifdef INSTALATION_VERSION
-#define EIGEN_FACES concatStringToPathFiles("Eigenfaces/out_eigenfaces.bmp")
-#else
-#define EIGEN_FACES "Eigenfaces/out_eigenfaces.bmp"
-#endif
-
-#ifdef INSTALATION_VERSION
-#define NEW_IMAGES_SCHEME concatStringToPathFiles("Eigenfaces/data/%d_%s%d.pgm")
-#else
-#define NEW_IMAGES_SCHEME "Eigenfaces/data/%d_%s%d.pgm"
+	#define HAARCASCADE_FRONTALFACE "Eigenfaces/haarcascade_frontalface_alt.xml"
+	#define FACE_DATA "Eigenfaces/facedata.xml"
+	#define TRAIN_DATA "Eigenfaces/train.txt"
+	#define AVERAGE_IMAGE "Eigenfaces/out_averageImage.bmp"
+	#define EIGEN_FACES "Eigenfaces/out_eigenfaces.bmp"
+	#define NEW_IMAGES_SCHEME "Eigenfaces/data/%d_%s%d.pgm"
+	#define LOG_FOLDER "LOG/"
+	#define SAMPLE_XML_PATH "Config/SamplesConfig.xml"
+	#define SAMPLE_XML_PATH_REGISTER "Config/Register.xml"
+	#define RECOGNIZER_PATH "recognizer"
 #endif
 
 #define NAME_OF_LOG_FILE "trackerLog"
-
-#ifdef INSTALATION_VERSION
-#define LOG_FOLDER concatStringToPathFiles("LOG/")
-#else
-#define LOG_FOLDER "LOG/"
-#endif
 
 // limiar de confianca para identificar o usuario
 #define THRESHOLD 0.9
