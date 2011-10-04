@@ -34,12 +34,12 @@ else
 	DYNAMIC_LINK += -shared -Wl,-soname,TrackerRunnable
 endif
 
-OBJS: $(RELEASE_DIR)Recognizer.o $(RELEASE_DIR)ImageUtil.o $(RELEASE_DIR)KeyboardUtil.o $(RELEASE_DIR)KinectUtil.o $(RELEASE_DIR)MessageQueue.o $(RELEASE_DIR)SceneDrawer.o $(RELEASE_DIR)StatisticsUtil.o $(RELEASE_DIR)Tracker.o $(RELEASE_DIR)Register.o $(RELEASE_DIR)TrackerRunnable.o
+OBJS: $(RELEASE_DIR)Recognizer.o $(RELEASE_DIR)ImageUtil.o $(RELEASE_DIR)KeyboardUtil.o $(RELEASE_DIR)KinectUtil.o $(RELEASE_DIR)MessageQueue.o $(RELEASE_DIR)SceneDrawer.o $(RELEASE_DIR)StatisticsUtil.o $(RELEASE_DIR)Tracker.o $(RELEASE_DIR)Register.o $(RELEASE_DIR)TrackerRunnable.o $(RELEASE_DIR)StringUtil.o
 
 all: $(OBJS)
-	$(CC) -o $(EXE_TRACKER) $(RELEASE_DIR)KeyboardUtil.o $(RELEASE_DIR)KinectUtil.o $(RELEASE_DIR)MessageQueue.o $(RELEASE_DIR)SceneDrawer.o $(RELEASE_DIR)StatisticsUtil.o $(RELEASE_DIR)Tracker.o $(CCFLAGS2) $(USED_LIBS) $(LDFLAGS) 
-	$(CC) -o $(EXE_REC) $(RELEASE_DIR)ImageUtil.o $(RELEASE_DIR)KeyboardUtil.o $(RELEASE_DIR)KinectUtil.o $(RELEASE_DIR)MessageQueue.o $(RELEASE_DIR)Recognizer.o $(CCFLAGS2) $(USED_LIBS) $(LDFLAGS)
-	$(CC) -o $(EXE_REG) $(RELEASE_DIR)ImageUtil.o $(RELEASE_DIR)KeyboardUtil.o $(RELEASE_DIR)KinectUtil.o $(RELEASE_DIR)MessageQueue.o $(RELEASE_DIR)Register.o $(CCFLAGS2) $(USED_LIBS) $(LDFLAGS)
+	$(CC) -o $(EXE_TRACKER) $(RELEASE_DIR)KeyboardUtil.o $(RELEASE_DIR)KinectUtil.o $(RELEASE_DIR)MessageQueue.o $(RELEASE_DIR)SceneDrawer.o $(RELEASE_DIR)StatisticsUtil.o $(RELEASE_DIR)StringUtil.o $(RELEASE_DIR)Tracker.o $(CCFLAGS2) $(USED_LIBS) $(LDFLAGS) 
+	$(CC) -o $(EXE_REC) $(RELEASE_DIR)ImageUtil.o $(RELEASE_DIR)KeyboardUtil.o $(RELEASE_DIR)KinectUtil.o $(RELEASE_DIR)MessageQueue.o $(RELEASE_DIR)StringUtil.o $(RELEASE_DIR)Recognizer.o $(CCFLAGS2) $(USED_LIBS) $(LDFLAGS)
+	$(CC) -o $(EXE_REG) $(RELEASE_DIR)ImageUtil.o $(RELEASE_DIR)KeyboardUtil.o $(RELEASE_DIR)KinectUtil.o $(RELEASE_DIR)MessageQueue.o $(RELEASE_DIR)StringUtil.o $(RELEASE_DIR)Register.o $(CCFLAGS2) $(USED_LIBS) $(LDFLAGS)
 	$(CC) $(DYNAMIC_LINK) -o $(EXE_LIB) $(RELEASE_DIR)MessageQueue.o $(RELEASE_DIR)TrackerRunnable.o $(CCFLAGS2) $(USED_LIBS) $(LDFLAGS)
 
 $(RELEASE_DIR)ImageUtil.o: 
@@ -53,7 +53,9 @@ $(RELEASE_DIR)MessageQueue.o: $(RELEASE_DIR)KinectUtil.o
 $(RELEASE_DIR)SceneDrawer.o:
 	$(CC) $(CCFLAGS) $(INC_DIRS) -o $(RELEASE_DIR)SceneDrawer.o $(SRC)SceneDrawer.cpp
 $(RELEASE_DIR)StatisticsUtil.o: $(RELEASE_DIR)MessageQueue.o
-	$(CC) $(CCFLAGS) $(INC_DIRS) -o $(RELEASE_DIR)StatisticsUtil.o $(SRC)StatisticsUtil.cpp	
+	$(CC) $(CCFLAGS) $(INC_DIRS) -o $(RELEASE_DIR)StatisticsUtil.o $(SRC)StatisticsUtil.cpp
+$(RELEASE_DIR)StringUtil.o: 
+	$(CC) $(CCFLAGS) $(INC_DIRS) -o $(RELEASE_DIR)StringUtil.o $(SRC)StringUtil.cpp	
 $(RELEASE_DIR)Recognizer.o: $(RELEASE_DIR)ImageUtil.o  $(RELEASE_DIR)KinectUtil.o $(RELEASE_DIR)MessageQueue.o
 	$(CC) $(CCFLAGS) $(INC_DIRS) -o $(RELEASE_DIR)Recognizer.o $(SRC)Recognizer.cpp
 $(RELEASE_DIR)Tracker.o: $(RELEASE_DIR)KeyboardUtil.o $(RELEASE_DIR)KinectUtil.o $(RELEASE_DIR)MessageQueue.o $(RELEASE_DIR)SceneDrawer.o $(RELEASE_DIR)StatisticsUtil.o
@@ -66,5 +68,27 @@ $(RELEASE_DIR)TrackerRunnable.o: $(RELEASE_DIR)MessageQueue.o
 clean: 
 	rm -rf $(RELEASE_DIR)*.o $(EXE_TRACKER) $(EXE_REC) $(EXE_REG) $(EXE_LIB)
 
-install:
+install: $(all)
+	sudo cp tracker /usr/bin/tracker
+	sudo cp recognizer /usr/bin/recognizer
+	sudo cp register /usr/bin/register
 	
+	sudo mkdir -pv /usr/share/true
+	sudo mkdir -pv /usr/share/true/LOG/
+	sudo cp -r Config/ /usr/share/true/Config/
+	sudo cp -r Eigenfaces/ /usr/share/true/Eigenfaces/
+	sudo cp -r Eigenfaces/facedata.xml /usr/share/true/Eigenfaces/facedata.xml
+	sudo cp -r Eigenfaces/haarcascade_frontalface_alt.xml /usr/share/true/Eigenfaces/haarcascade_frontalface_alt.xml
+	
+	# TODO : variavel só está durando a minha sessão no console.
+	TRUE_FILES_PATH=/usr/share/true/
+	export TRUE_FILES_PATH
+	
+	# TODO : instalar .so
+	
+uninstall: 
+	sudo rm /usr/bin/tracker
+	sudo rm /usr/bin/recognizer
+	sudo rm /usr/bin/register
+	
+	sudo rm -r /usr/share/true

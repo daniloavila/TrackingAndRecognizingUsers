@@ -62,7 +62,7 @@ int main(int argc, char** argv) {
 	printf("register\n");
 
 	if (argc >= 2 && strcmp(argv[1], "train") == 0) {
-		learn((char *) "Eigenfaces/train.txt");
+		learn((char *) TRAIN_DATA);
 	} else {
 		recognizeFromCam();
 	}
@@ -72,7 +72,7 @@ int main(int argc, char** argv) {
 void storeEigenfaceImages() {
 	//armazena a imagem media em um arquivo
 	printf("Salvando a imagem da face media como 'out_averageImage.bmp'.\n");
-	cvSaveImage("Eigenfaces/out_averageImage.bmp", pAvgTrainImg);
+	cvSaveImage(AVERAGE_IMAGE, pAvgTrainImg);
 
 	//cria uma nova imagem feita de varias imagens eigenfaces 
 	printf("Salvando o eigenvector %d como 'out_eigenfaces.bmp'\n", nEigens);
@@ -98,7 +98,7 @@ void storeEigenfaceImages() {
 			cvResetImageROI(bigImg);
 			cvReleaseImage(&byteImg);
 		}
-		cvSaveImage("Eigenfaces/out_eigenfaces.bmp", bigImg);
+		cvSaveImage(EIGEN_FACES, bigImg);
 		cvReleaseImage(&bigImg);
 	}
 }
@@ -144,7 +144,7 @@ int loadTrainingData(CvMat ** pTrainPersonNumMat) {
 	int i;
 
 	// cria uma interface arqivo - armazenamento
-	fileStorage = cvOpenFileStorage("Eigenfaces/facedata.xml", 0, CV_STORAGE_READ);
+	fileStorage = cvOpenFileStorage(FACE_DATA, 0, CV_STORAGE_READ);
 	if (!fileStorage) {
 		printf("Arquivo 'facedata.xml' nao pode ser aberto.\n");
 		return 0;
@@ -200,7 +200,7 @@ void storeTrainingData() {
 	int i;
 
 	// cria a interface arquivo-armazenamento
-	fileStorage = cvOpenFileStorage("Eigenfaces/facedata.xml", 0, CV_STORAGE_WRITE);
+	fileStorage = cvOpenFileStorage(FACE_DATA, 0, CV_STORAGE_WRITE);
 
 	// armazena os nomes das pessoas
 	cvWriteInt(fileStorage, "nPersons", nPersons);
@@ -426,7 +426,7 @@ CvMat* retrainOnline(void) {
 	cvFree( &projectedTrainFaceMat);
 
 	printf("Retreino com a nova pessoa ...\n");
-	learn((char *) "Eigenfaces/train.txt");
+	learn((char *) TRAIN_DATA);
 	printf("Retrinamento completo.\n");
 
 	if (!loadTrainingData(&trainPersonNumMat)) {
@@ -556,9 +556,9 @@ void recognizeFromCam(void) {
 				// amarzena os novos dados nos arquivo de treinamento
 				printf("Armazenando os dados de treinamento para nova pessoa '%s'.\n", newPersonName);
 				// concate a nova pessoa no final dos dados de treino
-				trainFile = fopen("Eigenfaces/train.txt", "a");
+				trainFile = fopen(TRAIN_DATA, "a");
 				for (i = 0; i < newPersonFaces; i++) {
-					sprintf(cstr, "Eigenfaces/data/%d_%s%d.pgm", nPersons + 1, newPersonName, i + 1);
+					sprintf(cstr, NEW_IMAGES_SCHEME, nPersons + 1, newPersonName, i + 1);
 					fprintf(trainFile, "%d %s %s\n", nPersons + 1, newPersonName, cstr);
 				}
 				fclose(trainFile);
@@ -641,7 +641,7 @@ void recognizeFromCam(void) {
 					printf("\007");
 					sleep(0.5);
 
-					sprintf(cstr, "Eigenfaces/data/%d_%s%d.pgm", nPersons + 1, newPersonName, newPersonFaces + 1);
+					sprintf(cstr, NEW_IMAGES_SCHEME, nPersons + 1, newPersonName, newPersonFaces + 1);
 					printf("Armazenando a face corrente de '%s' na imagem '%s'.\n", newPersonName, cstr);
 					cvSaveImage(cstr, processedFaceImg, NULL);
 					newPersonFaces++;

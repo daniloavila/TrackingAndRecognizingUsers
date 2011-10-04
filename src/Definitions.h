@@ -1,5 +1,11 @@
 #include <stdio.h>
 
+#include <XnOpenNI.h>
+#include <XnCodecIDs.h>
+#include <XnCppWrapper.h>
+
+#include "StringUtil.h"
+
 #ifndef DEFINITIONS_H_
 #define DEFINITIONS_H_
 
@@ -7,9 +13,19 @@
 
 #define JAVA_INTEGRATION // Define se será ou não enviado mensagens para o processo java.
 
-// #define DEBUG // Define se será ou não mostrado no console informações de log.
+//#define DEBUG // Define se será ou não mostrado no console informações de log.
 
 //#define SAVE_LOG // Define se será salvo um log sobre os usuários encontrados.
+
+//#define INSTALATION_VERSION // Define se será usado o path de instalação
+
+// TODO : Verificar necessidade de uma variavel de ambiente para esse path
+// no MAC é o msm path???
+#ifdef INSTALATION_VERSION
+#define RECOGNIZER_PATH "/usr/bin/recognizer"
+#else
+#define RECOGNIZER_PATH "recognizer"
+#endif
 
 
 /*********************************
@@ -37,8 +53,18 @@
 #define MAX_TIMES_OF_OBJECT_NO_DESLOCATION 5
 
 // arquivos de configuracao do kinect
+
+#ifdef INSTALATION_VERSION
+#define SAMPLE_XML_PATH concatStringToPathFiles("Config/SamplesConfig.xml")
+#else
 #define SAMPLE_XML_PATH "Config/SamplesConfig.xml"
+#endif
+
+#ifdef INSTALATION_VERSION
+#define SAMPLE_XML_PATH_REGISTER concatStringToPathFiles("Config/Register.xml")
+#else
 #define SAMPLE_XML_PATH_REGISTER "Config/Register.xml"
+#endif
 
 //define o numero de ajuste dos pixels do usuario da camera depth para o rgb
 #define ADJUSTMENT_LEFT 40
@@ -79,10 +105,49 @@
 #define MAX_SHARED_MEMORY 0x12bc
 
 // classificador para localizar a face em uma imagem
+#ifdef INSTALATION_VERSION
+#define HAARCASCADE_FRONTALFACE concatStringToPathFiles("Eigenfaces/haarcascade_frontalface_alt.xml")
+#else
 #define HAARCASCADE_FRONTALFACE "Eigenfaces/haarcascade_frontalface_alt.xml"
+#endif
+
+#ifdef INSTALATION_VERSION
+#define FACE_DATA concatStringToPathFiles("Eigenfaces/facedata.xml")
+#else
+#define FACE_DATA "Eigenfaces/facedata.xml"
+#endif
+
+#ifdef INSTALATION_VERSION
+#define TRAIN_DATA concatStringToPathFiles("Eigenfaces/train.txt")
+#else
+#define TRAIN_DATA "Eigenfaces/train.txt"
+#endif
+
+#ifdef INSTALATION_VERSION
+#define AVERAGE_IMAGE concatStringToPathFiles("Eigenfaces/out_averageImage.bmp")
+#else
+#define AVERAGE_IMAGE "Eigenfaces/out_averageImage.bmp"
+#endif
+
+#ifdef INSTALATION_VERSION
+#define EIGEN_FACES concatStringToPathFiles("Eigenfaces/out_eigenfaces.bmp")
+#else
+#define EIGEN_FACES "Eigenfaces/out_eigenfaces.bmp"
+#endif
+
+#ifdef INSTALATION_VERSION
+#define NEW_IMAGES_SCHEME concatStringToPathFiles("Eigenfaces/data/%d_%s%d.pgm")
+#else
+#define NEW_IMAGES_SCHEME "Eigenfaces/data/%d_%s%d.pgm"
+#endif
 
 #define NAME_OF_LOG_FILE "trackerLog"
+
+#ifdef INSTALATION_VERSION
+#define LOG_FOLDER concatStringToPathFiles("LOG/")
+#else
 #define LOG_FOLDER "LOG/"
+#endif
 
 // limiar de confianca para identificar o usuario
 #define THRESHOLD 0.9

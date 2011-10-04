@@ -280,7 +280,7 @@ int main(int argc, char **argv) {
 			fprintf(stderr, "%s\n", strError);
 			return (nRetVal);
 		} else if (nRetVal != XN_STATUS_OK) {
-			fprintf(stderr, "Open failed: %s\n", xnGetStatusString(nRetVal));
+			fprintf(stderr, "Open failed: %s -> %s\n", xnGetStatusString(nRetVal), SAMPLE_XML_PATH);
 			return (nRetVal);
 		}
 		errors.~EnumerationErrors();
@@ -300,9 +300,11 @@ int main(int argc, char **argv) {
 		exit(1);
 	}
 
-	//inicinado o processo que reconhece os novoc usuarios encontrados
+	//iniciando o processo que reconhece os novos usuarios encontrados
 	if (faceRecId == 0) {
-		execl("recognizer", "recognizer", (char *) 0);
+		printf("Iniciando processo do recognizer a partir do tracker\n");
+		execl(RECOGNIZER_PATH, "recognizer", (char *) 0);
+		return EXIT_SUCCESS;
 	}
 
 	nRetVal = g_SceneAnalyzer.Create(g_Context);
@@ -371,6 +373,10 @@ int main(int argc, char **argv) {
 	return EXIT_SUCCESS;
 }
 
+void reexecute(int signal) {
+	cleanupQueueAndExit(signal);
+	execl("tracker", "tracker", (char *) 0);
+}
 
 
 // ##########################################################
@@ -386,7 +392,7 @@ void getTrackerSignals() {
 	signal(SIGTRAP, cleanupQueueAndExit);
 	signal(SIGABRT, cleanupQueueAndExit);
 	signal(SIGKILL, cleanupQueueAndExit);
-	signal(SIGSEGV, SIG_DFL);
+	signal(SIGSEGV, reexecute);
 	signal(SIGTERM, cleanupQueueAndExit);
 	signal(SIGSYS, cleanupQueueAndExit);
 }
