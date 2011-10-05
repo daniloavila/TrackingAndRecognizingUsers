@@ -129,6 +129,7 @@ JNIEXPORT void JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriver_s
 	cleanupQueue(SIGINT);
 }
 
+
 /*
  * Class:     br_unb_unbiquitous_ubiquitos_uos_driver_UserDriver
  * Method:    saveImage
@@ -151,8 +152,22 @@ JNIEXPORT void JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriver_s
 		return;
 	}
 
-	IplImage* frame = cvCreateImage(cvSize(KINECT_HEIGHT_CAPTURE, KINECT_WIDTH_CAPTURE), IPL_DEPTH_8U, KINECT_NUMBER_OF_CHANNELS);
-	frame->imageData = (char *) image;
+	// Buscando o nome da pessoa
+	const char *newPersonName = env->GetStringUTFChars(name, NULL);
+
+	// Buscando o tamanho da imagem
+    int arrayLength = env->GetArrayLength(image);
+
+    // Buscando a imagem
+	jbyte *imageArray = env->GetByteArrayElements(image, NULL);
+	char *imageArrayConverted = (char *)(malloc(sizeof (char) * arrayLength));
+    for(int i = 0;i < arrayLength;++i){
+        imageArrayConverted[arrayLength - i] = (char)(imageArray[i]);
+    }
+
+    // Criando a IplImage
+    IplImage* frame = cvCreateImage(cvSize(KINECT_HEIGHT_CAPTURE, KINECT_WIDTH_CAPTURE), IPL_DEPTH_8U, KINECT_NUMBER_OF_CHANNELS);
+    frame->imageData = (char*)(imageArrayConverted);
 
 	// transforma a imagem em escala de cinza
 	greyImg = convertImageToGreyscale(frame);
@@ -171,7 +186,8 @@ JNIEXPORT void JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriver_s
 
 		//salvando a imagem
 		nPeople = getNumberOfRegisteredPersons();
-		sprintf(cstr, NEW_IMAGES_SCHEME, nPeople + 1, name, index);
+		sprintf(cstr, NEW_IMAGES_SCHEME, nPeople + 1, newPersonName, index);
+
 		cvSaveImage(cstr, equalizedImg, NULL);
 
 		// libera os recursos
@@ -179,10 +195,18 @@ JNIEXPORT void JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriver_s
 		cvReleaseImage(&faceImg);
 		cvReleaseImage(&sizedImg);
 		cvReleaseImage(&equalizedImg);
+
+		FILE *trainFile = fopen(TRAIN_DATA, "a");
+		fprintf(trainFile, "%d %s %s\n", nPeople + 1, newPersonName, cstr);
+		fclose(trainFile);
 	}
 
 }
 
+/**
+ * TODO : Refatorar esse metodo para que busque o ultimo ID do Train e não o numero de pessoas conhecidas do FACEDATA
+ * pois da erro quando eu adiciono dois usuários seguidamente e não treino ao final da inserção
+ */
 int getNumberOfRegisteredPersons(){
 	CvFileStorage * fileStorage;
 
