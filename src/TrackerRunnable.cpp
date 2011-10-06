@@ -38,17 +38,23 @@ using namespace std;
 extern "C" {
 #endif
 
+//****************************************************************************************
+//				ASSINATURA DAS FUNCOES
+//****************************************************************************************
 void lostTrackerRunnalbeSignals();
 void getTrackerRunnalbeSignals();
 int getNumberOfRegisteredPersons();
 void learn(char *szFileTrain);
+void cleanupQueue(int signal);
 
 
 int idQueueComunicationJavaC = 0;
 int trackerId = 0;
 int registerId = 0;
 
-//treinamento
+//****************************************************************************************
+//				VARIAVEIS UTILIZADAS NO TREINO
+//****************************************************************************************
 int nTrainFaces = 0;
 CvMat * projectedTrainFaceMat = 0; // projected training faces
 int nEigens = 0; // numero de eigenvalues
@@ -61,14 +67,10 @@ vector<string> personNames; // array dos nomes das pessoas (idexado pelo numero 
 int nPersons = 0; // numero de pessoas no cenario de treino
 CvMat * eigenValMat = 0; // eigenvalues
 
-// TODO : Tales - 10/09/2011 - Metodo não é chamado quando mata o processo java. Verificar o que acontece com os sinais.
-void cleanupQueue(int signal) {
-	lostTrackerRunnalbeSignals();
-	printLogConsole("Signal TrackerRunnable - %d\n", signal);
 
-	kill(trackerId, signal);
-	wait((int*)0);
-}
+//****************************************************************************************
+//				MÉTODOS DA CLASSE JAVA IMPLEMENTADAS AQUI
+//****************************************************************************************
 
 /*
  * Class:     br_unb_unbiquitous_ubiquitos_uos_driver_UserDriver_TrackerRunnale
@@ -244,6 +246,18 @@ int getNumberOfRegisteredPersons(){
 	return nPersons;
 }
 
+//****************************************************************************************
+//				FUNCOES UTILIZADAS PARA INTERCEPTAR OS DIVERSOS TIPOS DE SINAIS
+//****************************************************************************************
+
+void cleanupQueue(int signal) {
+	lostTrackerRunnalbeSignals();
+	printLogConsole("Signal TrackerRunnable - %d\n", signal);
+
+	kill(trackerId, signal);
+	wait((int*)0);
+}
+
 void getTrackerRunnalbeSignals() {
 	signal(SIGINT, cleanupQueue);
 	signal(SIGQUIT, cleanupQueue);
@@ -267,6 +281,11 @@ void lostTrackerRunnalbeSignals() {
 	signal(SIGTERM, SIG_IGN);
 	signal(SIGSYS, SIG_IGN);
 }
+
+//****************************************************************************************
+//							FUNCOES UTILIZADAS NO TREINO DO ALGORITMO
+//****************************************************************************************
+
 
 // le os nomes e as imagens das pessoas de um arquivo txt, e le todas as imagens listadas
 int loadFaceImgArray(char * filename) {
