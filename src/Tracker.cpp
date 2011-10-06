@@ -232,10 +232,10 @@ void cleanupQueueAndExit(int i) {
 	//matando a fila de mensagens que o tracker recebe respostas
 	msgctl(idQueueResponse, IPC_RMID, NULL);
 	kill(faceRecId, SIGUSR1);
-
-#ifdef DEBUG
+	wait((int*)0);
+	
 	printfLogComplete(&users, stdout);
-#endif
+// #endif
 
 #ifdef SAVE_LOG
 	fprintf(trackerLogFile, "\n\n");
@@ -251,6 +251,7 @@ void cleanupQueueAndExit(int i) {
 	fclose(trackerLogFile);
 #endif
 
+	printf("Terminando TRACKER\n");
 	exit(EXIT_SUCCESS);
 }
 
