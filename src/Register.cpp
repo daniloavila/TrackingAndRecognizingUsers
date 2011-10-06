@@ -63,6 +63,7 @@ int main(int argc, char** argv) {
 
 	if (argc >= 2 && strcmp(argv[1], "train") == 0) {
 		learn((char *) TRAIN_DATA);
+		exit(EXIT_SUCCESS);
 	} else {
 		recognizeFromCam();
 	}
