@@ -232,7 +232,11 @@ void cleanupQueueAndExit(int i) {
 	//matando a fila de mensagens que o tracker recebe respostas
 	msgctl(idQueueResponse, IPC_RMID, NULL);
 	kill(faceRecId, SIGUSR1);
-	wait();
+	#if (XN_PLATFORM == XN_PLATFORM_MACOSX)
+		wait((int*)0);
+	#else
+		wait();
+	#endif
 	
 	printfLogComplete(&users, stdout);
 // #endif
