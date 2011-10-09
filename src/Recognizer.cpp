@@ -411,6 +411,5 @@ void cleanup(int i){
 
 	msgctl(idQueueRequest, IPC_RMID, NULL);
 
-	printf("Terminando RECOGNIZER\n");
 	exit(EXIT_SUCCESS);
 }

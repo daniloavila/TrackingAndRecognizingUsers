@@ -251,7 +251,6 @@ void cleanupQueueAndExit(int i) {
 	fclose(trackerLogFile);
 #endif
 
-	printf("Terminando TRACKER\n");
 	exit(EXIT_SUCCESS);
 }
 
