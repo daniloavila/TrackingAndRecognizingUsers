@@ -14,12 +14,13 @@ DYNAMIC_LINK =
 
 USED_LIBS += -lOpenNI
 
+# Se alterar PATH aqui deve se alterar no Defintions.h
 NAME_OF_LIBRARY =
 SHARES_LIBRARY_PATH = /usr/lib/
 BIN_PATH = /usr/bin/
 FILES_PATH = /usr/share/true
 
-# Se alterar o nome aqui deve se alterar no Defintions.h
+# Se alterar o NOME aqui deve se alterar no Defintions.h
 EXE_TRACKER = tracker
 EXE_REC = recognizer
 EXE_REG = register
@@ -58,7 +59,7 @@ all: $(OBJS)
 	$(CC) -o $(EXE_TRACKER) $(RELEASE_DIR)KeyboardUtil.o $(RELEASE_DIR)KinectUtil.o $(RELEASE_DIR)MessageQueue.o $(RELEASE_DIR)SceneDrawer.o $(RELEASE_DIR)StatisticsUtil.o $(RELEASE_DIR)StringUtil.o $(RELEASE_DIR)Tracker.o $(CCFLAGS2) $(USED_LIBS) $(LDFLAGS) 
 	$(CC) -o $(EXE_REC) $(RELEASE_DIR)ImageUtil.o $(RELEASE_DIR)KeyboardUtil.o $(RELEASE_DIR)KinectUtil.o $(RELEASE_DIR)MessageQueue.o $(RELEASE_DIR)StringUtil.o $(RELEASE_DIR)Recognizer.o $(CCFLAGS2) $(USED_LIBS) $(LDFLAGS)
 	$(CC) -o $(EXE_REG) $(RELEASE_DIR)ImageUtil.o $(RELEASE_DIR)KeyboardUtil.o $(RELEASE_DIR)KinectUtil.o $(RELEASE_DIR)MessageQueue.o $(RELEASE_DIR)StringUtil.o $(RELEASE_DIR)Register.o $(CCFLAGS2) $(USED_LIBS) $(LDFLAGS)
-	$(CC) $(DYNAMIC_LINK) -o $(EXE_LIB) $(RELEASE_DIR)MessageQueue.o $(RELEASE_DIR)ImageUtil.o $(RELEASE_DIR)TrackerRunnable.o $(CCFLAGS2) $(USED_LIBS) $(LDFLAGS)
+	$(CC) $(DYNAMIC_LINK) -o $(EXE_LIB) $(RELEASE_DIR)MessageQueue.o $(RELEASE_DIR)ImageUtil.o $(RELEASE_DIR)StringUtil.o $(RELEASE_DIR)TrackerRunnable.o $(CCFLAGS2) $(USED_LIBS) $(LDFLAGS)
 
 $(RELEASE_DIR)ImageUtil.o: 
 	$(CC) $(CCFLAGS) $(INC_DIRS) -o $(RELEASE_DIR)ImageUtil.o $(SRC)ImageUtil.cpp

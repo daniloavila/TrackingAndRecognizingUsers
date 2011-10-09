@@ -13,12 +13,13 @@
 
 #define JAVA_INTEGRATION // Define se será ou não enviado mensagens para o processo java.
 
-#define DEBUG // Define se será ou não mostrado no console informações de log.
+//#define DEBUG // Define se será ou não mostrado no console informações de log.
 
-#define SAVE_LOG // Define se será salvo um log sobre os usuários encontrados.
+//#define SAVE_LOG // Define se será salvo um log sobre os usuários encontrados.
 
-#define INSTALATION_VERSION // Define se será usado o path de instalação
+//#define INSTALATION_VERSION // Define se será usado o path de instalação
 
+// Se alterar aqui alterar também o MAKEFILE
 #define EXEC_NAME_RECOGNIZER "recognizer"
 #define EXEC_NAME_TRACKER "tracker"
 

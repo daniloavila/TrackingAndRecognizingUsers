@@ -188,6 +188,8 @@ JNIEXPORT void JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriver_s
 	char cstr[256];
 	int nPeople;
 
+	printf("Teste 1\n");
+
 	// le o classificador utilizado para detecao
 	faceCascade = (CvHaarClassifierCascade*) cvLoad(HAARCASCADE_FRONTALFACE, 0, 0, 0);
 	if (!faceCascade) {
@@ -201,6 +203,8 @@ JNIEXPORT void JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriver_s
 	// Buscando o tamanho da imagem
     int arrayLength = env->GetArrayLength(image);
 
+    printf("Teste 2\n");
+
     // Buscando a imagem
 	jbyte *imageArray = env->GetByteArrayElements(image, NULL);
 	char *imageArrayConverted = (char *)(malloc(sizeof (char) * arrayLength));
@@ -212,11 +216,18 @@ JNIEXPORT void JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriver_s
     IplImage* frame = cvCreateImage(cvSize(KINECT_HEIGHT_CAPTURE, KINECT_WIDTH_CAPTURE), IPL_DEPTH_8U, KINECT_NUMBER_OF_CHANNELS);
     frame->imageData = (char*)(imageArrayConverted);
 
+    cvNamedWindow("teste");
+    cvMoveWindow("teste", 0, 0);
+    cvShowImage("teste", frame);
+    cvWaitKey(10);
+
 	// transforma a imagem em escala de cinza
 	greyImg = convertImageToGreyscale(frame);
 
 	// realiza deteccao facial na imagem de entrada, usando o classificador
 	faceRect = detectFaceInImage(greyImg, faceCascade);					
+
+	printf("Ai => %d", faceRect.x);
 
 	// veririfica se uma faxe foi detectada
 	if (faceRect.width > 0) {
