@@ -101,7 +101,7 @@ int main(int argc, char** argv) {
 	// projetando as imagens do subespaco PCA
 	projectedTestFace = (float *) cvAlloc(nEigens * sizeof(float));
 
-	mkdir("Eigenfaces/data", 0777);
+	mkdir(DATA_PATH, 0777);
 
 	// lendo o classificador
 	frontalFaceCascade = (CvHaarClassifierCascade*) cvLoad(frontalFaceCascadeFilename, 0, 0, 0);

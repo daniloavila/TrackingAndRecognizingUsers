@@ -232,7 +232,7 @@ void cleanupQueueAndExit(int i) {
 	//matando a fila de mensagens que o tracker recebe respostas
 	msgctl(idQueueResponse, IPC_RMID, NULL);
 	kill(faceRecId, SIGUSR1);
-	wait((int*)0);
+	wait();
 	
 	printfLogComplete(&users, stdout);
 // #endif
@@ -304,7 +304,7 @@ int main(int argc, char **argv) {
 	//iniciando o processo que reconhece os novos usuarios encontrados
 	if (faceRecId == 0) {
 		printf("Iniciando processo do recognizer a partir do tracker\n");
-		execl(RECOGNIZER_PATH, "recognizer", (char *) 0);
+		execl(RECOGNIZER_PATH, EXEC_NAME_RECOGNIZER, (char *) 0);
 		return EXIT_SUCCESS;
 	}
 
@@ -324,6 +324,7 @@ int main(int argc, char **argv) {
 		sprintf(trackerLogFolderFrames, "%s%s_%02d-%02d-%04d_%02d:%02dFrames/", LOG_FOLDER, NAME_OF_LOG_FILE, local->tm_mday, local->tm_mon + 1, local->tm_year + 1900, local->tm_hour,
 				local->tm_min);
 		mkdir(trackerLogFolderFrames, 0777);
+
 
 		trackerLogFile = fopen(trackerLogFileName, "w+");
 
@@ -376,7 +377,7 @@ int main(int argc, char **argv) {
 
 void reexecute(int signal) {
 	cleanupQueueAndExit(signal);
-	execl("tracker", "tracker", (char *) 0);
+	execl(TRACKER_PATH, EXEC_NAME_TRACKER, (char *) 0);
 }
 
 

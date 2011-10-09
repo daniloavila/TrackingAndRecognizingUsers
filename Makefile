@@ -14,27 +14,45 @@ DYNAMIC_LINK =
 
 USED_LIBS += -lOpenNI
 
+NAME_OF_LIBRARY =
+SHARES_LIBRARY_PATH = /usr/lib/
+BIN_PATH = /usr/bin/
+FILES_PATH = /usr/share/true
+
+# Se alterar o nome aqui deve se alterar no Defintions.h
 EXE_TRACKER = tracker
 EXE_REC = recognizer
 EXE_REG = register
 
 ifeq ("$(OSTYPE)","Darwin")
+	NAME_OF_LIBRARY = libTrackerRunnable.dylib
 	CCFLAGS += -arch x86_64
 	LDFLAGS += -framework OpenGL -framework GLUT `pkg-config --cflags opencv` `pkg-config --libs opencv`
 	CCFLAGS2 += -arch x86_64
 	SO_LINK += -I/System/Library/Java/JavaVirtualMachines/1.6.0.jdk/Contents/Home/include 
-	EXE_LIB = $(LIB_DIR)libTrackerRunnable.dylib
+	EXE_LIB = $(LIB_DIR)$(NAME_OF_LIBRARY)
 	DYNAMIC_LINK += -dynamiclib -Wl,-dylib_install_name,TrackerRunnable
 else
+	NAME_OF_LIBRARY = libTrackerRunnable.so
 	USED_LIBS += -lglut -lglib-2.0 -lcv -lcxcore 
 	INC_DIRS += -I/usr/local/include/opencv 
 	LDFLAGS += `pkg-config --cflags opencv` `pkg-config --libs opencv`
 	SO_LINK += -I/usr/lib/jvm/java-6-openjdk/include -I/usr/lib/jvm/java-6-openjdk/include/linux
-	EXE_LIB = $(LIB_DIR)libTrackerRunnable.so
+	EXE_LIB = $(LIB_DIR)$(NAME_OF_LIBRARY)
 	DYNAMIC_LINK += -shared -Wl,-soname,TrackerRunnable
 endif
 
-OBJS: $(RELEASE_DIR)Recognizer.o $(RELEASE_DIR)ImageUtil.o $(RELEASE_DIR)KeyboardUtil.o $(RELEASE_DIR)KinectUtil.o $(RELEASE_DIR)MessageQueue.o $(RELEASE_DIR)SceneDrawer.o $(RELEASE_DIR)StatisticsUtil.o $(RELEASE_DIR)Tracker.o $(RELEASE_DIR)Register.o $(RELEASE_DIR)TrackerRunnable.o $(RELEASE_DIR)StringUtil.o
+OBJS: 	$(RELEASE_DIR)Recognizer.o \
+ 		$(RELEASE_DIR)ImageUtil.o \
+ 		$(RELEASE_DIR)KeyboardUtil.o \
+ 		$(RELEASE_DIR)KinectUtil.o \
+ 		$(RELEASE_DIR)MessageQueue.o \
+ 		$(RELEASE_DIR)SceneDrawer.o \
+ 		$(RELEASE_DIR)StatisticsUtil.o \
+ 		$(RELEASE_DIR)Tracker.o \
+ 		$(RELEASE_DIR)Register.o \
+ 		$(RELEASE_DIR)TrackerRunnable.o \
+ 		$(RELEASE_DIR)StringUtil.o
 
 all: $(OBJS)
 	$(CC) -o $(EXE_TRACKER) $(RELEASE_DIR)KeyboardUtil.o $(RELEASE_DIR)KinectUtil.o $(RELEASE_DIR)MessageQueue.o $(RELEASE_DIR)SceneDrawer.o $(RELEASE_DIR)StatisticsUtil.o $(RELEASE_DIR)StringUtil.o $(RELEASE_DIR)Tracker.o $(CCFLAGS2) $(USED_LIBS) $(LDFLAGS) 
@@ -69,26 +87,23 @@ clean:
 	rm -rf $(RELEASE_DIR)*.o $(EXE_TRACKER) $(EXE_REC) $(EXE_REG) $(EXE_LIB)
 
 install: $(all)
-	sudo cp tracker /usr/bin/tracker
-	sudo cp recognizer /usr/bin/recognizer
-	sudo cp register /usr/bin/register
+	sudo cp $(EXE_TRACKER) $(BIN_PATH)$(EXE_TRACKER)
+	sudo cp recognizer $(BIN_PATH)$(EXE_REC)
+	sudo cp register $(BIN_PATH)$(EXE_REG)
 	
-	sudo mkdir -pv /usr/share/true
-	sudo mkdir -pv /usr/share/true/LOG/
-	sudo cp -r Config/ /usr/share/true/Config/
-	sudo cp -r Eigenfaces/ /usr/share/true/Eigenfaces/
-	sudo cp -r Eigenfaces/facedata.xml /usr/share/true/Eigenfaces/facedata.xml
-	sudo cp -r Eigenfaces/haarcascade_frontalface_alt.xml /usr/share/true/Eigenfaces/haarcascade_frontalface_alt.xml
+	sudo mkdir -pv $(FILES_PATH)
+	sudo mkdir -pv $(FILES_PATH)/LOG/
+	sudo cp -r Config/ $(FILES_PATH)/Config/
+	sudo cp -r Eigenfaces/ $(FILES_PATH)/Eigenfaces/
+	sudo cp -r Eigenfaces/facedata.xml $(FILES_PATH)/Eigenfaces/facedata.xml
+	sudo cp -r Eigenfaces/haarcascade_frontalface_alt.xml $(FILES_PATH)/Eigenfaces/haarcascade_frontalface_alt.xml
 	
-	# TODO : variavel só está durando a minha sessão no console.
-	TRUE_FILES_PATH=/usr/share/true/
-	export TRUE_FILES_PATH
-	
-	# TODO : instalar .so
+	sudo cp lib/$(NAME_OF_LIBRARY) $(SHARES_LIBRARY_PATH)$(NAME_OF_LIBRARY).1
+	ldconfig -n $(FILES_PATH)/lib/
 	
 uninstall: 
-	sudo rm /usr/bin/tracker
-	sudo rm /usr/bin/recognizer
-	sudo rm /usr/bin/register
+	sudo rm $(BIN_PATH)$(EXE_TRACKER)
+	sudo rm $(BIN_PATH)$(EXE_REC)
+	sudo rm $(BIN_PATH)$(EXE_REG)
 	
-	sudo rm -r /usr/share/true
+	sudo rm -r $(FILES_PATH)

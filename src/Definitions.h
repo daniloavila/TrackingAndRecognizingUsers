@@ -13,11 +13,45 @@
 
 #define JAVA_INTEGRATION // Define se será ou não enviado mensagens para o processo java.
 
-// #define DEBUG // Define se será ou não mostrado no console informações de log.
+#define DEBUG // Define se será ou não mostrado no console informações de log.
 
-//#define SAVE_LOG // Define se será salvo um log sobre os usuários encontrados.
+#define SAVE_LOG // Define se será salvo um log sobre os usuários encontrados.
 
-//#define INSTALATION_VERSION // Define se será usado o path de instalação
+#define INSTALATION_VERSION // Define se será usado o path de instalação
+
+#define EXEC_NAME_RECOGNIZER "recognizer"
+#define EXEC_NAME_TRACKER "tracker"
+
+// classificador para localizar a face em uma imagem
+#ifdef INSTALATION_VERSION
+	#define HAARCASCADE_FRONTALFACE concatStringToPathFiles("Eigenfaces/haarcascade_frontalface_alt.xml")
+	#define FACE_DATA concatStringToPathFiles("Eigenfaces/facedata.xml")
+	#define TRAIN_DATA concatStringToPathFiles("Eigenfaces/train.txt")
+	#define AVERAGE_IMAGE concatStringToPathFiles("Eigenfaces/out_averageImage.bmp")
+	#define EIGEN_FACES concatStringToPathFiles("Eigenfaces/out_eigenfaces.bmp")
+	#define NEW_IMAGES_SCHEME concatStringToPathFiles("Eigenfaces/data/%d_%s%d.pgm")
+	#define LOG_FOLDER "LOG/"
+	#define SAMPLE_XML_PATH concatStringToPathFiles("Config/SamplesConfig.xml")
+	#define SAMPLE_XML_PATH_REGISTER concatStringToPathFiles("Config/Register.xml")
+	#define DATA_PATH concatStringToPathFiles("Eigenfaces/data")
+	#define RECOGNIZER_PATH concatStringToPathBin(EXEC_NAME_RECOGNIZER)
+	#define TRACKER_PATH concatStringToPathBin(EXEC_NAME_TRACKER)
+#else
+	#define HAARCASCADE_FRONTALFACE "Eigenfaces/haarcascade_frontalface_alt.xml"
+	#define FACE_DATA "Eigenfaces/facedata.xml"
+	#define TRAIN_DATA "Eigenfaces/train.txt"
+	#define AVERAGE_IMAGE "Eigenfaces/out_averageImage.bmp"
+	#define EIGEN_FACES "Eigenfaces/out_eigenfaces.bmp"
+	#define NEW_IMAGES_SCHEME "Eigenfaces/data/%d_%s%d.pgm"
+	#define LOG_FOLDER "LOG/"
+	#define SAMPLE_XML_PATH "Config/SamplesConfig.xml"
+	#define SAMPLE_XML_PATH_REGISTER "Config/Register.xml"
+	#define DATA_PATH "Eigenfaces/data"
+	#define RECOGNIZER_PATH EXEC_NAME_RECOGNIZER
+	#define TRACKER_PATH EXEC_NAME_TRACKER
+#endif
+
+#define NAME_OF_LOG_FILE "trackerLog.out"
 
 /*********************************
  ****** Register parameters ******
@@ -84,33 +118,6 @@
 // key da memoria compartilhada entre "FaceRec" e "UserTracker". Utilizado para enviar a imagem do novo usuario detectado.
 #define SHARED_MEMORY 0x1230
 #define MAX_SHARED_MEMORY 0x12bc
-
-// classificador para localizar a face em uma imagem
-#ifdef INSTALATION_VERSION
-	#define HAARCASCADE_FRONTALFACE concatStringToPathFiles("Eigenfaces/haarcascade_frontalface_alt.xml")
-	#define FACE_DATA concatStringToPathFiles("Eigenfaces/facedata.xml")
-	#define TRAIN_DATA concatStringToPathFiles("Eigenfaces/train.txt")
-	#define AVERAGE_IMAGE concatStringToPathFiles("Eigenfaces/out_averageImage.bmp")
-	#define EIGEN_FACES concatStringToPathFiles("Eigenfaces/out_eigenfaces.bmp")
-	#define NEW_IMAGES_SCHEME concatStringToPathFiles("Eigenfaces/data/%d_%s%d.pgm")
-	#define LOG_FOLDER concatStringToPathFiles("LOG/")
-	#define SAMPLE_XML_PATH concatStringToPathFiles("Config/SamplesConfig.xml")
-	#define SAMPLE_XML_PATH_REGISTER concatStringToPathFiles("Config/Register.xml")
-	#define RECOGNIZER_PATH "/usr/bin/recognizer"
-#else
-	#define HAARCASCADE_FRONTALFACE "Eigenfaces/haarcascade_frontalface_alt.xml"
-	#define FACE_DATA "Eigenfaces/facedata.xml"
-	#define TRAIN_DATA "Eigenfaces/train.txt"
-	#define AVERAGE_IMAGE "Eigenfaces/out_averageImage.bmp"
-	#define EIGEN_FACES "Eigenfaces/out_eigenfaces.bmp"
-	#define NEW_IMAGES_SCHEME "Eigenfaces/data/%d_%s%d.pgm"
-	#define LOG_FOLDER "LOG/"
-	#define SAMPLE_XML_PATH "Config/SamplesConfig.xml"
-	#define SAMPLE_XML_PATH_REGISTER "Config/Register.xml"
-	#define RECOGNIZER_PATH "recognizer"
-#endif
-
-#define NAME_OF_LOG_FILE "trackerLog"
 
 // limiar de confianca para identificar o usuario
 #define THRESHOLD 0.9

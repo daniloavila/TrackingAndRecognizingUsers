@@ -144,7 +144,7 @@ JNIEXPORT void JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriver_s
 
 	//inicinado o processo que reconhece os novoc usuarios encontrados
 	if (trackerId == 0) {
-		execl("tracker", "tracker", (char *) 0);
+		execl(TRACKER_PATH, EXEC_NAME_TRACKER, (char *) 0);
 	}
 }
 
@@ -279,7 +279,7 @@ void cleanupQueue(int signal) {
 	printLogConsole("Signal TrackerRunnable - %d\n", signal);
 
 	kill(trackerId, signal);
-	wait((int*)0);
+	wait();
 }
 
 void getTrackerRunnalbeSignals() {
