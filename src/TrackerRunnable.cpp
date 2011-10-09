@@ -279,7 +279,12 @@ void cleanupQueue(int signal) {
 	printLogConsole("Signal TrackerRunnable - %d\n", signal);
 
 	kill(trackerId, signal);
-	wait();
+	#if (XN_PLATFORM == XN_PLATFORM_MACOSX)
+		wait((int*)0);
+	#else
+		wait();
+	#endif
+
 }
 
 void getTrackerRunnalbeSignals() {
