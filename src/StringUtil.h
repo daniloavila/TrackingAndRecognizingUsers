@@ -8,8 +8,8 @@
 #ifndef STRINGUTIL_H_
 #define STRINGUTIL_H_
 
+// Se alterar aqui alterar também o MAKEFILE
 #define TRUE_FILES_PATH "/usr/share/true/"
-
 #define TRUE_BIN_PATH "/usr/bin/"
 
 char* concatStrings(const char *path, const char *src);
