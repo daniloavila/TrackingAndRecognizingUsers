@@ -5,6 +5,8 @@
 
 //#include "Definitions.h"
 
+using namespace std;
+
 #ifndef STRINGUTIL_H_
 #define STRINGUTIL_H_
 
@@ -17,5 +19,7 @@ char* concatStrings(const char *path, const char *src);
 char* concatStringToPathFiles(const char *src);
 
 char* concatStringToPathBin(const char *src);
+
+const char* replaceInString(char *src, const char *s1, const char *s2);
 
 #endif /* STRINGUTIL_H_ */

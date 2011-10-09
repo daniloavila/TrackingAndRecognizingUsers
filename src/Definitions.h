@@ -28,6 +28,7 @@
 	#define HAARCASCADE_FRONTALFACE concatStringToPathFiles("Eigenfaces/haarcascade_frontalface_alt.xml")
 	#define FACE_DATA concatStringToPathFiles("Eigenfaces/facedata.xml")
 	#define TRAIN_DATA concatStringToPathFiles("Eigenfaces/train.txt")
+	#define TRAIN_DATA_AUX concatStringToPathFiles("Eigenfaces/train_aux.txt")
 	#define AVERAGE_IMAGE concatStringToPathFiles("Eigenfaces/out_averageImage.bmp")
 	#define EIGEN_FACES concatStringToPathFiles("Eigenfaces/out_eigenfaces.bmp")
 	#define NEW_IMAGES_SCHEME concatStringToPathFiles("Eigenfaces/data/%d_%s%d.pgm")
@@ -41,6 +42,7 @@
 	#define HAARCASCADE_FRONTALFACE "Eigenfaces/haarcascade_frontalface_alt.xml"
 	#define FACE_DATA "Eigenfaces/facedata.xml"
 	#define TRAIN_DATA "Eigenfaces/train.txt"
+	#define TRAIN_DATA_AUX "Eigenfaces/train_aux.txt"
 	#define AVERAGE_IMAGE "Eigenfaces/out_averageImage.bmp"
 	#define EIGEN_FACES "Eigenfaces/out_eigenfaces.bmp"
 	#define NEW_IMAGES_SCHEME "Eigenfaces/data/%d_%s%d.pgm"

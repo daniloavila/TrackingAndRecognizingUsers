@@ -103,8 +103,9 @@ install: $(all)
 	ldconfig -n $(FILES_PATH)/lib/
 	
 uninstall: 
-	sudo rm $(BIN_PATH)$(EXE_TRACKER)
-	sudo rm $(BIN_PATH)$(EXE_REC)
-	sudo rm $(BIN_PATH)$(EXE_REG)
+	sudo rm -f $(BIN_PATH)$(EXE_TRACKER)
+	sudo rm -f $(BIN_PATH)$(EXE_REC)
+	sudo rm -f $(BIN_PATH)$(EXE_REG)
 	
-	sudo rm -r $(FILES_PATH)
+	sudo rm -r -f $(FILES_PATH)
+	sudo rm -f $(SHARES_LIBRARY_PATH)$(NAME_OF_LIBRARY).1

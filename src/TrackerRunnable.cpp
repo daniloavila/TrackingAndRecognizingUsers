@@ -176,9 +176,8 @@ JNIEXPORT void JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriver_t
 /*
  * Class:     br_unb_unbiquitous_ubiquitos_uos_driver_UserDriver
  * Method:    saveImage
- * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriver_saveImage(JNIEnv * env, jobject obj, jstring name, jint index, jbyteArray image) {
+JNIEXPORT jboolean JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriver_saveImage(JNIEnv * env, jobject obj, jstring name, jint index, jbyteArray image) {
 	IplImage *greyImg;
 	IplImage *faceImg;
 	IplImage *sizedImg;
@@ -188,13 +187,12 @@ JNIEXPORT void JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriver_s
 	char cstr[256];
 	int nPeople;
 
-	printf("Teste 1\n");
-
 	// le o classificador utilizado para detecao
 	faceCascade = (CvHaarClassifierCascade*) cvLoad(HAARCASCADE_FRONTALFACE, 0, 0, 0);
 	if (!faceCascade) {
 		printf("ERROR em recognizeFromCam(): Classificador '%s' nao pode ser lido.\n", HAARCASCADE_FRONTALFACE);
-		return;
+		// TODO : lançar exceção
+		return false;
 	}
 
 	// Buscando o nome da pessoa
@@ -202,8 +200,6 @@ JNIEXPORT void JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriver_s
 
 	// Buscando o tamanho da imagem
     int arrayLength = env->GetArrayLength(image);
-
-    printf("Teste 2\n");
 
     // Buscando a imagem
 	jbyte *imageArray = env->GetByteArrayElements(image, NULL);
@@ -216,18 +212,11 @@ JNIEXPORT void JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriver_s
     IplImage* frame = cvCreateImage(cvSize(KINECT_HEIGHT_CAPTURE, KINECT_WIDTH_CAPTURE), IPL_DEPTH_8U, KINECT_NUMBER_OF_CHANNELS);
     frame->imageData = (char*)(imageArrayConverted);
 
-    cvNamedWindow("teste");
-    cvMoveWindow("teste", 0, 0);
-    cvShowImage("teste", frame);
-    cvWaitKey(10);
-
 	// transforma a imagem em escala de cinza
 	greyImg = convertImageToGreyscale(frame);
 
 	// realiza deteccao facial na imagem de entrada, usando o classificador
 	faceRect = detectFaceInImage(greyImg, faceCascade);					
-
-	printf("Ai => %d", faceRect.x);
 
 	// veririfica se uma faxe foi detectada
 	if (faceRect.width > 0) {
@@ -253,8 +242,86 @@ JNIEXPORT void JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriver_s
 		FILE *trainFile = fopen(TRAIN_DATA, "a");
 		fprintf(trainFile, "%d %s %s\n", nPeople + 1, newPersonName, cstr);
 		fclose(trainFile);
+
+		return true;
 	}
 
+	return false;
+}
+
+
+/*
+ * Class:     br_unb_unbiquitous_ubiquitos_uos_driver_UserDriver
+ * Method:    removeUser
+ */
+JNIEXPORT jboolean JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriver_removeUser(JNIEnv * env, jobject obj, jstring name) {
+	FILE *trainFileImages;
+	FILE *trainFileImagesAuxiliar;
+
+	char personName[256];
+	int personNumber;
+	char imageFileName[512], newImageFileName[512];
+
+	// Buscando o nome da pessoa
+	const char *personNameToRemove = env->GetStringUTFChars(name, NULL);
+
+	// abre o arquivo de TRAIN
+	if (!(trainFileImages = fopen(TRAIN_DATA, "r"))) {
+		fprintf(stderr, "Arquivo %s nao pode ser aberto\n", TRAIN_DATA);
+		// TODO : lançar exceção
+		return false;
+	}
+
+	// abre o arquivo de TRAIN AUXILIAR
+	if (!(trainFileImagesAuxiliar = fopen(TRAIN_DATA_AUX, "w+"))) {
+		fprintf(stderr, "Arquivo %s nao pode ser aberto\n", TRAIN_DATA_AUX);
+		// TODO : lançar exceção
+		return false;
+	}
+
+	// itera linha a linha procurando pelo usuario a ser removido
+	int lastPersonNumber = 0;
+	int lastLinePersonNumber = 0;
+	bool removed = false;
+	while(!feof(trainFileImages)) {
+		if(fscanf(trainFileImages, "%d %s %s", &personNumber, personName, imageFileName) < 0)
+			continue;
+
+		if(lastLinePersonNumber != personNumber) {
+			lastPersonNumber = lastLinePersonNumber;
+		}
+
+		if(strcmp(personName, personNameToRemove) == 0) {
+			remove(imageFileName);
+			removed = true;
+		} else {
+			if(removed) {
+				char s1[50], s2[50];
+				sprintf(s1, "%02d_", personNumber);
+				sprintf(s2, "%02d_", lastPersonNumber);
+
+				strcpy(newImageFileName, replaceInString(imageFileName, s1, s2));
+
+				rename(imageFileName, newImageFileName);
+
+				fprintf(trainFileImagesAuxiliar, "%d %s %s\n", lastPersonNumber, personName, imageFileName);
+			} else {
+				fprintf(trainFileImagesAuxiliar, "%d %s %s\n", personNumber, personName, imageFileName);
+			}
+		}
+
+		lastLinePersonNumber = personNumber;
+	}
+
+	fflush(trainFileImages);
+	fflush(trainFileImagesAuxiliar);
+
+	// remove o arquivo antigo
+	remove(TRAIN_DATA);
+
+	rename(TRAIN_DATA_AUX, TRAIN_DATA);
+
+	return removed;
 }
 
 /**
