@@ -34,6 +34,21 @@ using namespace std;
 #define METHOD_NAME_RECHECK_USER "registerRecheckUser"
 #define METHOD_SIGNATURE_RECHECK_USER "(Ljava/lang/String;Ljava/lang/String;FFFF)V"
 
+#define CLASS_NAME_LIST "java/util/ArrayList"
+
+#define METHOD_NAME_ADD_LIST "add"
+#define METHOD_SIGNATURE_ADD_LIST "(Ljava/lang/Object;)Z"
+
+#define METHOD_NAME_CONTAINS_LIST "contains"
+#define METHOD_SIGNATURE_CONTAINS_LIST "(Ljava/lang/Object;)Z"
+
+#define METHOD_NAME_CONSTRUCTOR_LIST "<init>"
+#define METHOD_SIGNATURE_CONSTRUCTOR_LIST "()V"
+
+#define NAME_SERVICE_CALL_EXCEPTION "br/unb/unbiquitous/ubiquitos/uos/adaptabitilyEngine/ServiceCallException"
+#define NAME_CLASS_NOT_FOUND_EXCEPTION "java/lang/ClassNotFoundException"
+#define NAME_NO_SUCH_METHOD_EXCEPTION "java/lang/NoSuchMethodException"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -43,10 +58,10 @@ extern "C" {
 //****************************************************************************************
 void lostTrackerRunnalbeSignals();
 void getTrackerRunnalbeSignals();
-int getNumberOfRegisteredPersons();
-void learn(char *szFileTrain);
+int getMaxPersonNumber(JNIEnv * env);
+void learn(JNIEnv * env, const char *szFileTrain);
 void cleanupQueue(int signal);
-
+void throwNewException(JNIEnv *env, const char *nameOfException, const char *message);
 
 int idQueueComunicationJavaC = 0;
 int trackerId = 0;
@@ -67,7 +82,6 @@ vector<string> personNames; // array dos nomes das pessoas (idexado pelo numero 
 int nPersons = 0; // numero de pessoas no cenario de treino
 CvMat * eigenValMat = 0; // eigenvalues
 
-
 //****************************************************************************************
 //				MÉTODOS DA CLASSE JAVA IMPLEMENTADAS AQUI
 //****************************************************************************************
@@ -78,28 +92,37 @@ CvMat * eigenValMat = 0; // eigenvalues
  * Signature: ()V
  */
 void JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriver_00024TrackerRunnable_doTracker(JNIEnv * env, jobject obj) {
-	printf("[INFO] Initializing Tracker Comunication...\n");
+	char msgException[256];
 
 	idQueueComunicationJavaC = createMessageQueue(MESSAGE_QUEUE_COMUNICATION_JAVA_C);
 
 	jclass trackerRunnableClass = (env)->FindClass(CLASS_NAME);
 	if (trackerRunnableClass == NULL) {
-		fprintf(stderr, "Não encontrou a classe %s.\n", CLASS_NAME); /* error handling */
+		sprintf(msgException, "Could not find class %s.", CLASS_NAME);
+		throwNewException(env, NAME_CLASS_NOT_FOUND_EXCEPTION, msgException);
+		return;
 	}
 
 	jmethodID midNewUser = (env)->GetStaticMethodID(trackerRunnableClass, METHOD_NAME_NEW_USER, METHOD_SIGNATURE_NEW_USER);
 	if (midNewUser == NULL) {
-		fprintf(stderr, "Não encontrou o metodo %s %s.\n", METHOD_NAME_NEW_USER, METHOD_SIGNATURE_NEW_USER); /* error handling */
+		sprintf(msgException, "Could not find method %s%s.", METHOD_NAME_NEW_USER, METHOD_SIGNATURE_NEW_USER);
+		throwNewException(env, NAME_NO_SUCH_METHOD_EXCEPTION, msgException);
+		return;
 	}
 
 	jmethodID midLostUser = (env)->GetStaticMethodID(trackerRunnableClass, METHOD_NAME_LOST_USER, METHOD_SIGNATURE_LOST_USER);
 	if (midLostUser == NULL) {
-		fprintf(stderr, "Não encontrou o metodo %s %s.\n", METHOD_NAME_LOST_USER, METHOD_SIGNATURE_LOST_USER); /* error handling */
+		char msgException[256];
+		sprintf(msgException, "Could not find method %s%s.", METHOD_NAME_LOST_USER, METHOD_SIGNATURE_LOST_USER);
+		throwNewException(env, NAME_NO_SUCH_METHOD_EXCEPTION, msgException);
+		return;
 	}
 
 	jmethodID midRecheckUser = (env)->GetStaticMethodID(trackerRunnableClass, METHOD_NAME_RECHECK_USER, METHOD_SIGNATURE_RECHECK_USER);
 	if (midLostUser == NULL) {
-		fprintf(stderr, "Não encontrou o metodo %s %s.\n", METHOD_NAME_RECHECK_USER, METHOD_SIGNATURE_RECHECK_USER); /* error handling */
+		sprintf(msgException, "Could not find method %s%s.", METHOD_NAME_RECHECK_USER, METHOD_SIGNATURE_RECHECK_USER);
+		throwNewException(env, NAME_NO_SUCH_METHOD_EXCEPTION, msgException);
+		return;
 	}
 
 	while (1) {
@@ -111,7 +134,7 @@ void JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriver_00024Tracke
 		jstring name = (env)->NewStringUTF(messageEvents.user_name);
 
 		jstring last_name = NULL;
-		if(strlen(messageEvents.last_name) > 0)
+		if (strlen(messageEvents.last_name) > 0)
 			last_name = (env)->NewStringUTF(messageEvents.last_name);
 
 		if (messageEvents.type == NEW_USER) {
@@ -126,20 +149,17 @@ void JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriver_00024Tracke
 	printLogConsole("FIM Tracker");
 }
 
-
 /*
  * Class:     br_unb_unbiquitous_ubiquitos_uos_driver_UserDriver
  * Method:    startTracker
  * Signature: ()V
  */
 JNIEXPORT void JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriver_startTracker(JNIEnv *, jobject) {
-	printf("[INFO] Starting TRUE System\n");
-
 	//criando um processo filho. Este processo sera transformado do deamon utilizando o execl
 	trackerId = fork();
 	if (trackerId < 0) {
-		fprintf(stderr, "Erro na criação do Tracker através do fork\n");
-		exit(1);
+		printLogConsole("Erro na criação do Tracker através do fork\n");
+		exit(EXIT_FAILURE);
 	}
 
 	//inicinado o processo que reconhece os novoc usuarios encontrados
@@ -154,11 +174,8 @@ JNIEXPORT void JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriver_s
  * Signature: ()V
  */
 JNIEXPORT void JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriver_stopTracker(JNIEnv * env, jobject obj) {
-	printf("[INFO] Stopping TRUE System\n");
-
 	cleanupQueue(SIGINT);
 }
-
 
 /*
  * Class:     br_unb_unbiquitous_ubiquitos_uos_driver_UserDriver
@@ -166,11 +183,7 @@ JNIEXPORT void JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriver_s
  * Signature: ()V
  */
 JNIEXPORT void JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriver_train(JNIEnv * env, jobject obj) {
-	printf("[INFO] Training TRUE System\n");
-
-	learn((char *) TRAIN_DATA);
-
-	printf("[INFO] Finished training TRUE System \n");
+	learn(env, TRAIN_DATA);
 }
 
 /*
@@ -187,11 +200,12 @@ JNIEXPORT jboolean JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriv
 	char cstr[256];
 	int nPeople;
 
-	// le o classificador utilizado para detecao
+	// lê o classificador utilizado para detecção
 	faceCascade = (CvHaarClassifierCascade*) cvLoad(HAARCASCADE_FRONTALFACE, 0, 0, 0);
 	if (!faceCascade) {
-		printf("ERROR em recognizeFromCam(): Classificador '%s' nao pode ser lido.\n", HAARCASCADE_FRONTALFACE);
-		// TODO : lançar exceção
+		char msgException[256];
+		sprintf(msgException, "Classifier '%s' can not be read.", TRAIN_DATA);
+		throwNewException(env, NAME_SERVICE_CALL_EXCEPTION, msgException);
 		return false;
 	}
 
@@ -199,24 +213,24 @@ JNIEXPORT jboolean JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriv
 	const char *newPersonName = env->GetStringUTFChars(name, NULL);
 
 	// Buscando o tamanho da imagem
-    int arrayLength = env->GetArrayLength(image);
+	int arrayLength = env->GetArrayLength(image);
 
-    // Buscando a imagem
+	// Buscando a imagem
 	jbyte *imageArray = env->GetByteArrayElements(image, NULL);
-	char *imageArrayConverted = (char *)(malloc(sizeof (char) * arrayLength));
-    for(int i = 0;i < arrayLength;++i){
-        imageArrayConverted[arrayLength - i] = (char)(imageArray[i]);
-    }
+	char *imageArrayConverted = (char *) (malloc(sizeof(char) * arrayLength));
+	for (int i = 0; i < arrayLength; ++i) {
+		imageArrayConverted[arrayLength - i] = (char) (imageArray[i]);
+	}
 
-    // Criando a IplImage
-    IplImage* frame = cvCreateImage(cvSize(KINECT_HEIGHT_CAPTURE, KINECT_WIDTH_CAPTURE), IPL_DEPTH_8U, KINECT_NUMBER_OF_CHANNELS);
-    frame->imageData = (char*)(imageArrayConverted);
+	// Criando a IplImage
+	IplImage* frame = cvCreateImage(cvSize(KINECT_HEIGHT_CAPTURE, KINECT_WIDTH_CAPTURE), IPL_DEPTH_8U, KINECT_NUMBER_OF_CHANNELS);
+	frame->imageData = (char*) (imageArrayConverted);
 
 	// transforma a imagem em escala de cinza
 	greyImg = convertImageToGreyscale(frame);
 
 	// realiza deteccao facial na imagem de entrada, usando o classificador
-	faceRect = detectFaceInImage(greyImg, faceCascade);					
+	faceRect = detectFaceInImage(greyImg, faceCascade);
 
 	// veririfica se uma faxe foi detectada
 	if (faceRect.width > 0) {
@@ -228,7 +242,7 @@ JNIEXPORT jboolean JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriv
 		cvEqualizeHist(sizedImg, equalizedImg);
 
 		//salvando a imagem
-		nPeople = getNumberOfRegisteredPersons();
+		nPeople = getMaxPersonNumber(env);
 		sprintf(cstr, NEW_IMAGES_SCHEME, nPeople + 1, newPersonName, index);
 
 		cvSaveImage(cstr, equalizedImg, NULL);
@@ -249,7 +263,6 @@ JNIEXPORT jboolean JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriv
 	return false;
 }
 
-
 /*
  * Class:     br_unb_unbiquitous_ubiquitos_uos_driver_UserDriver
  * Method:    removeUser
@@ -267,15 +280,17 @@ JNIEXPORT jboolean JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriv
 
 	// abre o arquivo de TRAIN
 	if (!(trainFileImages = fopen(TRAIN_DATA, "r"))) {
-		fprintf(stderr, "Arquivo %s nao pode ser aberto\n", TRAIN_DATA);
-		// TODO : lançar exceção
+		char msgException[256];
+		sprintf(msgException, "File %s can not be opened.", TRAIN_DATA);
+		throwNewException(env, NAME_SERVICE_CALL_EXCEPTION, msgException);
 		return false;
 	}
 
 	// abre o arquivo de TRAIN AUXILIAR
 	if (!(trainFileImagesAuxiliar = fopen(TRAIN_DATA_AUX, "w+"))) {
-		fprintf(stderr, "Arquivo %s nao pode ser aberto\n", TRAIN_DATA_AUX);
-		// TODO : lançar exceção
+		char msgException[256];
+		sprintf(msgException, "File %s can not be opened.", TRAIN_DATA_AUX);
+		throwNewException(env, NAME_SERVICE_CALL_EXCEPTION, msgException);
 		return false;
 	}
 
@@ -283,19 +298,19 @@ JNIEXPORT jboolean JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriv
 	int lastPersonNumber = 0;
 	int lastLinePersonNumber = 0;
 	bool removed = false;
-	while(!feof(trainFileImages)) {
-		if(fscanf(trainFileImages, "%d %s %s", &personNumber, personName, imageFileName) < 0)
+	while (!feof(trainFileImages)) {
+		if (fscanf(trainFileImages, "%d %s %s", &personNumber, personName, imageFileName) < 0)
 			continue;
 
-		if(lastLinePersonNumber != personNumber) {
+		if (lastLinePersonNumber != personNumber) {
 			lastPersonNumber = lastLinePersonNumber;
 		}
 
-		if(strcmp(personName, personNameToRemove) == 0) {
+		if (strcmp(personName, personNameToRemove) == 0) {
 			remove(imageFileName);
 			removed = true;
 		} else {
-			if(removed) {
+			if (removed) {
 				char s1[50], s2[50];
 				sprintf(s1, "%02d_", personNumber);
 				sprintf(s2, "%02d_", lastPersonNumber);
@@ -324,28 +339,85 @@ JNIEXPORT jboolean JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriv
 	return removed;
 }
 
-/**
- * TODO : Refatorar esse metodo para que busque o ultimo ID do Train e não o numero de pessoas conhecidas do FACEDATA
- * pois da erro quando eu adiciono dois usuários seguidamente e não treino ao final da inserção
- */
-int getNumberOfRegisteredPersons(){
-	CvFileStorage * fileStorage;
+JNIEXPORT jobject JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriver_listUsers(JNIEnv * env, jobject obj) {
+	FILE *trainFileImages;
+	char personName[256];
+	int personNumber;
+	char imageFileName[512];
 
-	// cria uma interface arqivo - armazenamento
-	fileStorage = cvOpenFileStorage(FACE_DATA, 0, CV_STORAGE_READ);
-	if (!fileStorage) {
-		printf("Arquivo 'facedata.xml' nao pode ser aberto.\n");
-		return 0;
+	// abre o arquivo de TRAIN
+	if (!(trainFileImages = fopen(TRAIN_DATA, "r"))) {
+		char msgException[256];
+		sprintf(msgException, "File %s can not be opened.", TRAIN_DATA);
+		throwNewException(env, NAME_SERVICE_CALL_EXCEPTION, msgException);
+		return false;
 	}
 
-	// le os nomes das pessoas
-	int nPersons = cvReadIntByName(fileStorage, 0, "nPersons", 0);
-	if (nPersons == 0) {
-		printf("Nenhuma pessoa encontrada em 'facedata.xml'.\n");
-		return 0;
+	jclass listClass = (env)->FindClass(CLASS_NAME_LIST);
+	if (listClass == NULL) {
+		fprintf(stderr, "Não encontrou a classe %s.", CLASS_NAME_LIST); /* error handling */
+		return NULL;
 	}
 
-	return nPersons;
+	jmethodID constructorList = (env)->GetMethodID(listClass, METHOD_NAME_CONSTRUCTOR_LIST, METHOD_SIGNATURE_CONSTRUCTOR_LIST);
+	if (constructorList == NULL) {
+		fprintf(stderr, "Não encontrou o metodo %s %s.", METHOD_NAME_CONSTRUCTOR_LIST, METHOD_SIGNATURE_CONSTRUCTOR_LIST); /* error handling */
+		return NULL;
+	}
+
+	jobject mylist = (env)->NewObject(listClass, constructorList);
+
+	jmethodID midAddList = (env)->GetMethodID(listClass, METHOD_NAME_ADD_LIST, METHOD_SIGNATURE_ADD_LIST);
+	if (midAddList == NULL) {
+		fprintf(stderr, "Não encontrou o metodo %s %s.", METHOD_NAME_ADD_LIST, METHOD_SIGNATURE_ADD_LIST); /* error handling */
+		return NULL;
+	}
+
+	jmethodID midContainsList = (env)->GetMethodID(listClass, METHOD_NAME_CONTAINS_LIST, METHOD_SIGNATURE_CONTAINS_LIST);
+	if (midContainsList == NULL) {
+		fprintf(stderr, "Não encontrou o metodo %s %s.", METHOD_NAME_CONTAINS_LIST, METHOD_SIGNATURE_CONTAINS_LIST); /* error handling */
+		return NULL;
+	}
+
+	while (!feof(trainFileImages)) {
+		if (fscanf(trainFileImages, "%d %s %s", &personNumber, personName, imageFileName) < 0)
+			continue;
+
+		if (strstr(personName, ":") != NULL) {
+			jstring id = (env)->NewStringUTF(personName);
+			jboolean result = (env)->CallBooleanMethod(mylist, midContainsList, id);
+			if(!result)
+				result = (env)->CallBooleanMethod(mylist, midAddList, id);
+		}
+	}
+
+	return mylist;
+}
+
+int getMaxPersonNumber(JNIEnv * env) {
+	FILE *trainFileImages;
+	char personName[256];
+	int personNumber, maxPersonNumber;
+	char imageFileName[512];
+
+	// abre o arquivo de TRAIN
+	if (!(trainFileImages = fopen(TRAIN_DATA, "r"))) {
+		char msgException[256];
+		sprintf(msgException, "File %s can not be opened.", TRAIN_DATA);
+		throwNewException(env, NAME_SERVICE_CALL_EXCEPTION, msgException);
+		return false;
+	}
+
+	maxPersonNumber = 0;
+	while (!feof(trainFileImages)) {
+		if (fscanf(trainFileImages, "%d %s %s", &personNumber, personName, imageFileName) < 0)
+			continue;
+
+		if (personNumber > maxPersonNumber)
+			maxPersonNumber = personNumber;
+	}
+
+	return maxPersonNumber;
 }
 
 //****************************************************************************************
@@ -357,11 +429,11 @@ void cleanupQueue(int signal) {
 	printLogConsole("Signal TrackerRunnable - %d\n", signal);
 
 	kill(trackerId, signal);
-	#if (XN_PLATFORM == XN_PLATFORM_MACOSX)
-		wait((int*)0);
-	#else
-		wait();
-	#endif
+#if (XN_PLATFORM == XN_PLATFORM_MACOSX)
+	wait((int*)0);
+#else
+	wait();
+#endif
 
 }
 
@@ -393,9 +465,8 @@ void lostTrackerRunnalbeSignals() {
 //							FUNCOES UTILIZADAS NO TREINO DO ALGORITMO
 //****************************************************************************************
 
-
 // le os nomes e as imagens das pessoas de um arquivo txt, e le todas as imagens listadas
-int loadFaceImgArray(char * filename) {
+int loadFaceImgArray(JNIEnv * env, const char * filename) {
 	FILE * imgListFile = 0;
 	char imgFilename[512];
 	int iFace, nFaces = 0;
@@ -403,7 +474,9 @@ int loadFaceImgArray(char * filename) {
 
 	// abre o arquivo de input
 	if (!(imgListFile = fopen(filename, "r"))) {
-		fprintf(stderr, "Arquivo %s nao pode ser aberto\n", filename);
+		char msgException[256];
+		sprintf(msgException, "File %s can not be opened", filename);
+		throwNewException(env, NAME_SERVICE_CALL_EXCEPTION, msgException);
 		return 0;
 	}
 
@@ -416,7 +489,7 @@ int loadFaceImgArray(char * filename) {
 	faceImgArr = (IplImage **) cvAlloc(nFaces * sizeof(IplImage *));
 	personNumTruthMat = cvCreateMat(1, nFaces, CV_32SC1);
 
-	personNames.clear(); 
+	personNames.clear();
 	nPersons = 0;
 
 	// armazena as imagens de faces em um array
@@ -444,21 +517,14 @@ int loadFaceImgArray(char * filename) {
 		faceImgArr[iFace] = cvLoadImage(imgFilename, CV_LOAD_IMAGE_GRAYSCALE);
 
 		if (!faceImgArr[iFace]) {
-			fprintf(stderr, "Imagem nao pode ser lida de %s\n", imgFilename);
+			char msgException[256];
+			sprintf(msgException, "Image can not be read from %s.", imgFilename);
+			throwNewException(env, NAME_SERVICE_CALL_EXCEPTION, msgException);
 			return 0;
 		}
 	}
 
 	fclose(imgListFile);
-
-	printf("Data lido de '%s': (%d imagens de %d pessoas).\n", filename, nFaces, nPersons);
-	printf("Pessoas: ");
-	if (nPersons > 0)
-		printf("<%s>", personNames[0].c_str());
-	for (i = 1; i < nPersons; i++) {
-		printf(", <%s>", personNames[i].c_str());
-	}
-	printf(".\n");
 
 	return nFaces;
 }
@@ -498,16 +564,16 @@ void doPCA() {
 // salva todos os eigenvectors
 void storeEigenfaceImages() {
 	//armazena a imagem media em um arquivo
-	printf("Salvando a imagem da face media como 'out_averageImage.bmp'.\n");
+	printLogConsole("Salvando a imagem da face media como 'out_averageImage.bmp'.\n");
 	cvSaveImage(AVERAGE_IMAGE, pAvgTrainImg);
 
 	//cria uma nova imagem feita de varias imagens eigenfaces 
-	printf("Salvando o eigenvector %d como 'out_eigenfaces.bmp'\n", nEigens);
+	printLogConsole("Salvando o eigenvector %d como 'out_eigenfaces.bmp'\n", nEigens);
 	if (nEigens > 0) {
 		//coloca todas imagens uma do lado da outra
 		int COLUMNS = 8; // poe 8 imagens em uma linha
 		int nCols = min(nEigens, COLUMNS);
-		int nRows = 1 + (nEigens / COLUMNS); 
+		int nRows = 1 + (nEigens / COLUMNS);
 		int w = eigenVectArr[0]->width;
 		int h = eigenVectArr[0]->height;
 		CvSize size;
@@ -563,16 +629,17 @@ void storeTrainingData() {
 }
 
 //armazena os dados treinados em um arquivo facedata.xml
-void learn(char *szFileTrain) {
+void learn(JNIEnv * env, const char *szFileTrain) {
 	int i, offset;
 
 	// le os dados de treinamento
-	printf("Lendo imagens de treinamento em '%s'\n", szFileTrain);
-	nTrainFaces = loadFaceImgArray(szFileTrain);
-	printf("%d imagens de treino obtidas.\n", nTrainFaces);
+	printLogConsole("Lendo imagens de treinamento em '%s'\n", szFileTrain);
+	nTrainFaces = loadFaceImgArray(env, szFileTrain);
+	printLogConsole("%d imagens de treino obtidas.\n", nTrainFaces);
 	if (nTrainFaces < 2) {
-		fprintf(stderr, "Necessario 2 ou mais faces de trieno\n"
-				"Arquivo de entrada contem somente %d\n", nTrainFaces);
+		char msgException[256];
+		sprintf(msgException, "Required two or more faces for training. Input file contains only %d.", nTrainFaces);
+		throwNewException(env, NAME_SERVICE_CALL_EXCEPTION, msgException);
 		return;
 	}
 
@@ -583,8 +650,7 @@ void learn(char *szFileTrain) {
 	projectedTrainFaceMat = cvCreateMat(nTrainFaces, nEigens, CV_32FC1);
 	offset = projectedTrainFaceMat->step / sizeof(float);
 	for (i = 0; i < nTrainFaces; i++) {
-		cvEigenDecomposite(faceImgArr[i], nEigens, eigenVectArr, 0, 0, pAvgTrainImg,
-		projectedTrainFaceMat->data.fl + i * offset);
+		cvEigenDecomposite(faceImgArr[i], nEigens, eigenVectArr, 0, 0, pAvgTrainImg, projectedTrainFaceMat->data.fl + i * offset);
 	}
 
 	// armazena os dados de reconhecimento como um arquivo xml
@@ -595,6 +661,19 @@ void learn(char *szFileTrain) {
 		storeEigenfaceImages();
 	}
 
+}
+
+
+/**
+ * Lança a esceção passada no sistema com a devida mensagem
+ */
+void throwNewException(JNIEnv *env, const char *nameOfException, const char *message) {
+	jclass exceptionClass = (env)->FindClass(nameOfException);
+	if (exceptionClass == NULL) {
+		exceptionClass = (env)->FindClass(NAME_CLASS_NOT_FOUND_EXCEPTION);
+	}
+
+	(env)->ThrowNew(exceptionClass, message);
 }
 
 #ifdef __cplusplus
