@@ -1,0 +1,2 @@
+./compile.sh
+make install
