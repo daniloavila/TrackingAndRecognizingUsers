@@ -89,7 +89,7 @@ void getTrackerSignals();
 void treatQueueResponse(int i) {
 	MessageResponse messageResponse;
 
-	printLogConsole("Log - Tracker diz: . TREAT QUEUE RESPONSE . \n", "tALES");
+	printLogConsole("Log - Tracker diz: . TREAT QUEUE RESPONSE . \n");
 
 	while (msgrcv(idQueueResponse, &messageResponse, sizeof(MessageResponse) - sizeof(long), 0, IPC_NOWAIT) >= 0) {
 
@@ -100,7 +100,7 @@ void treatQueueResponse(int i) {
 
 		// verifica se o usuário ainda está sendo trackeado.
 		if (users.find(messageResponse.user_id) == users.end()) {
-			printLogConsole("Log - Tracker diz: Usuário não está mais sendo rastreado\n", "TALES");
+			printLogConsole("Log - Tracker diz: Usuário não está mais sendo rastreado\n");
 			continue;
 		}
 
@@ -116,6 +116,8 @@ void treatQueueResponse(int i) {
 			}
 			continue;
 		} else if(strcmp(messageResponse.user_name, UNKNOWN) == 0) {
+
+			//verifica se eh a primeira vez que retornou uma label valida
 			if(users[messageResponse.user_id].name == NULL || strlen(users[messageResponse.user_id].name) == 0) {
 				users[messageResponse.user_id].name = (char *) malloc(strlen(UNKNOWN) + 1);
 				strcpy(users[messageResponse.user_id].name, UNKNOWN);
@@ -132,6 +134,7 @@ void treatQueueResponse(int i) {
 			continue;
 		}
 
+		// neste caso o nome retornardo eh valido e diferente de Unknown_\d*
 		#ifdef JAVA_INTEGRATION
 			char last_name[255];
 			if(users[messageResponse.user_id].name != NULL)
@@ -180,6 +183,11 @@ void recheckUsers(int i) {
 			requestRecognition((*it).first);
 			verifyDeslocationObject((*it).first);
 		}
+
+		#ifdef JAVA_INTEGRATION
+			sendChoice((*it).first, RECHECK, NULL);
+		#endif
+
 	}
 
 	glutTimerFunc(INTERVAL_IN_MILISECONDS_RECHECK, recheckUsers, 0);
