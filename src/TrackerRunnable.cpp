@@ -254,6 +254,12 @@ JNIEXPORT jboolean JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriv
 		cvReleaseImage(&equalizedImg);
 
 		FILE *trainFile = fopen(TRAIN_DATA, "a");
+		if (trainFile == NULL) {
+			char msgException[256];
+			sprintf(msgException, "File %s can not be opened.", TRAIN_DATA);
+			throwNewException(env, NAME_SERVICE_CALL_EXCEPTION, msgException);
+			return false;
+		}
 		fprintf(trainFile, "%d %s %s\n", nPeople + 1, newPersonName, cstr);
 		fclose(trainFile);
 
@@ -405,7 +411,7 @@ int getMaxPersonNumber(JNIEnv * env) {
 		char msgException[256];
 		sprintf(msgException, "File %s can not be opened.", TRAIN_DATA);
 		throwNewException(env, NAME_SERVICE_CALL_EXCEPTION, msgException);
-		return false;
+		return 0;
 	}
 
 	maxPersonNumber = 0;

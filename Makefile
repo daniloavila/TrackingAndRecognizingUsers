@@ -99,6 +99,9 @@ install: $(all)
 	sudo cp -r Eigenfaces/facedata.xml $(FILES_PATH)/Eigenfaces/facedata.xml
 	sudo cp -r Eigenfaces/haarcascade_frontalface_alt.xml $(FILES_PATH)/Eigenfaces/haarcascade_frontalface_alt.xml
 	
+	# TODO : Verificar qual a premissão correta nesse caso
+	sudo chmod 777 $(FILES_PATH)/Eigenfaces/ -R
+	
 	sudo cp lib/$(NAME_OF_LIBRARY) $(SHARES_LIBRARY_PATH)$(NAME_OF_LIBRARY).1
 	ldconfig -n $(FILES_PATH)/lib/
 	
