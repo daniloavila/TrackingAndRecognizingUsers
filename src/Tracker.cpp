@@ -112,7 +112,7 @@ void treatQueueResponse(int i) {
 			//  adicionado pois superlotava a fila de mensagens
 			if (total < ATTEMPTS_INICIAL_RECOGNITION) {
 				requestRecognition(messageResponse.user_id);
-				verifyDeslocationObject(messageResponse.user_id);
+				// verifyDeslocationObject(messageResponse.user_id);
 			}
 			continue;
 		} else if(strcmp(messageResponse.user_name, UNKNOWN) == 0) {
@@ -129,7 +129,7 @@ void treatQueueResponse(int i) {
 
 			if (total < ATTEMPTS_INICIAL_RECOGNITION) {
 				requestRecognition(messageResponse.user_id);
-				verifyDeslocationObject(messageResponse.user_id);
+				// verifyDeslocationObject(messageResponse.user_id);
 			}
 			continue;
 		}
@@ -181,7 +181,7 @@ void recheckUsers(int i) {
 	for (it = users.begin(); it != users.end(); it++) {
 		if (getTotalAttempts((*it).first) >= ATTEMPTS_INICIAL_RECOGNITION) {
 			requestRecognition((*it).first);
-			verifyDeslocationObject((*it).first);
+			// verifyDeslocationObject((*it).first);
 		}
 
 		#ifdef JAVA_INTEGRATION
@@ -204,7 +204,7 @@ void XN_CALLBACK_TYPE registerNewUser(xn::UserGenerator& generator, XnUserID nId
 	users[id].name[0] = '\0';
 	users[id].canRecognize = true;
 	requestRecognition(id);
-	verifyDeslocationObject(id);
+	// verifyDeslocationObject(id);
 
 	#ifdef SAVE_LOG
 		saveLogNewUser(nId);
@@ -314,7 +314,7 @@ int main(int argc, char **argv) {
 
 	//iniciando o processo que reconhece os novos usuarios encontrados
 	if (faceRecId == 0) {
-		printf("Iniciando processo do recognizer a partir do tracker\n");
+		printLogConsole("Iniciando processo do recognizer a partir do tracker\n");
 		execl(RECOGNIZER_PATH, EXEC_NAME_RECOGNIZER, (char *) 0);
 		return EXIT_SUCCESS;
 	}
