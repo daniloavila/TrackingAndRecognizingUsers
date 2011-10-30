@@ -112,7 +112,7 @@ void treatQueueResponse(int i) {
 			//  adicionado pois superlotava a fila de mensagens
 			if (total < ATTEMPTS_INICIAL_RECOGNITION) {
 				requestRecognition(messageResponse.user_id);
-				// verifyDeslocationObject(messageResponse.user_id);
+				verifyDeslocationObject(messageResponse.user_id);
 			}
 			continue;
 		} else if(strcmp(messageResponse.user_name, UNKNOWN) == 0) {
@@ -129,7 +129,7 @@ void treatQueueResponse(int i) {
 
 			if (total < ATTEMPTS_INICIAL_RECOGNITION) {
 				requestRecognition(messageResponse.user_id);
-				// verifyDeslocationObject(messageResponse.user_id);
+				verifyDeslocationObject(messageResponse.user_id);
 			}
 			continue;
 		}
@@ -181,11 +181,12 @@ void recheckUsers(int i) {
 	for (it = users.begin(); it != users.end(); it++) {
 		if (getTotalAttempts((*it).first) >= ATTEMPTS_INICIAL_RECOGNITION) {
 			requestRecognition((*it).first);
-			// verifyDeslocationObject((*it).first);
+			verifyDeslocationObject((*it).first);
 		}
 
 		#ifdef JAVA_INTEGRATION
-			sendChoice((*it).first, RECHECK, NULL);
+			printf("[TRACKER] REQUEST RECOGNITION\n");
+			sendChoice((*it).first, RECHECK_POSITION, NULL);
 		#endif
 
 	}
@@ -204,7 +205,7 @@ void XN_CALLBACK_TYPE registerNewUser(xn::UserGenerator& generator, XnUserID nId
 	users[id].name[0] = '\0';
 	users[id].canRecognize = true;
 	requestRecognition(id);
-	// verifyDeslocationObject(id);
+	verifyDeslocationObject(id);
 
 	#ifdef SAVE_LOG
 		saveLogNewUser(nId);
@@ -399,27 +400,27 @@ void reexecute(int signal) {
 // ##########################################################
 
 void getTrackerSignals() {
-	signal(SIGINT, cleanupQueueAndExit);
-	signal(SIGQUIT, cleanupQueueAndExit);
-	signal(SIGILL, cleanupQueueAndExit);
-	signal(SIGTRAP, cleanupQueueAndExit);
-	signal(SIGABRT, cleanupQueueAndExit);
-	signal(SIGKILL, cleanupQueueAndExit);
-	signal(SIGSEGV, reexecute);
-	signal(SIGTERM, cleanupQueueAndExit);
-	signal(SIGSYS, cleanupQueueAndExit);
+	// signal(SIGINT, cleanupQueueAndExit);
+	// signal(SIGQUIT, cleanupQueueAndExit);
+	// signal(SIGILL, cleanupQueueAndExit);
+	// signal(SIGTRAP, cleanupQueueAndExit);
+	// signal(SIGABRT, cleanupQueueAndExit);
+	// signal(SIGKILL, cleanupQueueAndExit);
+	// // signal(SIGSEGV, reexecute);
+	// signal(SIGTERM, cleanupQueueAndExit);
+	// signal(SIGSYS, cleanupQueueAndExit);
 }
 
 void lostTrackerSignals() {
-	signal(SIGINT, SIG_IGN);
-	signal(SIGQUIT, SIG_IGN);
-	signal(SIGILL, SIG_IGN);
-	signal(SIGTRAP, SIG_IGN);
-	signal(SIGABRT, SIG_IGN);
-	signal(SIGKILL, SIG_IGN);
-	signal(SIGSEGV, SIG_IGN);
-	signal(SIGTERM, SIG_IGN);
-	signal(SIGSYS, SIG_IGN);
+	// signal(SIGINT, SIG_IGN);
+	// signal(SIGQUIT, SIG_IGN);
+	// signal(SIGILL, SIG_IGN);
+	// signal(SIGTRAP, SIG_IGN);
+	// signal(SIGABRT, SIG_IGN);
+	// signal(SIGKILL, SIG_IGN);
+	// // signal(SIGSEGV, SIG_IGN);
+	// signal(SIGTERM, SIG_IGN);
+	// signal(SIGSYS, SIG_IGN);
 }
 
 /**
@@ -489,6 +490,7 @@ void requestRecognition(int id) {
 
 #ifdef JAVA_INTEGRATION
 void sendChoice(int id, MessageType type,char *last_name) {
+	printf("[TRACKER] SEND CHOICE\n");
 	MessageEvents messageEvent;
 	XnPoint3D com;
 	g_UserGenerator.GetCoM(id, com);
@@ -521,7 +523,10 @@ void sendChoice(int id, MessageType type,char *last_name) {
 
 	if (msgsnd(idQueueComunicationJavaC, &messageEvent, sizeof(MessageEvents) - sizeof(long), 0) > 0) {
 		printLogConsole("Log - Tracker diz: Erro no envio de mensagem para o JAVA.\n");
+		printf("[TRACKER] ERROR\n");
 	}
+
+	printf("[TRACKER] END SEND CHOICE\n");
 }
 #endif
 

@@ -133,7 +133,6 @@ CvRect detectFaceInImage(const IplImage *inputImg, const CvHaarClassifierCascade
 	IplImage *greyImg = 0;
 	CvMemStorage* storage;
 	CvRect rc;
-	double t;
 	CvSeq* rects;
 	int i;
 
@@ -149,10 +148,7 @@ CvRect detectFaceInImage(const IplImage *inputImg, const CvHaarClassifierCascade
 	}
 
 	//detecta todas as faces
-	t = (double) cvGetTickCount();
 	rects = cvHaarDetectObjects(detectImg, (CvHaarClassifierCascade*) cascade, storage, search_scale_factor, 3, flags, minFeatureSize);
-	t = (double) cvGetTickCount() - t;
-	// printf("[Face Detection took %d ms and found %d objects]\n", cvRound( t/((double)cvGetTickFrequency()*1000.0) ), rects->total );
 
 	// obtem a primeira face detectada (a maior)
 	if (rects->total > 0) {
