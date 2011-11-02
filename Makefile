@@ -77,8 +77,7 @@ $(RELEASE_DIR)StringUtil.o:
 	$(CC) $(CCFLAGS) $(INC_DIRS) -o $(RELEASE_DIR)StringUtil.o $(SRC)StringUtil.cpp	
 $(RELEASE_DIR)Recognizer.o: $(RELEASE_DIR)ImageUtil.o  $(RELEASE_DIR)KinectUtil.o $(RELEASE_DIR)MessageQueue.o
 	$(CC) $(CCFLAGS) $(INC_DIRS) -o $(RELEASE_DIR)Recognizer.o $(SRC)Recognizer.cpp
-$(RELEASE_DIR)Tracker.o: 
-	$(RELEASE_DIR)KeyboardUtil.o $(RELEASE_DIR)KinectUtil.o $(RELEASE_DIR)MessageQueue.o $(RELEASE_DIR)SceneDrawer.o $(RELEASE_DIR)StatisticsUtil.o
+$(RELEASE_DIR)Tracker.o: $(RELEASE_DIR)KeyboardUtil.o $(RELEASE_DIR)KinectUtil.o $(RELEASE_DIR)MessageQueue.o $(RELEASE_DIR)SceneDrawer.o $(RELEASE_DIR)StatisticsUtil.o
 	$(CC) $(CCFLAGS) $(INC_DIRS) -o $(RELEASE_DIR)Tracker.o $(SRC)Tracker.cpp
 $(RELEASE_DIR)Register.o: $(RELEASE_DIR)ImageUtil.o  $(RELEASE_DIR)KinectUtil.o $(RELEASE_DIR)MessageQueue.o
 	$(CC) $(CCFLAGS) $(INC_DIRS) -o $(RELEASE_DIR)Register.o $(SRC)Register.cpp
