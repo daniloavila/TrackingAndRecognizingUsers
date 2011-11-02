@@ -93,8 +93,8 @@ void treatQueueResponse(int i) {
 
 	while (msgrcv(idQueueResponse, &messageResponse, sizeof(MessageResponse) - sizeof(long), 0, IPC_NOWAIT) >= 0) {
 
-		if(messageResponse.user_name == NULL || strlen(messageResponse.user_name) == 0)
-			continue;
+		// if(messageResponse.user_name == NULL || strlen(messageResponse.user_name) == 0)
+			// continue;
 
 		printLogConsole("---------------------------------------------\n");
 
@@ -403,12 +403,12 @@ void reexecute(int signal) {
 // ##########################################################
 
 void getTrackerSignals() {
-	// signal(SIGINT, cleanupQueueAndExit);
-	// signal(SIGQUIT, cleanupQueueAndExit);
+	signal(SIGINT, cleanupQueueAndExit);
+	signal(SIGQUIT, cleanupQueueAndExit);
 	// signal(SIGILL, cleanupQueueAndExit);
 	// signal(SIGTRAP, cleanupQueueAndExit);
 	// signal(SIGABRT, cleanupQueueAndExit);
-	// signal(SIGKILL, cleanupQueueAndExit);
+	signal(SIGKILL, cleanupQueueAndExit);
 	// signal(SIGSEGV, reexecute);
 	// signal(SIGTERM, cleanupQueueAndExit);
 	// signal(SIGSYS, cleanupQueueAndExit);

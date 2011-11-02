@@ -83,18 +83,22 @@ StatusOfChoice verifyChoiceEuclidian(string name, float confidence, map<int, Use
 /**
  * Verifica se a escolha é valida, ou seja, se já não existe outro usuário com a mesma label, e se existe qual deve prevalecer a partir da confiança.
  */
-StatusOfChoice verifyChoiceMahalanobis(string name, int attempts, map<int, UserStatus> *users, int *idOtherUser) {
+StatusOfChoice verifyChoiceMahalanobis(string name,float confidence, int attempts, map<int, UserStatus> *users, int *idOtherUser) {
 	map<int, UserStatus>::iterator itUsers;
 
 	for (itUsers = users->begin(); itUsers != users->end(); itUsers++) {
+		if(itUsers->second.name == NULL || strlen(itUsers->second.name) == 0)
+			continue;
+
 		string name2(itUsers->second.name);
 
 		if (name.compare(name2) == 0 && itUsers->first != idUserInTime) {
 			map<string, int> *nameAttempts = &usersNameAttempts[itUsers->first];
+			map<string, float> *nameConfidence = &usersNameConfidence[itUsers->first];
 
-			if ((*nameAttempts)[name] > attempts) {
-				*idOtherUser = itUsers->first;
-				return EXIST_BUT_WIN;
+			if((attempts == (*nameAttempts)[name] && confidence > (*nameConfidence)[name]) || (attempts > (*nameAttempts)[name])){
+					*idOtherUser = itUsers->first;
+					return EXIST_BUT_WIN;	
 			} else {
 				return EXIST_BUT_LOST;
 			}
@@ -143,7 +147,7 @@ void changeChoiceForUser(int user_id, map<int, UserStatus> *users, string nameSt
 
 		status =
 			#ifdef USE_MAHALANOBIS_DISTANCE
-				verifyChoiceMahalanobis(name, attempts, users, &idOtherUser);
+				verifyChoiceMahalanobis(name, confidence, attempts, users, &idOtherUser);
 			#else
 				verifyChoiceEuclidian(name, confidence, users, &idOtherUser);
 			#endif
@@ -155,6 +159,11 @@ void changeChoiceForUser(int user_id, map<int, UserStatus> *users, string nameSt
 			printLogConsole("Log - StatisticsUtil diz: Verificou que existe outro usuário no com a mesma label.\n");
 			listNameOrdered.pop_front();
 		}
+	}
+
+	if(name.size() == 0){
+		name.erase();
+		name.append(UNKNOWN);
 	}
 
 	if ((*users)[user_id].name != NULL)
@@ -217,13 +226,13 @@ void choiceNewLabelToUser(MessageResponse *messageResponse, map<int, UserStatus>
 		name = listNameOrdered.front();
 		confidence = (*nameConfidence)[name];
 		attempts = (*nameAttempts)[name];
+		
+		#ifdef USE_MAHALANOBIS_DISTANCE
+			status = verifyChoiceMahalanobis(name, confidence, attempts, users, &idOtherUser);
+		#else
+			status = verifyChoiceEuclidian(name, confidence, users, &idOtherUser);
+		#endif
 
-		status =
-			#ifdef USE_MAHALANOBIS_DISTANCE
-				verifyChoiceMahalanobis(name, attempts, users, &idOtherUser);
-			#else
-				verifyChoiceEuclidian(name, confidence, users, &idOtherUser);
-			#endif
 
 		if (status == EXIST_BUT_WIN || status == NOT_EXIST) {
 			break;
@@ -232,6 +241,12 @@ void choiceNewLabelToUser(MessageResponse *messageResponse, map<int, UserStatus>
 			printLogConsole("Log - StatisticsUtil diz: Verificou que existe outro usuário no com a mesma label.\n");
 			listNameOrdered.pop_front();
 		}
+
+	}
+
+	if(name.size() == 0){
+		name.erase();
+		name.append(UNKNOWN);
 	}
 
 	if ((*users)[messageResponse->user_id].name != NULL)
