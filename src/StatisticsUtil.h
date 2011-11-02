@@ -14,6 +14,8 @@
 
 using namespace std;
 
+enum StatusOfChoice {NOT_EXIST, EXIST_BUT_WIN, EXIST_BUT_LOST};
+
 void calculateNewStatistics(MessageResponse *messageResponse);
 
 void choiceNewLabelToUser(MessageResponse *messageResponse, map<int, UserStatus> *users);

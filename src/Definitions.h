@@ -17,7 +17,7 @@
 
 // #define SAVE_LOG // Define se será salvo um log sobre os usuários encontrados.
 
-// #define INSTALATION_VERSION // Define se será usado o path de instalação
+//#define INSTALATION_VERSION // Define se será usado o path de instalação
 
 // Se alterar aqui alterar também o MAKEFILE
 #define EXEC_NAME_RECOGNIZER "recognizer"
