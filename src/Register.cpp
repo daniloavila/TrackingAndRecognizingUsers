@@ -408,7 +408,8 @@ CvMat* retrainOnline(void) {
 			if (faceImgArr[i])
 				cvReleaseImage(&faceImgArr[i]);
 		}
-	}cvFree( &faceImgArr);
+	}
+	cvFree( &faceImgArr);
 	// array de imagens de face
 	cvFree( &personNumTruthMat);
 	// array de numeros das pessoas
@@ -420,7 +421,8 @@ CvMat* retrainOnline(void) {
 	for (i = 0; i < nTrainFaces; i++) {
 		if (eigenVectArr[i])
 			cvReleaseImage(&eigenVectArr[i]);
-	}cvFree( &eigenVectArr);
+	}
+	cvFree( &eigenVectArr);
 	// eigenvectors
 	cvFree( &eigenValMat);
 	// eigenvalues
@@ -428,7 +430,7 @@ CvMat* retrainOnline(void) {
 
 	printf("Retreino com a nova pessoa ...\n");
 	learn((char *) TRAIN_DATA);
-	printf("Retrinamento completo.\n");
+	printf("Retreinamento completo.\n");
 
 	if (!loadTrainingData(&trainPersonNumMat)) {
 		printf("ERROR em recognizeFromCam(): Dados de treino nao puderam ser lidos!\n");

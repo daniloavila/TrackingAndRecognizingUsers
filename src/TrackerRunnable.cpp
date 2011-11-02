@@ -143,6 +143,9 @@ void JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriver_00024Tracke
 			(env)->CallStaticVoidMethod(trackerRunnableClass, midLostUser, name);
 		} else if (messageEvents.type == RECHECK) {
 			(env)->CallStaticVoidMethod(trackerRunnableClass, midRecheckUser, name, last_name, messageEvents.confidence, messageEvents.x, messageEvents.y, messageEvents.z);
+		} else if (messageEvents.type == RECHECK_POSITION){
+			printf("[RUNNABLE] FOI ---------------------------------------------\n");
+			(env)->CallStaticVoidMethod(trackerRunnableClass, midRecheckUser, name, last_name, messageEvents.confidence, messageEvents.x, messageEvents.y, messageEvents.z);
 		}
 	}
 

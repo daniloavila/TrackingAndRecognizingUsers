@@ -101,7 +101,7 @@ void DrawDepthMap(const xn::DepthMetaData& dmd, const xn::SceneMetaData& smd, ma
 	float texXpos;
 	float texYpos;
 
-
+	// printf("1\n");
 	if (!bInitialized) {
 		texWidth = getClosestPowerOfTwo(dmd.XRes());
 		texHeight = getClosestPowerOfTwo(dmd.YRes());
@@ -121,6 +121,7 @@ void DrawDepthMap(const xn::DepthMetaData& dmd, const xn::SceneMetaData& smd, ma
 		texcoords[0] = texXpos, texcoords[1] = texYpos, texcoords[2] = texXpos, texcoords[7] = texYpos;
 
 	}
+	// printf("2\n");
 	unsigned int nValue = 0;
 	unsigned int nHistValue = 0;
 	unsigned int nIndex = 0;
@@ -137,6 +138,7 @@ void DrawDepthMap(const xn::DepthMetaData& dmd, const xn::SceneMetaData& smd, ma
 	const XnLabel* pLabels = smd.Data();
 
 	memset(g_pDepthHist, 0, MAX_DEPTH * sizeof(float));
+	// printf("3\n");
 	for (nY = 0; nY < g_nYRes; nY++) {
 		for (nX = 0; nX < g_nXRes; nX++) {
 			nValue = *pDepth;
@@ -150,16 +152,19 @@ void DrawDepthMap(const xn::DepthMetaData& dmd, const xn::SceneMetaData& smd, ma
 		}
 	}
 
+	// printf("4\n");
 	for (nIndex = 1; nIndex < MAX_DEPTH; nIndex++) {
 		g_pDepthHist[nIndex] += g_pDepthHist[nIndex - 1];
 	}
 
+	// printf("5\n");
 	if (nNumberOfPoints) {
 		for (nIndex = 1; nIndex < MAX_DEPTH; nIndex++) {
 			g_pDepthHist[nIndex] = (unsigned int) (256 * (1.0f - (g_pDepthHist[nIndex] / nNumberOfPoints)));
 		}
 	}
 
+	// printf("6\n");
 	pDepth = dmd.Data();
 
 		XnUInt32 nIndexX = 0;
@@ -195,8 +200,10 @@ void DrawDepthMap(const xn::DepthMetaData& dmd, const xn::SceneMetaData& smd, ma
 			pDestImage += (texWidth - g_nXRes) * 3;
 		}
 
+		// printf("7\n");
 
 	glBindTexture(GL_TEXTURE_2D, depthTexID);
+	// printf("8\n");
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, texWidth, texHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, pDepthTexBuf);
 
 	// mostra o mapa de textura OpenGL
@@ -213,38 +220,55 @@ void DrawDepthMap(const xn::DepthMetaData& dmd, const xn::SceneMetaData& smd, ma
 
 	g_UserGenerator.GetUsers(aUsers, nUsers);
 
+	printf("9\n");
 	for (int i = 0; i < nUsers; ++i) {
 		XnPoint3D com, comPosition;
 
+printf("a\n");
 		g_UserGenerator.GetCoM(aUsers[i], com);
+		printf("b\n");
 		comPosition = com;
+		printf("c\n");
 		g_DepthGenerator.ConvertRealWorldToProjective(1, &com, &com);
-
+printf("d\n");
 		xnOSMemSet(strLabel, 0, sizeof(strLabel));
+		printf("e\n");
 		// Nada
-		if (strlen((*users)[aUsers[i]].name) == 0) {
-			if (!(*users)[aUsers[i]].canRecognize) {
-				sprintf(strLabel, "%d - Not Recognize", aUsers[i]);
-			} else {
-				sprintf(strLabel, "%d - Recognizing", aUsers[i]);
-			}
-		} else {
-			if (&com != NULL) {
-				if (strcmp((*users)[aUsers[i]].name, UNKNOWN) == 0 || strcmp((*users)[aUsers[i]].name, OBJECT) == 0) {
-					sprintf(strLabel, "%d - %s - (%.2lf, %.2lf, %.2lf)", aUsers[i], (*users)[aUsers[i]].name, comPosition.X, comPosition.Y, comPosition.Z);
+		if(!(*users).empty() && (*users)[aUsers[i]].name != NULL){
+			if (strlen((*users)[aUsers[i]].name) == 0) {
+				printf("f\n");
+				if (!(*users)[aUsers[i]].canRecognize) {
+					printf("g\n");
+					// sprintf(strLabel, "%d - Not Recognize", aUsers[i]);
 				} else {
-					sprintf(strLabel, "%d - %s \n%f - (%.2lf, %.2lf, %.2lf)", aUsers[i], (*users)[aUsers[i]].name, (*users)[aUsers[i]].confidence, comPosition.X, comPosition.Y,
-							comPosition.Z);
+					printf("h\n");
+					// sprintf(strLabel, "%d - Recognizing", aUsers[i]);
 				}
 			} else {
-				sprintf(strLabel, "%d - %s\n%f", aUsers[i], (*users)[aUsers[i]].name, (*users)[aUsers[i]].confidence);
+				printf("i\n");
+				if (&com != NULL) {
+					printf("j\n");
+					if (strcmp((*users)[aUsers[i]].name, UNKNOWN) == 0 || strcmp((*users)[aUsers[i]].name, OBJECT) == 0) {
+						printf("k\n");
+						// sprintf(strLabel, "%d - %s\n(%.2lf, %.2lf, %.2lf)", aUsers[i], (*users)[aUsers[i]].name, comPosition.X, comPosition.Y, comPosition.Z);
+						// printf("(%.2lf, %.2lf, %.2lf)",comPosition.X, comPosition.Y, comPosition.Z);
+					} else {
+						printf("l\n");
+						// sprintf(strLabel, "%d - %s \n%f - (%.2lf, %.2lf, %.2lf)", aUsers[i], (*users)[aUsers[i]].name, (*users)[aUsers[i]].confidence, comPosition.X, comPosition.Y,
+								// comPosition.Z);
+								// printf("(%.2lf, %.2lf, %.2lf)",comPosition.X, comPosition.Y, comPosition.Z);
+					}
+				} else {
+					printf("m\n");
+					// sprintf(strLabel, "%d - %s \n%f", aUsers[i], (*users)[aUsers[i]].name, (*users)[aUsers[i]].confidence);
+				}
 			}
 		}
-
+printf("10\n");
 		glColor4f(1 - Colors[i % nColors][0], 1 - Colors[i % nColors][1], 1 - Colors[i % nColors][2], 1);
 
 		glRasterPos2i(com.X, com.Y);
 		glPrintString(GLUT_BITMAP_HELVETICA_18, strLabel);
-
+// printf("11\n");
 	}
 }
