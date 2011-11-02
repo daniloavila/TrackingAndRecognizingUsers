@@ -13,7 +13,7 @@
 
 // #define JAVA_INTEGRATION // Define se será ou não enviado mensagens para o processo java.
 
-// #define DEBUG // Define se será ou não mostrado no console informações de log.
+#define DEBUG // Define se será ou não mostrado no console informações de log.
 
 // #define SAVE_LOG // Define se será salvo um log sobre os usuários encontrados.
 
