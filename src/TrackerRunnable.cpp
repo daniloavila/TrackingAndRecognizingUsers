@@ -30,15 +30,18 @@ using namespace std;
 //#define METHOD_NAME "registerUser"
 //#define METHOD_SIGNATURE "(ILjava/lang/String;F)V"
 
-#define CLASS_NAME "br/unb/unbiquitous/ubiquitos/uos/driver/UserDriver"
+#define CLASS_NAME "br/unb/unbiquitous/ubiquitos/uos/driver/UserDriverNativeSupport"
 
-#define METHOD_NAME_NEW_USER "registerNewUser"
+#define FIELD_NAME_DRIVER "userDriver"
+#define FIELD_SIGNATURE_DRIVER "Lbr/unb/unbiquitous/ubiquitos/uos/driver/UserDriverNativeSupport;"
+
+#define METHOD_NAME_NEW_USER "registerNewUserEvent"
 #define METHOD_SIGNATURE_NEW_USER "(Ljava/lang/String;FFFF)V"
 
-#define METHOD_NAME_LOST_USER "registerLostUser"
+#define METHOD_NAME_LOST_USER "registerLostUserEvent"
 #define METHOD_SIGNATURE_LOST_USER "(Ljava/lang/String;)V"
 
-#define METHOD_NAME_RECHECK_USER "registerRecheckUser"
+#define METHOD_NAME_RECHECK_USER "registerRecheckUserEvent"
 #define METHOD_SIGNATURE_RECHECK_USER "(Ljava/lang/String;Ljava/lang/String;FFFF)V"
 
 #define CLASS_NAME_LIST "java/util/ArrayList"
@@ -95,11 +98,11 @@ CvMat * eigenValMat = 0; // eigenvalues
 //****************************************************************************************
 
 /*
- * Class:     br_unb_unbiquitous_ubiquitos_uos_driver_UserDriver_TrackerRunnale
+ * Class:     br_unb_unbiquitous_ubiquitos_uos_driver_UserDriverNativeSupport_TrackerRunnale
  * Method:    doTracker
  * Signature: ()V
  */
-void JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriver_00024TrackerRunnable_doTracker(JNIEnv * env, jobject obj) {
+void JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriverNativeSupport_00024TrackerRunnable_doTracker(JNIEnv * env, jobject obj) {
 	char msgException[256];
 
 	idQueueComunicationJavaC = createMessageQueue(MESSAGE_QUEUE_COMUNICATION_JAVA_C);
@@ -111,14 +114,28 @@ void JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriver_00024Tracke
 		return;
 	}
 
-	jmethodID midNewUser = (env)->GetStaticMethodID(trackerRunnableClass, METHOD_NAME_NEW_USER, METHOD_SIGNATURE_NEW_USER);
+	jfieldID fid = (env)->GetStaticFieldID(trackerRunnableClass, FIELD_NAME_DRIVER, FIELD_SIGNATURE_DRIVER);
+	if (fid == NULL) {
+		sprintf(msgException, "Could not find field %s%s.", FIELD_NAME_DRIVER, FIELD_SIGNATURE_DRIVER);
+		throwNewException(env, NAME_CLASS_NOT_FOUND_EXCEPTION, msgException);
+		return;
+	}
+
+	jobject driver =  (env)->GetStaticObjectField(trackerRunnableClass, fid);
+	if (driver == NULL) {
+		sprintf(msgException, "Could not find object %s%s.", FIELD_NAME_DRIVER, FIELD_SIGNATURE_DRIVER);
+		throwNewException(env, NAME_CLASS_NOT_FOUND_EXCEPTION, msgException);
+		return;
+	}
+
+	jmethodID midNewUser = (env)->GetMethodID(trackerRunnableClass, METHOD_NAME_NEW_USER, METHOD_SIGNATURE_NEW_USER);
 	if (midNewUser == NULL) {
 		sprintf(msgException, "Could not find method %s%s.", METHOD_NAME_NEW_USER, METHOD_SIGNATURE_NEW_USER);
 		throwNewException(env, NAME_NO_SUCH_METHOD_EXCEPTION, msgException);
 		return;
 	}
 
-	jmethodID midLostUser = (env)->GetStaticMethodID(trackerRunnableClass, METHOD_NAME_LOST_USER, METHOD_SIGNATURE_LOST_USER);
+	jmethodID midLostUser = (env)->GetMethodID(trackerRunnableClass, METHOD_NAME_LOST_USER, METHOD_SIGNATURE_LOST_USER);
 	if (midLostUser == NULL) {
 		char msgException[256];
 		sprintf(msgException, "Could not find method %s%s.", METHOD_NAME_LOST_USER, METHOD_SIGNATURE_LOST_USER);
@@ -126,7 +143,7 @@ void JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriver_00024Tracke
 		return;
 	}
 
-	jmethodID midRecheckUser = (env)->GetStaticMethodID(trackerRunnableClass, METHOD_NAME_RECHECK_USER, METHOD_SIGNATURE_RECHECK_USER);
+	jmethodID midRecheckUser = (env)->GetMethodID(trackerRunnableClass, METHOD_NAME_RECHECK_USER, METHOD_SIGNATURE_RECHECK_USER);
 	if (midLostUser == NULL) {
 		sprintf(msgException, "Could not find method %s%s.", METHOD_NAME_RECHECK_USER, METHOD_SIGNATURE_RECHECK_USER);
 		throwNewException(env, NAME_NO_SUCH_METHOD_EXCEPTION, msgException);
@@ -146,13 +163,13 @@ void JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriver_00024Tracke
 			last_name = (env)->NewStringUTF(messageEvents.last_name);
 
 		if (messageEvents.type == NEW_USER) {
-			(env)->CallStaticVoidMethod(trackerRunnableClass, midNewUser, name, messageEvents.confidence, messageEvents.x, messageEvents.y, messageEvents.z);
+			(env)->CallVoidMethod(driver, midNewUser, name, messageEvents.confidence, messageEvents.x, messageEvents.y, messageEvents.z);
 		} else if (messageEvents.type == LOST_USER) {
-			(env)->CallStaticVoidMethod(trackerRunnableClass, midLostUser, name);
+			(env)->CallVoidMethod(driver, midLostUser, name);
 		} else if (messageEvents.type == RECHECK) {
-			(env)->CallStaticVoidMethod(trackerRunnableClass, midRecheckUser, name, last_name, messageEvents.confidence, messageEvents.x, messageEvents.y, messageEvents.z);
+			(env)->CallVoidMethod(driver, midRecheckUser, name, last_name, messageEvents.confidence, messageEvents.x, messageEvents.y, messageEvents.z);
 		} else if (messageEvents.type == RECHECK_POSITION){
-			(env)->CallStaticVoidMethod(trackerRunnableClass, midRecheckUser, name, last_name, messageEvents.confidence, messageEvents.x, messageEvents.y, messageEvents.z);
+			(env)->CallVoidMethod(driver, midRecheckUser, name, last_name, messageEvents.confidence, messageEvents.x, messageEvents.y, messageEvents.z);
 		}
 
 	}
@@ -161,11 +178,11 @@ void JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriver_00024Tracke
 }
 
 /*
- * Class:     br_unb_unbiquitous_ubiquitos_uos_driver_UserDriver
+ * Class:     br_unb_unbiquitous_ubiquitos_uos_driver_UserDriverNativeSupport
  * Method:    startTracker
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriver_startTracker(JNIEnv *, jobject) {
+JNIEXPORT void JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriverNativeSupport_startTracker(JNIEnv *, jobject) {
 	//criando um processo filho. Este processo sera transformado do deamon utilizando o execl
 	trackerId = fork();
 	if (trackerId < 0) {
@@ -181,28 +198,28 @@ JNIEXPORT void JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriver_s
 }
 
 /*
- * Class:     br_unb_unbiquitous_ubiquitos_uos_driver_UserDriver
+ * Class:     br_unb_unbiquitous_ubiquitos_uos_driver_UserDriverNativeSupport
  * Method:    stopTracker
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriver_stopTracker(JNIEnv * env, jobject obj) {
+JNIEXPORT void JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriverNativeSupport_stopTracker(JNIEnv * env, jobject obj) {
 	cleanupQueue(SIGINT);
 }
 
 /*
- * Class:     br_unb_unbiquitous_ubiquitos_uos_driver_UserDriver
+ * Class:     br_unb_unbiquitous_ubiquitos_uos_driver_UserDriverNativeSupport
  * Method:    train
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriver_train(JNIEnv * env, jobject obj) {
+JNIEXPORT void JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriverNativeSupport_train(JNIEnv * env, jobject obj) {
 	learn(env, TRAIN_DATA);
 }
 
 /*
- * Class:     br_unb_unbiquitous_ubiquitos_uos_driver_UserDriver
+ * Class:     br_unb_unbiquitous_ubiquitos_uos_driver_UserDriverNativeSupport
  * Method:    saveImage
  */
-JNIEXPORT jboolean JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriver_saveImage(JNIEnv * env, jobject obj, jstring name, jint index, jbyteArray image) {
+JNIEXPORT jboolean JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriverNativeSupport_saveImage(JNIEnv * env, jobject obj, jstring name, jint index, jbyteArray image) {
 	IplImage *greyImg;
 	IplImage *faceImg;
 	IplImage *sizedImg;
@@ -282,10 +299,10 @@ JNIEXPORT jboolean JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriv
 }
 
 /*
- * Class:     br_unb_unbiquitous_ubiquitos_uos_driver_UserDriver
+ * Class:     br_unb_unbiquitous_ubiquitos_uos_driver_UserDriverNativeSupport
  * Method:    removeUser
  */
-JNIEXPORT jboolean JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriver_removeUser(JNIEnv * env, jobject obj, jstring name) {
+JNIEXPORT jboolean JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriverNativeSupport_removeUser(JNIEnv * env, jobject obj, jstring name) {
 	FILE *trainFileImages;
 	FILE *trainFileImagesAuxiliar;
 
@@ -357,7 +374,7 @@ JNIEXPORT jboolean JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriv
 	return removed;
 }
 
-JNIEXPORT jobject JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriver_listUsers(JNIEnv * env, jobject obj) {
+JNIEXPORT jobject JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriverNativeSupport_listUsers(JNIEnv * env, jobject obj) {
 	FILE *trainFileImages;
 	char personName[256];
 	int personNumber;
@@ -458,11 +475,11 @@ string getStdoutFromCommand(string cmd){
 }
 
 /*
- * Class:     br_unb_unbiquitous_ubiquitos_uos_driver_UserDriver_Daemon
+ * Class:     br_unb_unbiquitous_ubiquitos_uos_driver_UserDriverNativeSupport_Daemon
  * Method:    isProcessRunning
  * Signature: ()Z
  */
-JNIEXPORT jboolean JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriver_00024Daemon_isProcessRunning(JNIEnv *env, jobject object){
+JNIEXPORT jboolean JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriverNativeSupport_00024Daemon_isProcessRunning(JNIEnv *env, jobject object){
 	string cmd, output;
 	std::stringstream out;
 	out << trackerId;
@@ -473,7 +490,21 @@ JNIEXPORT jboolean JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriv
 
 	output = getStdoutFromCommand(cmd);
 
-	if(output.find("Z", 100) != -1 || output.find("U", 100) != -1 || output.find("T", 100) != -1){
+	#if (XN_PLATFORM == XN_PLATFORM_MACOSX)
+		int headSize = 100;
+	#else
+		int headSize = 70;
+	#endif
+
+
+	// TODO: remove
+	printf("\n-------------------------------------\n");
+	printf("%s\n", output.c_str());
+	printf("-------------------------------------\n");
+	printf("%s\n", output.substr(headSize, output.size()).c_str());
+	printf("-------------------------------------\n\n");
+
+	if(output.find("Z", headSize) != -1 || output.find("U", headSize) != -1 || output.find("T", headSize) != -1){
 		return false;
 	}
 
