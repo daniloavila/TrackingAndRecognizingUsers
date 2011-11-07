@@ -86,7 +86,9 @@ void getTrackerSignals();
 /**
  * Recebe as mensagens da fila de resposta e reenvia as frames dos usuarios não reconhecidos.
  */
+ // int cont = 0;
 void treatQueueResponse(int i) {
+	
 	MessageResponse messageResponse;
 
 	printLogConsole("Log - Tracker diz: . TREAT QUEUE RESPONSE . \n");
@@ -108,7 +110,13 @@ void treatQueueResponse(int i) {
 		}
 
 		int total = getTotalAttempts(messageResponse.user_id);
-
+		// printf("\n\nTOTAL: %d\n\n", total);
+		// if(total + cont == 20){
+		// 	printfLogComplete(&users, stdout);
+		// 	printf("UNKOWN: %d\n", cont);
+		// 	exit(EXIT_SUCCESS);
+		// }
+		
 		// verifica se é uma label válida
 		if (messageResponse.user_name == NULL || strlen(messageResponse.user_name) == 0) {
 			printLogConsole("Log - Tracker diz: Nome está vazio\n");
@@ -119,7 +127,10 @@ void treatQueueResponse(int i) {
 			}
 			continue;
 		} else if(strcmp(messageResponse.user_name, UNKNOWN) == 0) {
-
+			// if(total == 0) {
+			// 	cont++;
+			// 	printf("UNKOWN\n");
+			// }
 			//verifica se eh a primeira vez que retornou uma label valida
 			if(users[messageResponse.user_id].name == NULL || strlen(users[messageResponse.user_id].name) == 0) {
 				users[messageResponse.user_id].name = (char *) malloc(strlen(UNKNOWN) + 1);
@@ -170,6 +181,7 @@ void treatQueueResponse(int i) {
 
 	printLogConsole("---------------------------------------------\n");
 
+
 	glutTimerFunc(INTERVAL_IN_MILISECONDS_TREAT_RESPONSE, treatQueueResponse, 0);
 }
 
@@ -188,7 +200,6 @@ void recheckUsers(int i) {
 		}
 
 		#ifdef JAVA_INTEGRATION
-			printf("[TRACKER] REQUEST RECOGNITION\n");
 			sendChoice((*it).first, RECHECK_POSITION, NULL);
 		#endif
 
@@ -309,7 +320,7 @@ int main(int argc, char **argv) {
 	users.clear();
 	statisticsClearAll();
 
-	//criando um processo filho. Este processo sera transformado do deamon utilizando o execl
+	//criando um processo filho. 
 	faceRecId = fork();
 	if (faceRecId < 0) {
 		fprintf(stderr, "Erro ao tentar criar o processo 'Recognizer' atraves do fork.\n");
@@ -405,13 +416,14 @@ void reexecute(int signal) {
 void getTrackerSignals() {
 	signal(SIGINT, cleanupQueueAndExit);
 	signal(SIGQUIT, cleanupQueueAndExit);
-	// signal(SIGILL, cleanupQueueAndExit);
-	// signal(SIGTRAP, cleanupQueueAndExit);
-	// signal(SIGABRT, cleanupQueueAndExit);
+	signal(SIGILL, cleanupQueueAndExit);
+	signal(SIGTRAP, cleanupQueueAndExit);
+	signal(SIGABRT, cleanupQueueAndExit);
 	signal(SIGKILL, cleanupQueueAndExit);
+	signal(SIGSEGV, cleanupQueueAndExit);
 	// signal(SIGSEGV, reexecute);
-	// signal(SIGTERM, cleanupQueueAndExit);
-	// signal(SIGSYS, cleanupQueueAndExit);
+	signal(SIGTERM, cleanupQueueAndExit);
+	signal(SIGSYS, cleanupQueueAndExit);
 }
 
 void lostTrackerSignals() {
@@ -420,7 +432,7 @@ void lostTrackerSignals() {
 	signal(SIGILL, SIG_IGN);
 	signal(SIGTRAP, SIG_IGN);
 	signal(SIGABRT, SIG_IGN);
-	signal(SIGKILL, SIG_IGN);
+	// signal(SIGKILL, SIG_IGN);
 	signal(SIGSEGV, SIG_IGN);
 	signal(SIGTERM, SIG_IGN);
 	signal(SIGSYS, SIG_IGN);

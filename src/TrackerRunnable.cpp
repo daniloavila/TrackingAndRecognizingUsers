@@ -16,6 +16,13 @@
 #include "Definitions.h"
 
 #include <stdio.h>
+#include <stdlib.h>
+
+#if (XN_PLATFORM == XN_PLATFORM_MACOSX)
+#include <GLUT/glut.h>
+#else
+#include <GL/glut.h>
+#endif
 
 using namespace std;
 
@@ -56,6 +63,7 @@ extern "C" {
 //****************************************************************************************
 //				ASSINATURA DAS FUNCOES
 //****************************************************************************************
+void isTrackerRunning();
 void lostTrackerRunnalbeSignals();
 void getTrackerRunnalbeSignals();
 int getMaxPersonNumber(JNIEnv * env);
@@ -144,9 +152,9 @@ void JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriver_00024Tracke
 		} else if (messageEvents.type == RECHECK) {
 			(env)->CallStaticVoidMethod(trackerRunnableClass, midRecheckUser, name, last_name, messageEvents.confidence, messageEvents.x, messageEvents.y, messageEvents.z);
 		} else if (messageEvents.type == RECHECK_POSITION){
-			printf("[RUNNABLE] FOI ---------------------------------------------\n");
 			(env)->CallStaticVoidMethod(trackerRunnableClass, midRecheckUser, name, last_name, messageEvents.confidence, messageEvents.x, messageEvents.y, messageEvents.z);
 		}
+
 	}
 
 	printLogConsole("FIM Tracker");
@@ -169,6 +177,7 @@ JNIEXPORT void JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriver_s
 	if (trackerId == 0) {
 		execl(TRACKER_PATH, EXEC_NAME_TRACKER, (char *) 0);
 	}
+
 }
 
 /*
@@ -432,6 +441,44 @@ int getMaxPersonNumber(JNIEnv * env) {
 //****************************************************************************************
 //				FUNCOES UTILIZADAS PARA INTERCEPTAR OS DIVERSOS TIPOS DE SINAIS
 //****************************************************************************************
+
+// ps -lp pid
+string getStdoutFromCommand(string cmd){
+  // setup
+  string data;
+  FILE *stream;
+  char buffer[255];
+
+  stream = popen(cmd.c_str(), "r");
+  while ( fgets(buffer, 255, stream) != NULL )
+    data.append(buffer);
+  pclose(stream);
+
+  return data;
+}
+
+/*
+ * Class:     br_unb_unbiquitous_ubiquitos_uos_driver_UserDriver_Daemon
+ * Method:    isProcessRunning
+ * Signature: ()Z
+ */
+JNIEXPORT jboolean JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriver_00024Daemon_isProcessRunning(JNIEnv *env, jobject object){
+	string cmd, output;
+	std::stringstream out;
+	out << trackerId;
+
+	printf("TRACKER RUNNING?\n");
+	cmd = "ps -lp ";
+	cmd.append(out.str());
+
+	output = getStdoutFromCommand(cmd);
+
+	if(output.find("Z", 100) != -1 || output.find("U", 100) != -1 || output.find("T", 100) != -1){
+		return false;
+	}
+
+	return true;
+}
 
 void cleanupQueue(int signal) {
 	lostTrackerRunnalbeSignals();

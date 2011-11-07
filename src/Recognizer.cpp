@@ -258,7 +258,7 @@ int findNearestNeighbor(float * projectedTestFace, float *pConfidence) {
 	// e imagens muitos diferentes deem indice de confianca entre 0.0 - 0.5
 	*pConfidence = 1.0f - sqrt(leastDistSq / (float) (nTrainFaces * nEigens)) / 255.0f;
 
-	if (iNearest == iNearestMahalanobis && *pConfidence > THRESHOLD) {
+	if (iNearest == iNearestMahalanobis && *pConfidence > THRESHOLD ) {
 		return iNearest;
 	}
 	return -1;
