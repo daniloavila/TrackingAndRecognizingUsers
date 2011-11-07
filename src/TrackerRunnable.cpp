@@ -74,6 +74,7 @@ void throwNewException(JNIEnv *env, const char *nameOfException, const char *mes
 int idQueueComunicationJavaC = 0;
 int trackerId = 0;
 int registerId = 0;
+int faceRecId = 0;
 
 //****************************************************************************************
 //				VARIAVEIS UTILIZADAS NO TREINO
@@ -176,6 +177,19 @@ JNIEXPORT void JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriver_s
 	//inicinado o processo que reconhece os novoc usuarios encontrados
 	if (trackerId == 0) {
 		execl(TRACKER_PATH, EXEC_NAME_TRACKER, (char *) 0);
+	}
+
+	//criando um processo filho. 
+	faceRecId = fork();
+	if (faceRecId < 0) {
+		fprintf(stderr, "Erro ao tentar criar o processo 'Recognizer' atraves do fork.\n");
+		exit(1);
+	}
+
+	//iniciando o processo que reconhece os novos usuarios encontrados
+	if (faceRecId == 0) {
+		printLogConsole("Iniciando processo do recognizer\n");
+		execl(RECOGNIZER_PATH, EXEC_NAME_RECOGNIZER, (char *) 0);
 	}
 
 }
@@ -467,7 +481,6 @@ JNIEXPORT jboolean JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriv
 	std::stringstream out;
 	out << trackerId;
 
-	printf("TRACKER RUNNING?\n");
 	cmd = "ps -lp ";
 	cmd.append(out.str());
 
@@ -485,6 +498,7 @@ void cleanupQueue(int signal) {
 	printLogConsole("Signal TrackerRunnable - %d\n", signal);
 
 	kill(trackerId, signal);
+	kill(faceRecId, signal);
 #if (XN_PLATFORM == XN_PLATFORM_MACOSX)
 	wait((int*)0);
 #else
