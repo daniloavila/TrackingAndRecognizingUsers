@@ -194,7 +194,6 @@ JNIEXPORT void JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriverNa
 	if (trackerId == 0) {
 		execl(TRACKER_PATH, EXEC_NAME_TRACKER, (char *) 0);
 	}
-
 }
 
 /*
@@ -484,7 +483,6 @@ JNIEXPORT jboolean JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriv
 	std::stringstream out;
 	out << trackerId;
 
-	printf("TRACKER RUNNING?\n");
 	cmd = "ps -lp ";
 	cmd.append(out.str());
 
@@ -496,15 +494,7 @@ JNIEXPORT jboolean JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriv
 		int headSize = 70;
 	#endif
 
-
-	// TODO: remove
-	printf("\n-------------------------------------\n");
-	printf("%s\n", output.c_str());
-	printf("-------------------------------------\n");
-	printf("%s\n", output.substr(headSize, output.size()).c_str());
-	printf("-------------------------------------\n\n");
-
-	if(output.find("Z", headSize) != -1 || output.find("U", headSize) != -1 || output.find("T", headSize) != -1){
+	if(output.find("Z", headSize) != -1){
 		return false;
 	}
 

@@ -15,7 +15,7 @@
 
 // #define DEBUG // Define se será ou não mostrado no console informações de log.
 
-#define SAVE_LOG // Define se será salvo um log sobre os usuários encontrados.
+// #define SAVE_LOG // Define se será salvo um log sobre os usuários encontrados.
 
 #define INSTALATION_VERSION // Define se será usado o path de instalação
 

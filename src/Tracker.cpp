@@ -421,7 +421,6 @@ void getTrackerSignals() {
 	signal(SIGABRT, cleanupQueueAndExit);
 	signal(SIGKILL, cleanupQueueAndExit);
 	signal(SIGSEGV, cleanupQueueAndExit);
-	// signal(SIGSEGV, reexecute);
 	signal(SIGTERM, cleanupQueueAndExit);
 	signal(SIGSYS, cleanupQueueAndExit);
 }
@@ -432,7 +431,7 @@ void lostTrackerSignals() {
 	signal(SIGILL, SIG_IGN);
 	signal(SIGTRAP, SIG_IGN);
 	signal(SIGABRT, SIG_IGN);
-	// signal(SIGKILL, SIG_IGN);
+	signal(SIGKILL, SIG_IGN);
 	signal(SIGSEGV, SIG_IGN);
 	signal(SIGTERM, SIG_IGN);
 	signal(SIGSYS, SIG_IGN);
