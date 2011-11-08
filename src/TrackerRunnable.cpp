@@ -77,7 +77,6 @@ void throwNewException(JNIEnv *env, const char *nameOfException, const char *mes
 int idQueueComunicationJavaC = 0;
 int trackerId = 0;
 int registerId = 0;
-int faceRecId = 0;
 
 //****************************************************************************************
 //				VARIAVEIS UTILIZADAS NO TREINO
@@ -195,20 +194,6 @@ JNIEXPORT void JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriverNa
 	if (trackerId == 0) {
 		execl(TRACKER_PATH, EXEC_NAME_TRACKER, (char *) 0);
 	}
-
-	//criando um processo filho. 
-	faceRecId = fork();
-	if (faceRecId < 0) {
-		fprintf(stderr, "Erro ao tentar criar o processo 'Recognizer' atraves do fork.\n");
-		exit(1);
-	}
-
-	//iniciando o processo que reconhece os novos usuarios encontrados
-	if (faceRecId == 0) {
-		printLogConsole("Iniciando processo do recognizer\n");
-		execl(RECOGNIZER_PATH, EXEC_NAME_RECOGNIZER, (char *) 0);
-	}
-
 }
 
 /*
@@ -509,15 +494,7 @@ JNIEXPORT jboolean JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriv
 		int headSize = 70;
 	#endif
 
-
-	// TODO: remove
-	printf("\n-------------------------------------\n");
-	printf("%s\n", output.c_str());
-	printf("-------------------------------------\n");
-	printf("%s\n", output.substr(headSize, output.size()).c_str());
-	printf("-------------------------------------\n\n");
-
-	if(output.find("Z", headSize) != -1 || output.find("U", headSize) != -1 || output.find("T", headSize) != -1){
+	if(output.find("Z", headSize) != -1){
 		return false;
 	}
 
@@ -529,7 +506,6 @@ void cleanupQueue(int signal) {
 	printLogConsole("Signal TrackerRunnable - %d\n", signal);
 
 	kill(trackerId, signal);
-	kill(faceRecId, signal);
 #if (XN_PLATFORM == XN_PLATFORM_MACOSX)
 	wait((int*)0);
 #else

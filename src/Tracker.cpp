@@ -47,7 +47,7 @@ xn::SceneAnalyzer g_SceneAnalyzer;
 int idQueueRequest;
 int idQueueResponse;
 int idQueueComunicationJavaC;
-// int faceRecId;
+int faceRecId;
 
 #if (XN_PLATFORM == XN_PLATFORM_MACOSX)
 #include <GLUT/glut.h>
@@ -254,12 +254,12 @@ void cleanupQueueAndExit(int i) {
 
 	//matando a fila de mensagens que o tracker recebe respostas
 	msgctl(idQueueResponse, IPC_RMID, NULL);
-	// kill(faceRecId, SIGUSR1);
-	// #if (XN_PLATFORM == XN_PLATFORM_MACOSX)
-	// 	wait((int*)0);
-	// #else
-	// 	wait();
-	// #endif
+	kill(faceRecId, SIGUSR1);
+	#if (XN_PLATFORM == XN_PLATFORM_MACOSX)
+		wait((int*)0);
+	#else
+		wait();
+	#endif
 	
 	printfLogComplete(&users, stdout);
 // #endif
@@ -320,19 +320,19 @@ int main(int argc, char **argv) {
 	users.clear();
 	statisticsClearAll();
 
-	// //criando um processo filho. 
-	// faceRecId = fork();
-	// if (faceRecId < 0) {
-	// 	fprintf(stderr, "Erro ao tentar criar o processo 'Recognizer' atraves do fork.\n");
-	// 	exit(1);
-	// }
+	//criando um processo filho. 
+	faceRecId = fork();
+	if (faceRecId < 0) {
+		fprintf(stderr, "Erro ao tentar criar o processo 'Recognizer' atraves do fork.\n");
+		exit(1);
+	}
 
-	// //iniciando o processo que reconhece os novos usuarios encontrados
-	// if (faceRecId == 0) {
-	// 	printLogConsole("Iniciando processo do recognizer a partir do tracker\n");
-	// 	execl(RECOGNIZER_PATH, EXEC_NAME_RECOGNIZER, (char *) 0);
-	// 	return EXIT_SUCCESS;
-	// }
+	//iniciando o processo que reconhece os novos usuarios encontrados
+	if (faceRecId == 0) {
+		printLogConsole("Iniciando processo do recognizer a partir do tracker\n");
+		execl(RECOGNIZER_PATH, EXEC_NAME_RECOGNIZER, (char *) 0);
+		return EXIT_SUCCESS;
+	}
 
 	nRetVal = g_SceneAnalyzer.Create(g_Context);
 
@@ -421,7 +421,6 @@ void getTrackerSignals() {
 	signal(SIGABRT, cleanupQueueAndExit);
 	signal(SIGKILL, cleanupQueueAndExit);
 	signal(SIGSEGV, cleanupQueueAndExit);
-	// signal(SIGSEGV, reexecute);
 	signal(SIGTERM, cleanupQueueAndExit);
 	signal(SIGSYS, cleanupQueueAndExit);
 }
@@ -432,7 +431,7 @@ void lostTrackerSignals() {
 	signal(SIGILL, SIG_IGN);
 	signal(SIGTRAP, SIG_IGN);
 	signal(SIGABRT, SIG_IGN);
-	// signal(SIGKILL, SIG_IGN);
+	signal(SIGKILL, SIG_IGN);
 	signal(SIGSEGV, SIG_IGN);
 	signal(SIGTERM, SIG_IGN);
 	signal(SIGSYS, SIG_IGN);
