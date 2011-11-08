@@ -423,6 +423,19 @@ void getTrackerSignals() {
 	signal(SIGSEGV, cleanupQueueAndExit);
 	signal(SIGTERM, cleanupQueueAndExit);
 	signal(SIGSYS, cleanupQueueAndExit);
+
+	signal(SIGEMT, cleanupQueueAndExit); 
+	signal(SIGFPE , cleanupQueueAndExit);
+	signal(SIGKILL, cleanupQueueAndExit);
+	signal(SIGBUS , cleanupQueueAndExit);
+	signal(SIGSEGV, cleanupQueueAndExit);
+	signal(SIGSYS , cleanupQueueAndExit);
+	signal(SIGPIPE, cleanupQueueAndExit);
+	signal(SIGALRM, cleanupQueueAndExit);
+	signal(SIGURG , cleanupQueueAndExit);
+	signal(SIGTSTP, cleanupQueueAndExit);
+	signal(SIGUSR1, cleanupQueueAndExit);
+	signal(SIGUSR2, cleanupQueueAndExit);
 }
 
 void lostTrackerSignals() {
@@ -435,6 +448,19 @@ void lostTrackerSignals() {
 	signal(SIGSEGV, SIG_IGN);
 	signal(SIGTERM, SIG_IGN);
 	signal(SIGSYS, SIG_IGN);
+
+	signal(SIGEMT, SIG_IGN); 	
+	signal(SIGFPE , SIG_IGN);
+	signal(SIGKILL, SIG_IGN);
+	signal(SIGBUS , SIG_IGN);
+	signal(SIGSEGV, SIG_IGN);
+	signal(SIGSYS , SIG_IGN);
+	signal(SIGPIPE, SIG_IGN);
+	signal(SIGALRM, SIG_IGN);
+	signal(SIGURG , SIG_IGN);
+	signal(SIGTSTP, SIG_IGN);
+	signal(SIGUSR1, SIG_IGN);
+	signal(SIGUSR2, SIG_IGN);
 }
 
 /**
