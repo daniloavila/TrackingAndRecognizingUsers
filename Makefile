@@ -96,6 +96,7 @@ install: $(all)
 	sudo mkdir -pv $(FILES_PATH)/LOG/
 	sudo cp -r Config/ $(FILES_PATH)/Config/
 	sudo cp -r Eigenfaces/ $(FILES_PATH)/Eigenfaces/
+	sudo cp -r Eigenfaces/train.txt $(FILES_PATH)/Eigenfaces/train.txt
 	sudo cp -r Eigenfaces/facedata.xml $(FILES_PATH)/Eigenfaces/facedata.xml
 	sudo cp -r Eigenfaces/haarcascade_frontalface_alt.xml $(FILES_PATH)/Eigenfaces/haarcascade_frontalface_alt.xml
 	

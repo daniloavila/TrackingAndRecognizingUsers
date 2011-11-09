@@ -17,7 +17,7 @@
 
 // #define SAVE_LOG // Define se será salvo um log sobre os usuários encontrados.
 
-#define INSTALATION_VERSION // Define se será usado o path de instalação
+//#define INSTALATION_VERSION // Define se será usado o path de instalação
 
 // Se alterar aqui alterar também o MAKEFILE
 #define EXEC_NAME_RECOGNIZER "recognizer"
@@ -59,9 +59,9 @@
 /*********************************
  ****** Register parameters ******
  *********************************/
-#define NUMBER_OF_SAVED_FACES_FRONTAL 6
-#define NUMBER_OF_SAVED_FACES_RIGHT 2
-#define NUMBER_OF_SAVED_FACES_LEFT 2
+#define NUMBER_OF_SAVED_FACES_FRONTAL 60
+#define NUMBER_OF_SAVED_FACES_RIGHT 20
+#define NUMBER_OF_SAVED_FACES_LEFT 20
 
 #define FACE_WIDTH 92
 #define FACE_HEIGHT 112
