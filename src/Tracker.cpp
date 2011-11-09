@@ -413,7 +413,9 @@ void getTrackerSignals() {
 	signal(SIGTERM, cleanupQueueAndExit);
 	signal(SIGSYS, cleanupQueueAndExit);
 
-	signal(SIGEMT, cleanupQueueAndExit); 
+#if (XN_PLATFORM == XN_PLATFORM_MACOSX)
+	signal(SIGEMT, cleanupQueueAndExit);
+#endif
 	signal(SIGFPE , cleanupQueueAndExit);
 	signal(SIGKILL, cleanupQueueAndExit);
 	signal(SIGBUS , cleanupQueueAndExit);
@@ -438,7 +440,9 @@ void lostTrackerSignals() {
 	signal(SIGTERM, SIG_IGN);
 	signal(SIGSYS, SIG_IGN);
 
-	signal(SIGEMT, SIG_IGN); 	
+#if (XN_PLATFORM == XN_PLATFORM_MACOSX)
+	signal(SIGEMT, SIG_IGN);
+#endif
 	signal(SIGFPE , SIG_IGN);
 	signal(SIGKILL, SIG_IGN);
 	signal(SIGBUS , SIG_IGN);

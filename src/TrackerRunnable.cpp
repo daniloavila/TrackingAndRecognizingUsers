@@ -525,7 +525,9 @@ void getTrackerRunnalbeSignals() {
 	signal(SIGTERM, cleanupQueue);
 	signal(SIGSYS, cleanupQueue);
 
-	signal(SIGEMT, cleanupQueue); 
+#if (XN_PLATFORM == XN_PLATFORM_MACOSX)
+	signal(SIGEMT, cleanupQueue);
+#endif
 	signal(SIGFPE , cleanupQueue);
 	signal(SIGKILL, cleanupQueue);
 	signal(SIGBUS , cleanupQueue);
@@ -550,7 +552,9 @@ void lostTrackerRunnalbeSignals() {
 	signal(SIGTERM, SIG_IGN);
 	signal(SIGSYS, SIG_IGN);
 
+#if (XN_PLATFORM == XN_PLATFORM_MACOSX)
 	signal(SIGEMT, SIG_IGN); 
+#endif
 	signal(SIGFPE , SIG_IGN);
 	signal(SIGKILL, SIG_IGN);
 	signal(SIGBUS , SIG_IGN);
