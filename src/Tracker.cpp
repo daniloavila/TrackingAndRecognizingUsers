@@ -86,7 +86,6 @@ void getTrackerSignals();
 /**
  * Recebe as mensagens da fila de resposta e reenvia as frames dos usuarios não reconhecidos.
  */
- // int cont = 0;
 void treatQueueResponse(int i) {
 	
 	MessageResponse messageResponse;
@@ -110,12 +109,6 @@ void treatQueueResponse(int i) {
 		}
 
 		int total = getTotalAttempts(messageResponse.user_id);
-		// printf("\n\nTOTAL: %d\n\n", total);
-		// if(total + cont == 20){
-		// 	printfLogComplete(&users, stdout);
-		// 	printf("UNKOWN: %d\n", cont);
-		// 	exit(EXIT_SUCCESS);
-		// }
 		
 		// verifica se é uma label válida
 		if (messageResponse.user_name == NULL || strlen(messageResponse.user_name) == 0) {
@@ -127,10 +120,6 @@ void treatQueueResponse(int i) {
 			}
 			continue;
 		} else if(strcmp(messageResponse.user_name, UNKNOWN) == 0) {
-			// if(total == 0) {
-			// 	cont++;
-			// 	printf("UNKOWN\n");
-			// }
 			//verifica se eh a primeira vez que retornou uma label valida
 			if(users[messageResponse.user_id].name == NULL || strlen(users[messageResponse.user_id].name) == 0) {
 				users[messageResponse.user_id].name = (char *) malloc(strlen(UNKNOWN) + 1);
@@ -423,6 +412,19 @@ void getTrackerSignals() {
 	signal(SIGSEGV, cleanupQueueAndExit);
 	signal(SIGTERM, cleanupQueueAndExit);
 	signal(SIGSYS, cleanupQueueAndExit);
+
+	signal(SIGEMT, cleanupQueueAndExit); 
+	signal(SIGFPE , cleanupQueueAndExit);
+	signal(SIGKILL, cleanupQueueAndExit);
+	signal(SIGBUS , cleanupQueueAndExit);
+	signal(SIGSEGV, cleanupQueueAndExit);
+	signal(SIGSYS , cleanupQueueAndExit);
+	signal(SIGPIPE, cleanupQueueAndExit);
+	signal(SIGALRM, cleanupQueueAndExit);
+	signal(SIGURG , cleanupQueueAndExit);
+	signal(SIGTSTP, cleanupQueueAndExit);
+	signal(SIGUSR1, cleanupQueueAndExit);
+	signal(SIGUSR2, cleanupQueueAndExit);
 }
 
 void lostTrackerSignals() {
@@ -435,6 +437,19 @@ void lostTrackerSignals() {
 	signal(SIGSEGV, SIG_IGN);
 	signal(SIGTERM, SIG_IGN);
 	signal(SIGSYS, SIG_IGN);
+
+	signal(SIGEMT, SIG_IGN); 	
+	signal(SIGFPE , SIG_IGN);
+	signal(SIGKILL, SIG_IGN);
+	signal(SIGBUS , SIG_IGN);
+	signal(SIGSEGV, SIG_IGN);
+	signal(SIGSYS , SIG_IGN);
+	signal(SIGPIPE, SIG_IGN);
+	signal(SIGALRM, SIG_IGN);
+	signal(SIGURG , SIG_IGN);
+	signal(SIGTSTP, SIG_IGN);
+	signal(SIGUSR1, SIG_IGN);
+	signal(SIGUSR2, SIG_IGN);
 }
 
 /**

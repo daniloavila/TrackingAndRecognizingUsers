@@ -478,7 +478,7 @@ string getStdoutFromCommand(string cmd){
  * Method:    isProcessRunning
  * Signature: ()Z
  */
-JNIEXPORT jboolean JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriverNativeSupport_00024Daemon_isProcessRunning(JNIEnv *env, jobject object){
+JNIEXPORT jboolean JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriverImpl_00024Daemon_isProcessRunning(JNIEnv *env, jobject object){
 	string cmd, output;
 	std::stringstream out;
 	out << trackerId;
@@ -524,6 +524,19 @@ void getTrackerRunnalbeSignals() {
 	signal(SIGSEGV, cleanupQueue);
 	signal(SIGTERM, cleanupQueue);
 	signal(SIGSYS, cleanupQueue);
+
+	signal(SIGEMT, cleanupQueue); 
+	signal(SIGFPE , cleanupQueue);
+	signal(SIGKILL, cleanupQueue);
+	signal(SIGBUS , cleanupQueue);
+	signal(SIGSEGV, cleanupQueue);
+	signal(SIGSYS , cleanupQueue);
+	signal(SIGPIPE, cleanupQueue);
+	signal(SIGALRM, cleanupQueue);
+	signal(SIGURG , cleanupQueue);
+	signal(SIGTSTP, cleanupQueue);
+	signal(SIGUSR1, cleanupQueue);
+	signal(SIGUSR2, cleanupQueue);
 }
 
 void lostTrackerRunnalbeSignals() {
@@ -536,6 +549,20 @@ void lostTrackerRunnalbeSignals() {
 	signal(SIGSEGV, SIG_IGN);
 	signal(SIGTERM, SIG_IGN);
 	signal(SIGSYS, SIG_IGN);
+
+	signal(SIGEMT, SIG_IGN); 
+	signal(SIGFPE , SIG_IGN);
+	signal(SIGKILL, SIG_IGN);
+	signal(SIGBUS , SIG_IGN);
+	signal(SIGSEGV, SIG_IGN);
+	signal(SIGSYS , SIG_IGN);
+	signal(SIGPIPE, SIG_IGN);
+	signal(SIGALRM, SIG_IGN);
+	signal(SIGURG , SIG_IGN);
+	signal(SIGTSTP, SIG_IGN);
+	signal(SIGUSR1, SIG_IGN);
+	signal(SIGUSR2, SIG_IGN);
+
 }
 
 //****************************************************************************************
