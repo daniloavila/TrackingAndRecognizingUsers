@@ -109,9 +109,21 @@ void transformAreaVision(short unsigned int* source, int id) {
 
 					setPixel(source, i * KINECT_WIDTH_CAPTURE + j, i * KINECT_WIDTH_CAPTURE + posicaoEsquerda, id);
 					setPixel(source, i * KINECT_WIDTH_CAPTURE + posicaoDireita, i * KINECT_WIDTH_CAPTURE + j, id);
+
 				}
 			}
 		}
+
+		printf("----------------------------------\n");
+
+		IplImage* frame = cvCreateImage(cvSize(KINECT_HEIGHT_CAPTURE, KINECT_WIDTH_CAPTURE), IPL_DEPTH_16U, 1);
+		frame->imageData = (char *) source;
+
+		cvNamedWindow("teste", CV_WINDOW_AUTOSIZE);
+		cvMoveWindow("teste", 500, 500);
+		cvShowImage("teste", frame);
+		cvWaitKey(10);
+
 	}
 
 }
