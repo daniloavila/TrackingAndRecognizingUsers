@@ -88,7 +88,7 @@
 #define ADJUSTMENT_RIGHT 20
 
 //valor que o pixel da area expandida do usuario recebe
-#define ADJUSTED 999
+#define ADJUSTED 80
 
 // Avalia os erros do Kinect
 #define CHECK_RC(nRetVal, what) \

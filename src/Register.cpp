@@ -641,8 +641,8 @@ void recognizeFromCam(void) {
 				}
 
 				if (saveNextFaces && newPersonFaces < NUMBER_OF_SAVED_FACES_FRONTAL + NUMBER_OF_SAVED_FACES_LEFT + NUMBER_OF_SAVED_FACES_RIGHT) {
-					printf("\007");
-					sleep(0.5);
+					// printf("\007");
+					// sleep(0.5);
 
 					sprintf(cstr, NEW_IMAGES_SCHEME, nPersons + 1, newPersonName, newPersonFaces + 1);
 					printf("Armazenando a face corrente de '%s' na imagem '%s'.\n", newPersonName, cstr);

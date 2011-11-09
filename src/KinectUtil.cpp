@@ -114,16 +114,6 @@ void transformAreaVision(short unsigned int* source, int id) {
 			}
 		}
 
-		printf("----------------------------------\n");
-
-		IplImage* frame = cvCreateImage(cvSize(KINECT_HEIGHT_CAPTURE, KINECT_WIDTH_CAPTURE), IPL_DEPTH_16U, 1);
-		frame->imageData = (char *) source;
-
-		cvNamedWindow("teste", CV_WINDOW_AUTOSIZE);
-		cvMoveWindow("teste", 500, 500);
-		cvShowImage("teste", frame);
-		cvWaitKey(10);
-
 	}
 
 }

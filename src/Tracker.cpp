@@ -489,6 +489,16 @@ void getFrameFromUserId(XnUserID nId, char *maskPixels) {
 		}
 	}
 
+	printf("----------------------------------\n");
+
+		IplImage* frame = cvCreateImage(cvSize(KINECT_HEIGHT_CAPTURE, KINECT_WIDTH_CAPTURE), IPL_DEPTH_8U, 3);
+		frame->imageData = (char *) maskPixels;
+
+		cvNamedWindow("teste", CV_WINDOW_AUTOSIZE);
+		cvMoveWindow("teste", 500, 500);
+		cvShowImage("teste", frame);
+		cvWaitKey(10);
+
 	sceneMD.~OutputMetaData();
 	free(result);
 }
