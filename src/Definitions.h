@@ -11,7 +11,7 @@
 
 #define USE_MAHALANOBIS_DISTANCE // Define o uso da distancia mahalanobis para auxiliar a euclidiana
 
-//#define JAVA_INTEGRATION // Define se será ou não enviado mensagens para o processo java.
+#define JAVA_INTEGRATION // Define se será ou não enviado mensagens para o processo java.
 
 // #define DEBUG // Define se será ou não mostrado no console informações de log.
 

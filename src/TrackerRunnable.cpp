@@ -478,7 +478,7 @@ string getStdoutFromCommand(string cmd){
  * Method:    isProcessRunning
  * Signature: ()Z
  */
-JNIEXPORT jboolean JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriverImpl_00024Daemon_isProcessRunning(JNIEnv *env, jobject object){
+JNIEXPORT jboolean JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriverNativeSupport_00024Daemon_isProcessRunning(JNIEnv *env, jobject object){
 	string cmd, output;
 	std::stringstream out;
 	out << trackerId;

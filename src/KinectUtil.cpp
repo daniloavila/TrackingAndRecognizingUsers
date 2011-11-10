@@ -118,6 +118,17 @@ void transformAreaVision(short unsigned int* source, int id) {
 
 }
 
+ void destransformAreaVision(unsigned short int* source) {
+   if (source != NULL) {
+     for (int i = 0; i < KINECT_HEIGHT_CAPTURE; i++) {
+       for (int j = 0; j < KINECT_WIDTH_CAPTURE; j++) {
+         if(source[i * KINECT_WIDTH_CAPTURE + j] == ADJUSTED)
+                 source[i * KINECT_WIDTH_CAPTURE + j] = 0;
+       }
+     }
+   }
+}
+
 /**
  * Inicia o Kinect
  */
@@ -171,7 +182,7 @@ IplImage* getKinectFrame() {
 		printf("Falha ao atualizar os dados: %s\n", xnGetStatusString(nRetVal));
 		return NULL;
 	}
-	IplImage* frame = cvCreateImage(cvSize(KINECT_HEIGHT_CAPTURE, KINECT_WIDTH_CAPTURE), IPL_DEPTH_8U, KINECT_NUMBER_OF_CHANNELS);
+	IplImage* frame = cvCreateImage(cvSize(KINECT_WIDTH_CAPTURE, KINECT_HEIGHT_CAPTURE), IPL_DEPTH_8U, KINECT_NUMBER_OF_CHANNELS);
 	char* result = transformToCharAray(image.GetRGB24ImageMap());
 	frame->imageData = result;
 	return frame;

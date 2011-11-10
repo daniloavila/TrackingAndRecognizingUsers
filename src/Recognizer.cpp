@@ -124,7 +124,7 @@ int main(int argc, char** argv) {
 		if(pshm == NULL)
 			continue;
 
-		IplImage* frame = cvCreateImage(cvSize(KINECT_HEIGHT_CAPTURE, KINECT_WIDTH_CAPTURE), IPL_DEPTH_8U, KINECT_NUMBER_OF_CHANNELS);
+		IplImage* frame = cvCreateImage(cvSize(KINECT_WIDTH_CAPTURE,KINECT_HEIGHT_CAPTURE), IPL_DEPTH_8U, KINECT_NUMBER_OF_CHANNELS);
 		frame->imageData = pshm;
 
 		float confidence = 0.0;
