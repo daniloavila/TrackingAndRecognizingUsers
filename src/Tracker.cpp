@@ -112,12 +112,12 @@ void treatQueueResponse(int i) {
 
 		int total = getTotalAttempts(messageResponse.user_id);
 
-		// printf("\n\nTOTAL: %d\n\n", total+cont);
-    if(total + cont >= 20){
-      printfLogComplete(&users, stdout);
-      printf("UNKOWN: %d\n", cont);
-      // cleanupQueueAndExit(0);
-    }
+		//printf("\n\nTOTAL: %d\n\n", total + cont);
+		/*if (total + cont >= 20) {
+			printfLogComplete(&users, stdout);
+			printf("UNKOWN: %d\n", cont);
+			cleanupQueueAndExit(0);
+		}*/
 		
 		// verifica se é uma label válida
 		if (messageResponse.user_name == NULL || strlen(messageResponse.user_name) == 0) {
