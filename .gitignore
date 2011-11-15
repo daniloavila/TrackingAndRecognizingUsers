@@ -15,3 +15,5 @@ Eigenfaces/out_averageImage.bmp
 Eigenfaces/train.txt
 LOG/
 bin/*.o
+*.bak
+*~
