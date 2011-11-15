@@ -251,7 +251,7 @@ JNIEXPORT jboolean JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriv
 	}
 
 	// Criando a IplImage
-	IplImage* frame = cvCreateImage(cvSize(KINECT_HEIGHT_CAPTURE, KINECT_WIDTH_CAPTURE), IPL_DEPTH_8U, KINECT_NUMBER_OF_CHANNELS);
+	IplImage* frame = cvCreateImage(cvSize(KINECT_WIDTH_CAPTURE, KINECT_HEIGHT_CAPTURE), IPL_DEPTH_8U, KINECT_NUMBER_OF_CHANNELS);
 	frame->imageData = (char*) (imageArrayConverted);
 
 	// transforma a imagem em escala de cinza
@@ -259,6 +259,13 @@ JNIEXPORT jboolean JNICALL Java_br_unb_unbiquitous_ubiquitos_uos_driver_UserDriv
 
 	// realiza deteccao facial na imagem de entrada, usando o classificador
 	faceRect = detectFaceInImage(greyImg, faceCascade);
+
+	cvNamedWindow("teste", CV_WINDOW_AUTOSIZE);
+	cvMoveWindow("teste", 500, 500);
+	cvShowImage("teste", frame);
+	cvWaitKey();
+
+	printf("faceRect.width -> %d", faceRect.width);
 
 	// veririfica se uma faxe foi detectada
 	if (faceRect.width > 0) {
