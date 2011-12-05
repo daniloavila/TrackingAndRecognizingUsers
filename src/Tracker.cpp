@@ -87,7 +87,6 @@ void getTrackerSignals();
 /**
  * Recebe as mensagens da fila de resposta e reenvia as frames dos usuarios não reconhecidos.
  */
- // int cont = 0;
 void treatQueueResponse(int i) {
 	
 	MessageResponse messageResponse;
@@ -112,12 +111,7 @@ void treatQueueResponse(int i) {
 
 		int total = getTotalAttempts(messageResponse.user_id);
 
-		// printf("\n\nTOTAL: %d\n\n", total+cont);
-		//   if(total + cont >= 20){
-		//     printfLogComplete(&users, stdout);
-  		//     printf("UNKOWN: %d\n", cont);
-  		//     cleanupQueueAndExit(0);
-  		//   }
+			
 		
 		// verifica se é uma label válida
 		if (messageResponse.user_name == NULL || strlen(messageResponse.user_name) == 0) {
@@ -129,10 +123,6 @@ void treatQueueResponse(int i) {
 			}
 			continue;
 		} else if(strcmp(messageResponse.user_name, UNKNOWN) == 0) {
-			// if(total == 0) {
-			// 	cont++;
-			// 	// printf("UNKOWN\n");
-			// }
 			//verifica se eh a primeira vez que retornou uma label valida
 			if(users[messageResponse.user_id].name == NULL || strlen(users[messageResponse.user_id].name) == 0) {
 				users[messageResponse.user_id].name = (char *) malloc(strlen(UNKNOWN) + 1);
